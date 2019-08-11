@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # y
 
 > A Vue.js project
@@ -19,3 +20,6 @@ npm run build --report
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+=======
+# XAPFrontend
+>>>>>>> 8e56f94ba6cea10ebd630832888c574dae20c45e
