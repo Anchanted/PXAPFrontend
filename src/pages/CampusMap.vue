@@ -65,7 +65,7 @@ export default {
   },
   methods: {
     drawMapInfo: function (scaleX, scaleY, offsetX, offsetY, scaleAdaption) {
-      const url = '/static/images/campus/CampusMap.png';
+      const url = '/static/images/map/campus/campus-map.png';
       this.drawImage(0 * scaleX + offsetX, 0 * scaleY + offsetY, this.width * scaleX, this.height * scaleY, url);
     },
 
@@ -328,7 +328,7 @@ export default {
     this.context = this.canvas.getContext('2d');
     this.clientWidth = document.documentElement.clientWidth;
     this.clientHeight = document.documentElement.clientHeight;
-    const img = await this.loadImage('/static/images/campus/CampusMap.png');
+    const img = await this.loadImage('/static/images/map/campus/campus-map.png');
 
     const pageWidth = parseInt(img.width);
     const pageHeight = parseInt(img.height);
