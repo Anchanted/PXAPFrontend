@@ -1,22 +1,24 @@
 import Vue from 'vue'
 import App from '@/App.vue'
-import Vuex from 'vuex'
-import axios from 'axios'
+// import Vuex from 'vuex'
+// import axios from 'axios'
 import VueLazyload from 'vue-lazyload'
 
-import { store } from '@/store/index.js'
+import store from '@/store/index.js'
 import { router } from '@/router/index.js'
 
-import api from '../static/js/api';
-Vue.prototype.$api = api;
+import api from '@/api';
 
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import '../node_modules/bootstrap/dist/js/bootstrap.min.js'
 
 import '@/assets/css/iconfont/iconfont.css'
 
-Vue.use(Vuex)
-Vue.use(axios)
+// Vue.use(Vuex)
+// Vue.use(axios)
+
+Vue.prototype.$api = api;
+
 Vue.use(VueLazyload, {
   preLoad: 1.3,
   error: 'dist/error.png',
@@ -34,10 +36,6 @@ Vue.use(VueLazyload, {
 
   // }
 })
-
-axios.defaults.baseURL = 'http://localhost:8888/';
-axios.defaults.headers['Content-type'] = 'application/x-www-form-urlencoded';
-axios.defaults.withCredentials = true;
 
 new Vue({
   el: '#app',

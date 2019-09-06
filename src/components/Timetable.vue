@@ -261,7 +261,13 @@
 import $ from 'jquery'
 
 export default {
-  props: ['lessons'],
+  props: {
+    lessons: {
+      type: Array,
+      required: true,
+      default: () => []
+    },
+  },
   data() {
       return {
         lessonList: [],
@@ -292,7 +298,6 @@ export default {
           rows[startRow+i].cells[day].setAttribute("style", "display:none");
         }
       });
-      this.$emit('renderFinished', true);
     },
 
     clearLessons: function () {
@@ -341,10 +346,20 @@ export default {
     }
   },
 
+  mounted () {
+    this.clearLessons()
+    this.lessonList = this.lessons;
+    this.renderLessons()
+    $("[data-toggle=tooltip]").tooltip({
+      container: 'body',
+      html: true,
+    })
+  },
+
   watch: {
-    lessons: function(newVal,oldVal) {
+    lessons (val) {
       this.clearLessons()
-      this.lessonList = newVal;
+      this.lessonList = val;
       this.renderLessons()
       $("[data-toggle=tooltip]").tooltip({
         container: 'body',

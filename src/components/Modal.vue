@@ -1,189 +1,101 @@
 <template>
-  <div class="shadow bg-white rounded modal-area" :style="{height: height+'px'}" :class="{'panel-collapsed': panelCollapsed}">
-    <div class="modal-container" :style="{height: height - 68 +'px'}">
-      <div class="modal-selector" ref="modalSelector">
-        <!-- display room -->
-        <div v-if="type === 'room'" class="d-flex flex-column">
-          <div class="picture-container">
-            <img :src="room.imgUrl ? room.imgUrl : '/static/images/icon/default.png'" alt="">
-          </div>
+  <div class="shadow bg-white rounded modal-area" :style="modalStyle" :class="{'panel-collapsed': panelCollapsed}">
+    <div class="modal-window" ref="modal" @scroll="onscroll">
+      <!-- <div class="modal-container pb-3" ref="modalContainer"> -->
 
-          <div class="section detail">
-            <h1>{{room.name}}</h1>
-            <h5>{{room.type}}</h5>
-            <div class="detail-location">
-              <img src="/static/images/icon/location.svg" alt="location"/>
-              <div class="detail-location-text">
-                <span class="detail-location-text-building">{{room.buildingId}}</span><span class="detail-location-text-floor">{{room.floorId}}</span>
-              </div>
-            </div>
-          </div>
+        <keep-alive>
+          <router-view v-if="$route.meta.keepAlive"></router-view>
+        </keep-alive>
+        <router-view v-if="!$route.meta.keepAlive" :key="key"></router-view>
+        <!-- <router-view :key="key"></router-view> -->
 
-          <div class="section-divider"></div>
 
-          <div class="section">
-            <h3>Timetable</h3>
-            <timetable ref="timetable" :lessons="lessonList" @renderFinished="showModal"></timetable>
-          </div>
-        </div>
+        <!-- <keep-alive>
+          <router-view v-if="$route.meta.keepAlive && $route.name !== 'CampusSearchMore'"></router-view>
+        </keep-alive>
+        <router-view v-if="!$route.meta.keepAlive && $route.name !== 'CampusSearchMore'" :key="key"></router-view> -->
 
-        <!-- display facility -->
-        <div v-else-if="type === 'facility'" class="d-flex flex-column">
-          <div class="picture-container">
-            <img :src="facility.imgUrl ? facility.imgUrl : '/static/images/icon/default.png'" alt="">
-          </div>
-
-          <div class="section detail">
-            <h1>{{facility.name}}</h1>
-            <div class="detail-location">
-              <img src="/static/images/icon/location.svg" alt="location"/>
-              <div class="detail-location-text">
-                <span class="detail-location-text-building">{{facility.buildingId}}</span><span class="detail-location-text-floor">{{facility.floorId}}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- display building -->
-        <div v-else-if="type === 'building'" class="d-flex flex-column">
-          <div class="picture-container">
-            <img :src="building.imgUrl ? building.imgUrl : '/static/images/icon/default.png'" alt="">
-          </div>
-
-          <div class="indoor">
-            <button type="button" class="iconfont icon-indoor btn btn-primary indoor-button"
-              data-toggle="tooltip" data-placement="right" title="View Indoor Maps in this Building"
-              @click="$router.push({ path: '/building', query: { buildingId: building.id } })"></button>
-          </div>
-
-          <div class="section detail">
-            <h1>{{building.name}}</h1>
-            <h5>{{building.code}}</h5>
-          </div>
-        </div>
-
-        <!-- display search result -->
-        <div v-else-if="type === 'search'" class="d-flex flex-column">
-          <div class="card">
-            <div class="card-header">Building</div>
-            <div class="card-body search-content">
-              <ul class="search-content-group">
-                <li class="search-content-group-item">
-                  <div class="search-item-area">
-                    <div class="search-item-image" :style="{'backgroundImage': 'url('+'/static/images/building/bs.png'+')'}">
-                      <!-- <img src="" alt=""> -->
-                    </div>
-                    <div class="search-item-info">
-                      <div class="search-item-info-name">International Business Building</div>
-                      <div class="search-item-info-location">South Campus</div>
-                    </div>
-                  </div>
-                </li>
-                <li class="search-content-group-item">Hello</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">Room</div>
-            <div class="card-body">
-              <h5 class="card-title">Special title treatment</h5>
-              <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-          </div>
-        </div>
-      </div>
+        <!-- <transition name="more" mode="in-out" @enter="onenter">
+          <router-view v-if="!$route.meta.keepAlive && $route.name === 'CampusSearchMore'" :key="key" style="position:absolute;top:0"></router-view>
+        </transition> -->
+      <!-- </div> -->
     </div>
   </div>
 </template>
 
 <script>
 import vm from '@/assets/js/eventBus'
-import Timetable from '@/components/Timetable'
+
+import { mapState } from 'vuex'
 
 export default {
-  components: {
-    Timetable
-  },
-  // props: {
-  //   buildingInfo: {
-  //     type: Object,
-  //     required: true
-  //   },
-  // },
+  name: "Modal",
   data() {
     return {
       maxHeight: 0,
       screenHeight: 0,
-      modalHeight: 0,
-      panelCollapsed: false,
-      modalCollapsed: true,
-      lessonList: [],
-      room: {},
-      facility: {},
-      building: {},
-      type: null,
     }
   },
   computed: {
-    containerStyle: function () {
+    ...mapState(['scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight']),
+    key () {
+      const route = this.$route
+      // if (route.matched.length === 2 && route.matched[1].name === 'CampusSearchTop') return route.matched[1].name
+      // else if (route.matched.length === 3) return route.fullPath
+      // else return route.path
+      return route.fullPath
+    },
+    modalStyle () {
+      const computedHeight = this.screenHeight - 78 - 50
+      let h, overflow = false
+      if (this.modalCollapsed) return {height:0}
+      if (computedHeight < 300) h = 300
+      else if (this.modalHeight > 0 && this.modalHeight < computedHeight) h = this.modalHeight
+      else if (computedHeight > 1200) h = 1200
+      else h = computedHeight
+
+      if (this.modalHeight > h) overflow = true
       return {
-        // 'max-height': this.modalCollapsed ? '68px' : this.maxHeight+'px',
-        // 'min-height': this.modalCollapsed ? '' : '300px',
-        height: this.modalCollapsed ? 0 : '500px'
+        height: h + 'px',
+        width: `calc(434px + ${overflow ? this.scrollBarWidth : 0}px)`
       }
     },
-    height () {
-      const h = this.screenHeight - 10 - 50
-      if (this.modalCollapsed) return 0
-      else if (h < 300) return 300
-      else if (this.modalHeight > 0 && this.modalHeight < h) return this.modalHeight + 68
-      else return h
-    }
   },
   methods: {
-    async getItemInfo (type, id) {
-      this.type = type
-      let data
-      switch (type) {
-        case 'room':
-          data = await this.$api.get(`/room/${id}`);
-          // console.log(data)
-          this.room = data.room
-          this.lessonList = data.timetable
-          // this.description = data.description;
-          break
-        case 'facility':
-          data = await this.$api.get(`/facility/${id}`);
-          // console.log(data)
-          this.facility = data.facility
-          // this.description = data.description;
-          this.showModal()
-          break
-        case 'building':
-          data = await this.$api.get(`/building/${id}`);
-          // console.log(data)
-          this.building = data.building
-          // this.description = data.description;
-          this.showModal()
-          break
-
-      }
-    },
-    showModal () {
-      this.modalCollapsed = false
-      this.panelCollapsed = false
-      vm.$emit('displayItemInfo')
-      this.$nextTick(function(){
-        this.modalHeight = this.$refs.modalSelector.clientHeight
+    async getItemInfo (type, id, name) {
+      this.showModal()
+      const pageName = this.$route.matched[0].name
+      this.$router.push({
+        name: 'Place',
+        params: {
+          buildingId: this.$route.params.buildingId,
+          floorId: this.$route.params.floorId,
+          type,
+          id,
+          itemName: name
+        }
       })
     },
-    getSearchResult (keyword) {
-      this.type = 'search'
-      this.modalCollapsed = false
-      this.panelCollapsed = false
-      console.log(keyword)
+
+    showModal () {
+      this.$store.dispatch('commitPanelCollapsed', false)
+      this.$store.dispatch('commitModalCollapsed', false)
+      // vm.$emit('displayItemInfo')
+    },
+
+    // getSearchResult (keyword) {
+    //   this.type = 'search'
+    //   this.modalCollapsed = false
+    //   this.panelCollapsed = false
+    //   console.log(keyword)
+    // }
+
+    onscroll () {
+      this.$store.commit('setModalScrollTop', this.$refs.modal.scrollTop)
+    },
+
+    onenter () {
+      console.log('enter')
     }
   },
   mounted () {
@@ -192,75 +104,38 @@ export default {
       this.maxHeight = window.innerHeight - 10 - 50
       this.screenHeight = window.innerHeight
     }
-    vm.$on('collapsePanel', flag => {
-      this.panelCollapsed = flag
-    })
-    vm.$on('collapseModal', flag => {
-      this.modalCollapsed = flag
-    })
-    vm.$on('search', keyword => this.getSearchResult(keyword))
+    // vm.$on('search', keyword => this.getSearchResult(keyword))
   },
 }
 </script>
 
-<style>
-.modal-area
-{
+<style lang="scss">
+.modal-area {
   position: fixed;
-  width: 434px;
-  top: 10px;
+  // width: 434px;
+  top: 78px;
 	left: 10px;
-  padding-top: 68px;
+  // padding-top: 68px;
   /* padding-bottom: 50px; */
   /* min-height: 300px; */
   overflow: hidden;
   /* overflow-y: overlay; */
   transition: all ease-in-out 0.5s;
+  transition-property: height,transform;
 }
 
-.modal-container
-{
-  height: auto;
-  width: auto;
+.modal-window {
+  height: 100%;
+  width: 100%;
+  // position: relative;
   overflow-y: auto;
-}
 
-.modal-selector
-{
-  height: auto;
-  width: auto;
-  position: relative;
-}
+  .modal-container {
+    height: auto;
+    width: 434px;
+    position: relative;
 
-.picture-container
-{
-  width: 100%;
-  height: 240px;
-}
-
-.picture-container img
-{
-  width: 100%;
-  height: auto;
-  border: none;
-}
-
-.indoor
-{
-  position: absolute;
-  width: auto;
-  height: auto;
-  top: 210px;
-  right: 20px;
-}
-
-.indoor-button
-{
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
-  padding: 0;
-  font-size: 2rem;
+  }
 }
 
 .search-content
@@ -299,7 +174,7 @@ export default {
 {
   width: 100px;
   height: 100px;
-  background-size: cover; 
+  background-size: cover;
   background-position: center;
   display: inline-block;
   float: left;
@@ -326,64 +201,20 @@ export default {
   margin-top: 5px;
 }
 
-.section
-{
-  height: auto;
-  padding: 16px 20px;
-  background: white;
-}
-
-.detail-location
-{
-  display: flex;
-  margin-top: 15px;
-  align-items: center;
-  /* clear: both; */
-}
-
-.detail-location img
-{
-  width: 25px;
-  height: 25px;
-  margin-right: 10px;
-}
-
-.detail-location span
-{
-  position: relative;
-  display: inline-block;
-  font-size: 1.2rem;
-  /* float: left; */
-}
-
-.detail-location-text-floor
-{
-  margin-left: 1.5rem;
-}
-
-.detail-location-text-floor::before
-{
-  position: absolute;
-  left: -1rem;
-  top: 0;
-  bottom: 0;
-  margin: auto;
-  width: 0.5rem;
-  height: 0.5rem;
-  content: "";
-  background: grey;
-  border-radius: 0.25rem;
-}
-
-.section-divider
-{
-  width: 100%;
-  height: 0;
-  border-bottom: 1px solid grey;
-}
-
-.panel-collapsed
-{
+.panel-collapsed {
   transform: translateX(-445px)
+}
+
+.more-enter-active {
+  transition: transform .2s linear;
+}
+.more-leave-active {
+  transition: transform .2s linear;
+}
+.more-enter, .more-leave-to {
+  transform: translateX(434px);
+}
+.more-enter-to, .more-leave {
+  transform: translateX(0px);
 }
 </style>

@@ -16,10 +16,10 @@
         :class="{'modal-expand-button': !modalCollapsed}"
         type="button"
         data-toggle="tooltip" data-placement="bottom" :title="modalCollapsed ? 'Expand Modal' : 'Collapse Modal'"
-        @click="collapseModal"/>
+        @click="commitModalCollapsed(!modalCollapsed)"/>
     </div>
 
-    <form class="form-inline search-form" style="" onsubmit="return false;">
+    <form class="form-inline search-form" style="" @submit.prevent>
 			<input class="search-input" type="search" placeholder="Search" aria-label="Search" v-model.trim="keyword"/>
       <div class="search-submit">
         <button
@@ -29,7 +29,7 @@
           @click="submit"/>
       </div>
 		</form>
-    <div class="panel-collapse" @click="collapsePanel">
+    <div class="panel-collapse" @click="commitPanelCollapsed(!panelCollapsed)">
       <button
         class="iconfont icon-arrow-left panel-collapse-button"
         :class="{'panel-collapsed-button': panelCollapsed}"
@@ -42,29 +42,38 @@
 <script>
 import vm from '@/assets/js/eventBus'
 
+import { mapState, mapActions } from 'vuex'
+
 export default {
   data() {
     return {
-      panelCollapsed: false,
-      modalCollapsed: true,
       keyword: ''
     }
   },
+  computed: {
+    ...mapState(['panelCollapsed', 'modalCollapsed'])
+  },
   methods: {
-    collapsePanel: function () {
-      this.panelCollapsed = !this.panelCollapsed
-      vm.$emit('collapsePanel', this.panelCollapsed)
-    },
-    collapseModal: function () {
-      this.modalCollapsed = !this.modalCollapsed
-      vm.$emit('collapseModal', this.modalCollapsed)
-    },
+    ...mapActions([
+      "commitPanelCollapsed",
+      "commitModalCollapsed"
+    ]),
     submit () {
-      if (!!this.keyword) {
-        console.log('search')
-        this.modalCollapsed = false
-        this.panelCollapsed = false
-        vm.$emit('search', this.keyword)
+      if (this.keyword && this.keyword.trim() !== '') {
+        // console.log(this.keyword)
+        this.commitPanelCollapsed(false)
+        this.commitModalCollapsed(false)
+        this.$router.push({
+          name: 'SearchTop',
+          query: {
+            q: encodeURIComponent(this.keyword)
+          },
+          params: {
+            buildingId: this.$route.params.buildingId,
+            floorId: this.$route.params.floorId
+          }
+        })
+        // vm.$emit('search', this.keyword)
       } else console.log('invalid')
     }
   },
@@ -72,11 +81,6 @@ export default {
     $('[data-toggle="tooltip"]').tooltip();
 
     const div = document.getElementsByClassName('search-bar')[0]
-    vm.$on('displayItemInfo', () => {
-      this.modalCollapsed = false
-      this.panelCollapsed = false
-      vm.$emit('collapseModal', false)
-    })
   }
 }
 </script>

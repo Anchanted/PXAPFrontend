@@ -55,7 +55,7 @@
 <script>
 import ButtonGroup from '@/components/ButtonGroup'
 
-import date from '../../static/js/date'
+import date from '@/utils/date'
 
 export default {
   components: {

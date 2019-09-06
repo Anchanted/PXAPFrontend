@@ -6,13 +6,13 @@
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
           <div v-for="(floor, index) in floorList" :key="floor.id" >
             <div v-if="index !== 0" class="dropdown-divider" style="margin: 0"></div>
-            <a class="dropdown-item" href="javascript:void(0)" :class="{ active: floor.id === currentFloor.id }" @click="chooseOtherFloor($event,floor)">{{floor.name}}</a>
+            <a class="dropdown-item" href="javascript:void(0)" :class="{ active: floor.id === currentFloor.id }" @click.prevent="chooseOtherFloor($event,floor)">{{floor.name}}</a>
           </div>
         </div>
       </div>
       <!-- Home Button -->
       <div v-if="buttonList.indexOf('home') !== -1" class="home">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button" @click="$router.push({ name: 'Campus' })">
+        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button" @click="$router.push({ path: '/' })">
           <img src="/static/images/icon/home.png" alt="home">
         </button>
       </div>
@@ -92,12 +92,12 @@ export default {
     },
     zoomIn: function () {
       if (!this.$refs.zinbtn.disabled) {
-        this.$emit('zoom', 200);
+        this.$emit('zoom', 200, 'click');
       }
     },
     zoomOut: function () {
       if (!this.$refs.zoutbtn.disabled) {
-        this.$emit('zoom', -200);
+        this.$emit('zoom', -200, 'click');
       }
     },
     showOccupiedRoom: function () {
@@ -110,14 +110,13 @@ export default {
     chooseOtherFloor: function (e, floor) {
       if (floor.id !== this.currentFloor.id){
         this.$router.push({
-          path: '/building',
-          query: {
+          name: 'Map',
+          params: {
             buildingId: floor.buildingId,
             floorId: floor.id,
           }
         });
-        e.preventDefault();
-        this.$router.go(0);
+        // this.$router.go(0);
       }
     }
   },

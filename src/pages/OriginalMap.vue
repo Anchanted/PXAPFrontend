@@ -12,7 +12,8 @@ export default {
       mapWidth: 0,
       mapHeight: 0,
       context: null,
-      pointArr: []
+      pointArr: [],
+      image: {}
     }
   },
   methods: {
@@ -30,6 +31,7 @@ export default {
         pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
       }
       console.log(pointStr)
+      if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
       // console.log(mousePos.x + ',' + mousePos.y);
     },
     getMousePos (event) {
@@ -56,11 +58,46 @@ export default {
         image.src = url
       })
     },
+    getCentroid: function (coordsStr) {
+      const coordsArr = coordsStr.split(",");
+      const coordsArrLength = coordsArr.length;
+      const vertexArr = [];
+
+      for (let i=0; i<coordsArrLength; i=i+2) {
+        if (coordsArr[i]!=""&&coordsArr[i+1]!="") {
+          vertexArr.push({
+            x: parseInt(coordsArr[i]),
+            y: parseInt(coordsArr[i+1]),
+          });
+        }
+      }
+
+      const vertexArrLength = vertexArr.length;
+      let subAreaSum = 0;
+      let subCentroidXSum = 0;
+      let subCentroidYSum = 0;
+
+      for(let i=2; i<vertexArrLength; i++){
+        const p0 = vertexArr[0];
+        const p1 = vertexArr[i-1];
+        const p2 = vertexArr[i];
+        const subArea = (p0.x*p1.y + p1.x*p2.y + p2.x*p0.y - p1.x*p0.y - p2.x*p1.y - p0.x*p2.y)/2;
+        const subCentroidX = (p0.x+p1.x+p2.x)/3;
+        const subCentroidY = (p0.y+p1.y+p2.y)/3;
+
+        subAreaSum += subArea;
+        subCentroidXSum += subCentroidX*subArea;
+        subCentroidYSum += subCentroidY*subArea;
+      }
+
+      return {
+        x: 	subCentroidXSum/subAreaSum,
+        y: 	subCentroidYSum/subAreaSum,
+      }
+    },
     animate () {
       this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
-      let image = new Image()
-      image.src = '/static/images/map/campus/campus-map.png'
-      this.context.drawImage(image, 0, 0, this.mapWidth, this.mapHeight)
+      this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
       this.context.lineWidth = 3
       this.context.strokeStyle = '#FFFF00'
       this.context.fillStyle = 'red'
@@ -78,12 +115,12 @@ export default {
     }
   },
   async mounted () {
-    const img = await this.loadImage('/static/images/map/campus/campus-map.png')
+    this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + '/static/static/images/map/building/s/S1F.png')
 
     this.context = this.$refs.map.getContext('2d')
 
-    this.mapWidth = parseInt(img.width)
-    this.mapHeight = parseInt(img.height)
+    this.mapWidth = parseInt(this.image.width)
+    this.mapHeight = parseInt(this.image.height)
 
     this.$refs.map.setAttribute("width", this.mapWidth)
     this.$refs.map.setAttribute("height", this.mapHeight)

@@ -1,4 +1,5 @@
 <template>
+  <!-- <div style="position:absolute; top:50%;left:50%;transform:translate(-50%,-50%);"> -->
   <div style="overflow: hidden">
     <search-bar></search-bar>
     <modal ref="modal"></modal>
@@ -7,10 +8,15 @@
       @mousedown="onmousedown"
       @mouseup="onmouseup"
       @mousemove="onmousemove">[Your browser is too old!]</canvas>
+
     <button-group
-    :scale="scale.x"
-    @zoom="doZoom"
-    :button-list="['zoom']"></button-group>
+      :scale="scale.x"
+      :button-list="buttonList"
+      :current-floor="selectedFloor"
+      :floor-list="floorList"
+      @zoom="doZoom"
+      @clickOccupiedBtn="showOccupiedRoom"
+      ref="occupiedButton"></button-group>
   </div>
 </template>
 
@@ -19,8 +25,10 @@ import SearchBar from '@/components/SearchBar'
 import ButtonGroup from '@/components/ButtonGroup'
 import Modal from '@/components/Modal'
 
+import iconPath from '@/assets/js/facilityIconPath.js'
+
 export default {
-  name: '',
+  name: "CanvasMap",
   components: {
     SearchBar,
     ButtonGroup,
@@ -28,6 +36,8 @@ export default {
   },
   data() {
     return {
+      baseUrl: process.env.VUE_APP_BASE_API + '/static',
+      mapType: null,
       canvas: null,
       context: null,
       desktop: true,
@@ -57,10 +67,12 @@ export default {
       mdown: false, // desktop drag
       mclick: false,
       init: false,
-      muptime: null,
-      mdowntime: null,
-      buildingList: [],
+      selectedFloor: {},
       selectedItem: {},
+      areaList: [],
+      occupiedRoomList: [],
+      facilityList: [],
+      floorList: [],
       muptime: null,
       mdowntime: null,
       lastMarkerAnimation: {
@@ -80,6 +92,11 @@ export default {
         times: 0,
         totalZoom: 0,
       },
+    }
+  },
+  computed: {
+    buttonList () {
+      return this.mapType === 'floor' ? ['floor','home','occupy','zoom'] : ['zoom']
     }
   },
   methods: {
@@ -111,10 +128,10 @@ export default {
       if (this.position.x + currentWidth + this.positionAdaption.x < this.canvas.width - this.positionAdaption.x) this.position.x = this.canvas.width - 2 * this.positionAdaption.x - currentWidth
 		  if (this.position.y + currentHeight + this.positionAdaption.y < this.canvas.height - this.positionAdaption.y) this.position.y = this.canvas.height - 2 * this.positionAdaption.y - currentHeight
 
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
       // indoor map drawing function
       this.drawMapInfo(this.scale.x * this.scaleAdaption, this.scale.y * this.scaleAdaption, this.position.x + this.positionAdaption.x, this.position.y + this.positionAdaption.y, this.scaleAdaption);
-      requestAnimationFrame(this.animate.bind(this));
+      requestAnimationFrame(this.animate);
     },
 
     drawMapInfo: function (scaleX, scaleY, offsetX, offsetY, scaleAdaption) {
@@ -122,8 +139,22 @@ export default {
 
       ctx.drawImage(this.imageMap['map'], 0 * scaleX + offsetX, 0 * scaleY + offsetY, this.imgWidth * scaleX, this.imgHeight * scaleY);
 
+      if (this.mapType === 'floor') {
+        if (this.facilityList.length && (scaleX / scaleAdaption >= 2 || scaleY / scaleAdaption >= 2)) {
+          const size = 14;
+          this.facilityList.forEach(facility => {
+            if (JSON.stringify(this.selectedItem) !== "{}" && this.selectedItem.id === facility.id && this.selectedItem.type === 'facility') return
+            ctx.beginPath()
+            ctx.arc(parseInt(facility.location.x) * scaleX + offsetX, parseInt(facility.location.y) * scaleY + offsetY, 11 * scaleX, 0, 2*Math.PI)
+            ctx.fillStyle="blue"
+            ctx.fill()
+            ctx.drawImage(this.imageMap[facility.type], (parseInt(facility.location.x) - size/2) * scaleX + offsetX, (parseInt(facility.location.y) - size/2) * scaleY + offsetY, size * scaleX, size * scaleY);
+          })
+        }
+      }
+
       if (JSON.stringify(this.selectedItem) !== "{}") {
-        if (this.selectedItem.type === 'building') {
+        if (this.selectedItem.type === 'room' || this.selectedItem.type === 'building') {
           const AdaptScaleX = ox => ox * this.scale.x * this.scaleAdaption + this.position.x + this.positionAdaption.x
           const AdaptScaleY = oy => oy * this.scale.y * this.scaleAdaption + this.position.y + this.positionAdaption.y
           const areaCoordsArr = this.selectedItem.areaCoords.split(',')
@@ -149,6 +180,7 @@ export default {
           this.currentMarkerAnimation.triggered = false
         }
         // console.log(size)
+
         ctx.drawImage(this.imageMap['marker'], parseInt(this.currentMarkerAnimation.x - size/2) * scaleX + offsetX, parseInt(this.currentMarkerAnimation.y - size) * scaleY + offsetY, size * scaleX, size * scaleY)
       }
 
@@ -165,11 +197,20 @@ export default {
 
         ctx.drawImage(this.imageMap['marker'], parseInt(this.lastMarkerAnimation.x - size/2) * scaleX + offsetX, parseInt(this.lastMarkerAnimation.y - size) * scaleY + offsetY, size * scaleX, size * scaleY)
       }
+
+      if (this.mapType === 'floor') {
+        if (this.occupiedRoomList.length) {
+          const size = 60;
+          this.occupiedRoomList.forEach(room => {
+            const centroid = room.location
+            ctx.drawImage(this.imageMap['group'], parseInt(centroid.x - size/2) * scaleX + offsetX, parseInt(centroid.y - size/2) * scaleY + offsetY, size * scaleX, size * scaleY);
+          })
+        }
+      }
     },
 
     doZoom: function (zoom) {
       if (!zoom) return
-      // new scale
       if (Math.abs(zoom) >= 200) {
         this.zoomAnimation.triggered = true
         this.zoomAnimation.totalZoom = zoom
@@ -182,17 +223,18 @@ export default {
         y: this.canvas.height / 2,
       }
 
+      // new scale
       let newScale = this.scale.x + zoom / 400;
 
       if (newScale > 1) {
         if (newScale > 2.5) {
-          newScale = 2.5;
+          newScale = 2.5
           this.zoomAnimation.triggered = false
         } else {
           newScale = this.scale.x + zoom / 400;
         }
       } else {
-        newScale = 1;
+        newScale = 1
         this.zoomAnimation.triggered = false
       }
       let newPosX = this.focusPointer.x - (this.focusPointer.x - this.position.x) * newScale / this.scale.x;
@@ -220,18 +262,18 @@ export default {
         const deltaX = relativeX - this.lastX;
         const deltaY = relativeY - this.lastY;
 
-        const currentWidth = (this.imgWidth * this.scaleAdaption * this.scale.x)
-				const currentHeight = (this.imgHeight * this.scaleAdaption * this.scale.y)
+        const currentWidth = (this.imgWidth * this.scaleAdaption * this.scale.x);
+				const currentHeight = (this.imgHeight * this.scaleAdaption * this.scale.y);
 
         this.position.x += deltaX;
         this.position.y += deltaY;
 
         // edge cases
-        if (this.position.x > 0) this.position.x = 0
+        if (this.position.x > 0) this.position.x = 0;
         else if (this.position.x + currentWidth + this.positionAdaption.x < this.canvas.width - this.positionAdaption.x)
           this.position.x = this.canvas.width - 2 * this.positionAdaption.x - currentWidth
 
-        if (this.position.y > 0) this.position.y = 0
+        if (this.position.y > 0) this.position.y = 0;
         else if (this.position.y + currentHeight + this.positionAdaption.y < this.canvas.height - this.positionAdaption.y)
 					this.position.y = this.canvas.height - 2 * this.positionAdaption.y - currentHeight
       }
@@ -283,9 +325,9 @@ export default {
         const relativeX = e.clientX - this.canvas.getBoundingClientRect().left;
         const relativeY = e.clientY - this.canvas.getBoundingClientRect().top;
 
-        if (e.target == this.canvas && e.buttons === 1 && this.mdown) this.doMove(relativeX, relativeY)
+        if (e.target == this.canvas && e.buttons === 1 && this.mdown) this.doMove(relativeX, relativeY);
 
-        if (relativeX <= 0 || relativeX >= this.canvas.width || relativeY <= 0 || relativeY >= this.canvas.height) this.mdown = false
+        if (relativeX <= 0 || relativeX >= this.canvas.width || relativeY <= 0 || relativeY >= this.canvas.height) this.mdown = false;
       }
     },
 
@@ -297,6 +339,7 @@ export default {
         this.chooseItem(e)
       }
       this.mdown = false;
+
     },
 
     chooseItem (e) {
@@ -306,7 +349,7 @@ export default {
 
         const ctx = this.context;
         let sameItem = false
-        let found = this.buildingList.some(element => {
+        let found = this.areaList.some(element => {
           // ctx.fillStyle = '#000';
           ctx.beginPath();
           const areaCoordsArr = element.areaCoords.split(',');
@@ -315,10 +358,29 @@ export default {
             else ctx.lineTo(AdaptScaleX(areaCoordsArr[i]), AdaptScaleY(areaCoordsArr[i+1]));
           }
           if(ctx.isPointInPath(e.clientX, e.clientY)){
-            sameItem = this.setSelectedItem('building', element)
+            sameItem = this.setSelectedItem(this.mapType === 'floor' ? 'room' : 'building', element)
             return true
           }
         })
+
+        if (this.mapType === 'floor') {
+          if (!found) {
+            found = this.facilityList.some(element => {
+              // ctx.fillStyle = '#000';
+              ctx.beginPath();
+              ctx.arc(parseInt(AdaptScaleX(element.location.x)), parseInt(AdaptScaleY(element.location.y)), 11 * this.scale.x * this.scaleAdaption, 0, 2*Math.PI)
+              if(ctx.isPointInPath(e.clientX, e.clientY)){
+                sameItem = this.setSelectedItem('facility', element)
+                return true
+              }
+            })
+          }
+
+          if (found && this.occupiedRoomList.length) {
+            this.occupiedRoomList = []
+            this.$refs.occupiedButton.hideOccupiedRoom()
+          }
+        }
 
         if (!found && !sameItem && JSON.stringify(this.selectedItem) !== "{}") {
           this.lastMarkerAnimation = {
@@ -366,6 +428,55 @@ export default {
       return sameItem
     },
 
+    async showOccupiedRoom (flag) {
+      if (flag) {
+        const data = await this.$api.room.getOccupiedRoom(this.selectedFloor.id)
+        this.occupiedRoomList = data.occupiedRoomList
+        this.selectedItem = {}
+      } else {
+        this.occupiedRoomList = []
+      }
+
+    },
+
+    getCentroid: function (coordsStr) {
+      const coordsArr = coordsStr.split(",");
+      const coordsArrLength = coordsArr.length;
+      const vertexArr = [];
+
+      for (let i=0; i<coordsArrLength; i=i+2) {
+        if (coordsArr[i]!=""&&coordsArr[i+1]!="") {
+          vertexArr.push({
+            x: parseInt(coordsArr[i]),
+            y: parseInt(coordsArr[i+1]),
+          });
+        }
+      }
+
+      const vertexArrLength = vertexArr.length;
+      let subAreaSum = 0;
+      let subCentroidXSum = 0;
+      let subCentroidYSum = 0;
+
+      for(let i=2; i<vertexArrLength; i++){
+        const p0 = vertexArr[0];
+        const p1 = vertexArr[i-1];
+        const p2 = vertexArr[i];
+        const subArea = (p0.x*p1.y + p1.x*p2.y + p2.x*p0.y - p1.x*p0.y - p2.x*p1.y - p0.x*p2.y)/2;
+        const subCentroidX = (p0.x+p1.x+p2.x)/3;
+        const subCentroidY = (p0.y+p1.y+p2.y)/3;
+
+        subAreaSum += subArea;
+        subCentroidXSum += subCentroidX*subArea;
+        subCentroidYSum += subCentroidY*subArea;
+      }
+
+      return {
+        x: 	subCentroidXSum/subAreaSum,
+        y: 	subCentroidYSum/subAreaSum,
+      }
+    },
+
     loadImage: function (url) {
       return new Promise(function(resolve, reject) {
         var image = new Image();
@@ -395,9 +506,41 @@ export default {
   async mounted () {
     document.body.style.overflow='hidden';
 
-    const data = await this.$api.building.getBuildings()
-    console.log(data)
-    this.buildingList = data.buildingList;
+    this.mapType = !!this.$route.params.buildingId ? 'floor' : 'campus'
+
+    if (this.mapType === 'floor') {
+      let buildingId = parseInt(this.$route.params.buildingId)
+      let floorId = parseInt(this.$route.params.floorId)
+      const data = await this.$api.floor.getFloorInfo(buildingId, floorId);
+      console.log(data)
+      this.selectedFloor = data.selectedFloor;
+      this.floorList = data.floorList;
+      this.areaList = data.roomList;
+      this.facilityList = data.facilityList;
+
+      const iconList = []
+      this.facilityList.forEach(facility => {
+        iconList.push(facility.type)
+      })
+      iconList.sort()
+
+      if (iconList.length) {
+        const result = [iconList[0]]
+        for (let i=1, len=iconList.length; i<len; i++) iconList[i] !== iconList[i-1] && result.push(iconList[i])
+        for (let i = 0; i < result.length; i++) this.imageMap[result[i]] = await this.loadImage(iconPath[result[i]])
+      }
+
+      this.imageMap['map'] = await this.loadImage(this.baseUrl + this.selectedFloor.imgUrl)
+      this.imageMap['marker'] = await this.loadImage(require('@/assets/images/icon/marker.png'))
+      this.imageMap['group'] = await this.loadImage(require('@/assets/images/icon/group.png'))
+    } else {
+      const data = await this.$api.building.getBuildings()
+      console.log(data)
+      this.areaList = data.buildingList;
+
+      this.imageMap['map'] = await this.loadImage(require('@/assets/images/map/campus/campus-map.png'))
+      this.imageMap['marker'] = await this.loadImage(require('@/assets/images/icon/marker.png'))
+    }
 
     this.canvas = this.$refs.indoorMap;
     this.context = this.canvas.getContext('2d');
@@ -405,9 +548,6 @@ export default {
     const clientHeight = document.documentElement.clientHeight;
     this.canvas.width = clientWidth
     this.canvas.height = clientHeight
-
-    this.imageMap['map'] = await this.loadImage(require('@/assets/images/map/campus/campus-map.png'))
-    this.imageMap['marker'] = await this.loadImage(require('@/assets/images/icon/marker.png'))
 
     const imgWidth = parseInt(this.imageMap['map'].width)
     const imgHeight = parseInt(this.imageMap['map'].height)
@@ -436,18 +576,24 @@ export default {
 
     this.checkRequestAnimationFrame();
     requestAnimationFrame(this.animate);
-
-    this.$store.dispatch('commitPanelCollapsed', false)
-    this.$store.dispatch('commitModalCollapsed', true)
   },
 
-  destroyed: function () {
+  destroyed () {
     document.body.style.overflow='';
   },
 
   beforeRouteUpdate (to, from, next) {
+    console.log('map update')
     // console.log(from)
     // console.log(to)
+    const fromBuildingId = from.params.buildingId || ''
+    const fromFloorId = from.params.floorId || ''
+    const toBuildingId = to.params.buildingId || ''
+    const toFloorId = to.params.floorId || ''
+    if (fromBuildingId + fromFloorId !== toBuildingId + toFloorId) {
+      this.$store.dispatch('commitModalCollapsed', true)
+      this.$store.dispatch('commitPanelCollapsed', false)
+    }
     next()
     // console.log(this.$route)
   },
@@ -457,6 +603,11 @@ export default {
   //   console.log(to)
   //   next()
   // }
+
+  beforeRouteLeave (to, from, next) {
+    console.log('map leave')
+    next()
+  }
 
 }
 </script>
