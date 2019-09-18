@@ -2,9 +2,12 @@
   <div class="shadow bg-white rounded modal-area" :style="modalStyle" :class="{'panel-collapsed': panelCollapsed}">
     <div class="modal-window" ref="modal" @scroll="onscroll">
       <!-- <div class="modal-container pb-3" ref="modalContainer"> -->
+        <div v-if="modalLoading" class="d-flex flex-column justify-content-center loading" :style="{ height: modalStyle.height }">
+          <loading></loading>
+        </div>
 
-        <keep-alive>
-          <router-view v-if="$route.meta.keepAlive"></router-view>
+        <keep-alive :max="1">
+          <router-view v-if="$route.meta.keepAlive" :key="key"></router-view>
         </keep-alive>
         <router-view v-if="!$route.meta.keepAlive" :key="key"></router-view>
         <!-- <router-view :key="key"></router-view> -->
@@ -24,31 +27,28 @@
 </template>
 
 <script>
-import vm from '@/assets/js/eventBus'
-
 import { mapState } from 'vuex'
 
 export default {
   name: "Modal",
   data() {
     return {
-      maxHeight: 0,
       screenHeight: 0,
     }
   },
   computed: {
-    ...mapState(['scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight']),
+    ...mapState(['scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', 'modalLoading']),
     key () {
       const route = this.$route
-      // if (route.matched.length === 2 && route.matched[1].name === 'CampusSearchTop') return route.matched[1].name
-      // else if (route.matched.length === 3) return route.fullPath
-      // else return route.path
       return route.fullPath
     },
     modalStyle () {
-      const computedHeight = this.screenHeight - 78 - 50
+      const computedHeight = this.screenHeight - 66 - 50
       let h, overflow = false
-      if (this.modalCollapsed) return {height:0}
+      if (this.modalCollapsed) return {
+        height: 0,
+        width: `424px`
+      }
       if (computedHeight < 300) h = 300
       else if (this.modalHeight > 0 && this.modalHeight < computedHeight) h = this.modalHeight
       else if (computedHeight > 1200) h = 1200
@@ -57,14 +57,13 @@ export default {
       if (this.modalHeight > h) overflow = true
       return {
         height: h + 'px',
-        width: `calc(434px + ${overflow ? this.scrollBarWidth : 0}px)`
+        width: `calc(424px + ${overflow && !this.panelCollapsed ? this.scrollBarWidth : 0}px)`
       }
     },
   },
   methods: {
     async getItemInfo (type, id, name) {
       this.showModal()
-      const pageName = this.$route.matched[0].name
       this.$router.push({
         name: 'Place',
         params: {
@@ -80,44 +79,35 @@ export default {
     showModal () {
       this.$store.dispatch('commitPanelCollapsed', false)
       this.$store.dispatch('commitModalCollapsed', false)
-      // vm.$emit('displayItemInfo')
     },
-
-    // getSearchResult (keyword) {
-    //   this.type = 'search'
-    //   this.modalCollapsed = false
-    //   this.panelCollapsed = false
-    //   console.log(keyword)
-    // }
 
     onscroll () {
       this.$store.commit('setModalScrollTop', this.$refs.modal.scrollTop)
     },
-
-    onenter () {
-      console.log('enter')
-    }
   },
   mounted () {
     this.screenHeight = window.innerHeight
     window.onresize = () => {
-      this.maxHeight = window.innerHeight - 10 - 50
       this.screenHeight = window.innerHeight
     }
-    // vm.$on('search', keyword => this.getSearchResult(keyword))
   },
 }
 </script>
 
 <style lang="scss">
+.loading {
+  width: 424px;
+  position: absolute;
+  top: 0;
+  z-index: 1000;
+  background: #ffffff;
+}
+
 .modal-area {
   position: fixed;
-  // width: 434px;
-  top: 78px;
+  // width: 424px;
+  top: 66px;
 	left: 10px;
-  // padding-top: 68px;
-  /* padding-bottom: 50px; */
-  /* min-height: 300px; */
   overflow: hidden;
   /* overflow-y: overlay; */
   transition: all ease-in-out 0.5s;
@@ -132,46 +122,40 @@ export default {
 
   .modal-container {
     height: auto;
-    width: 434px;
+    width: 424px;
     position: relative;
 
   }
 }
 
-.search-content
-{
+.search-content {
   padding: 0;
 }
 
-.search-content-group
-{
+.search-content-group {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.search-content-group li:last-child
-{
+.search-content-group li:last-child {
   border-bottom: none;
 }
 
-.search-content-group-item
-{
+.search-content-group-item {
   list-style: none;
   padding: 0;
   margin: 0;
   border-bottom: 1px rgba(0,0,0,0.125) solid;
 }
 
-.search-item-area
-{
+.search-item-area {
   width: 100%;
   height: 100px;
   padding: 0;
 }
 
-.search-item-image
-{
+.search-item-image {
   width: 100px;
   height: 100px;
   background-size: cover;
@@ -180,8 +164,7 @@ export default {
   float: left;
 }
 
-.search-item-info
-{
+.search-item-info {
   display: inline-block;
   float: left;
   width: calc(100% - 100px);
@@ -189,14 +172,12 @@ export default {
   padding: 5px;
 }
 
-.search-item-info-name
-{
+.search-item-info-name {
   font-size: 1.5rem;
   line-height: 1.5rem;
 }
 
-.search-item-info-location
-{
+.search-item-info-location {
   font-size: 1rem;
   margin-top: 5px;
 }
@@ -212,7 +193,7 @@ export default {
   transition: transform .2s linear;
 }
 .more-enter, .more-leave-to {
-  transform: translateX(434px);
+  transform: translateX(424px);
 }
 .more-enter-to, .more-leave {
   transform: translateX(0px);

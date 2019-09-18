@@ -1,13 +1,7 @@
 <template>
   <div id="app">
-    <!-- <div class="container" style="display:flex; justify-content:center;"> -->
-      <!-- <search-bar></search-bar> -->
-      <!-- <canvas-map></canvas-map> -->
-      <!-- <zoom-button></zoom-button> -->
-      <!-- <modal></modal> -->
-      <!-- <timetable></timetable> -->
-    <!-- </div> -->
-    <!-- <keep-alive exclude="Modal"> -->
+    <!-- <keep-alive :exclude="['Modal', 'ButtonGroup']"> -->
+    <!-- <keep-alive> -->
       <router-view :key="key"></router-view>
     <!-- </keep-alive> -->
   </div>
@@ -22,7 +16,7 @@ export default {
     key () {
       const buildingId = this.$route.params.buildingId || ''
       const floorId = this.$route.params.floorId || ''
-      return '' + buildingId + floorId
+      return `b${buildingId}f${floorId}`
     }
   },
   methods: {
@@ -46,14 +40,15 @@ export default {
     const scrollBarWidth = this.getScrollbarWidth()
     console.log('scrollBarWidth', scrollBarWidth)
     this.$store.dispatch('commitScrollBarWidth', scrollBarWidth)
+    this.$store.dispatch('searchHistory/refreshHistoryList')
   }
 }
 </script>
 
 <style>
-html,body
-{
-	font-size: 14px;
-  /* overflow: hidden; */
+@import "./assets/css/reset.css";
+
+.tooltip {
+  font-size: 1rem;
 }
 </style>

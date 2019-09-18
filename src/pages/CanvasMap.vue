@@ -1,13 +1,19 @@
 <template>
   <!-- <div style="position:absolute; top:50%;left:50%;transform:translate(-50%,-50%);"> -->
   <div style="overflow: hidden">
-    <search-bar></search-bar>
+    <div v-if="loading" class="d-flex flex-column justify-content-center loading">
+      <loading></loading>
+    </div>
+
+    <search-bar ref="searchBar"></search-bar>
     <modal ref="modal"></modal>
+    <search-history-modal v-show="displaySearchHistory"></search-history-modal>
 
     <canvas id="indoormap" ref="indoorMap" width="1080" height="1175"
       @mousedown="onmousedown"
       @mouseup="onmouseup"
-      @mousemove="onmousemove">[Your browser is too old!]</canvas>
+      @mousemove="onmousemove"
+      @mousewheel="onmousewheel">[Your browser is too old!]</canvas>
 
     <button-group
       :scale="scale.x"
@@ -24,8 +30,10 @@
 import SearchBar from '@/components/SearchBar'
 import ButtonGroup from '@/components/ButtonGroup'
 import Modal from '@/components/Modal'
+import SearchHistoryModal from '@/components/SearchHistoryModal'
 
 import iconPath from '@/assets/js/facilityIconPath.js'
+import { mapState } from 'vuex';
 
 export default {
   name: "CanvasMap",
@@ -33,6 +41,7 @@ export default {
     SearchBar,
     ButtonGroup,
     Modal,
+    SearchHistoryModal
   },
   data() {
     return {
@@ -75,6 +84,8 @@ export default {
       floorList: [],
       muptime: null,
       mdowntime: null,
+      lastClickTime: null,
+      lastDoubleClick: false,
       lastMarkerAnimation: {
         x: 0,
         y: 0,
@@ -92,15 +103,17 @@ export default {
         times: 0,
         totalZoom: 0,
       },
+      loading: true,
     }
   },
   computed: {
+    ...mapState({ displaySearchHistory: state => state.searchHistory.displaySearchHistory }),
     buttonList () {
       return this.mapType === 'floor' ? ['floor','home','occupy','zoom'] : ['zoom']
     }
   },
   methods: {
-    animate: function () {
+    animate () {
       // set scale such as image cover all the canvas
       if (!this.init) {
         let scaleRatio = null;
@@ -114,7 +127,8 @@ export default {
         this.init = true;
       }
 
-      if (!this.currentMarkerAnimation.triggered && !this.lastMarkerAnimation.triggered && this.zoomAnimation.triggered) {
+      // if (!this.currentMarkerAnimation.triggered && !this.lastMarkerAnimation.triggered && this.zoomAnimation.triggered) {
+      if (this.zoomAnimation.triggered) {
         const totalZoom = this.zoomAnimation.totalZoom
         const zoom = totalZoom / Math.abs(totalZoom) * 20
         this.doZoom(zoom)
@@ -134,7 +148,7 @@ export default {
       requestAnimationFrame(this.animate);
     },
 
-    drawMapInfo: function (scaleX, scaleY, offsetX, offsetY, scaleAdaption) {
+    drawMapInfo (scaleX, scaleY, offsetX, offsetY, scaleAdaption) {
       const ctx = this.context
 
       ctx.drawImage(this.imageMap['map'], 0 * scaleX + offsetX, 0 * scaleY + offsetY, this.imgWidth * scaleX, this.imgHeight * scaleY);
@@ -209,7 +223,7 @@ export default {
       }
     },
 
-    doZoom: function (zoom) {
+    doZoom (zoom, type) {
       if (!zoom) return
       if (Math.abs(zoom) >= 200) {
         this.zoomAnimation.triggered = true
@@ -218,10 +232,11 @@ export default {
         return
       }
 
-      this.focusPointer = {
-        x: this.canvas.width / 2,
-        y: this.canvas.height / 2,
-      }
+      if (type === 'button')
+        this.focusPointer = {
+          x: this.canvas.width / 2,
+          y: this.canvas.height / 2,
+        }
 
       // new scale
       let newScale = this.scale.x + zoom / 400;
@@ -257,7 +272,7 @@ export default {
       this.position.y = newPosY;
     },
 
-    doMove: function (relativeX, relativeY) {
+    doMove (relativeX, relativeY) {
       if (this.lastX && this.lastY) {
         const deltaX = relativeX - this.lastX;
         const deltaY = relativeY - this.lastY;
@@ -281,7 +296,7 @@ export default {
       this.lastY = relativeY;
     },
 
-    checkRequestAnimationFrame: function () {
+    checkRequestAnimationFrame () {
       let lastTime = 0;
       const vendors = ['ms', 'moz', 'webkit', 'o'];
       for (let x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
@@ -310,6 +325,12 @@ export default {
       }
     },
 
+    onmousewheel (e) {
+      this.focusPointer.x = e.clientX
+      this.focusPointer.y = e.clientY
+      this.doZoom(-e.deltaY / 5)
+    },
+
     onmousedown: function (e) {
       // console.log('mousedown')
       this.mdowntime = new Date().getTime();
@@ -333,11 +354,28 @@ export default {
 
     onmouseup: function (e) {
       // console.log('mouseup')
-      this.muptime = new Date().getTime();
+      const currentTime = Date.now()
+      this.muptime = currentTime
       if (this.mdown && this.muptime - this.mdowntime < 200) {
-        this.mclick = true;
+        this.mclick = true
+
+        if (this.lastClickTime && currentTime - this.lastClickTime < 500) { // double click
+          if (!this.lastDoubleClick) {  // second click
+            this.focusPointer.x = e.clientX
+            this.focusPointer.y = e.clientY
+            this.doZoom(200)
+
+            this.lastClickTime = currentTime
+            this.lastDoubleClick = true
+            return
+          }
+        }
+
         this.chooseItem(e)
+        this.lastClickTime = currentTime
+        this.lastDoubleClick = false
       }
+
       this.mdown = false;
 
     },
@@ -420,7 +458,22 @@ export default {
           duration: 0,
           ...element.location
         }
-        this.$refs.modal.getItemInfo(type, element.id, element.name)
+        if (this.$route.name === 'Place' && this.$route.params.id === element.id) {
+          this.$store.dispatch('commitPanelCollapsed', false)
+          this.$store.dispatch('commitModalCollapsed', false)
+          this.$store.commit('setGlobalText', element.name)
+        } else {
+          this.$router.push({
+            name: 'Place',
+            params: {
+              buildingId: element.buildingId,
+              floorId: element.floorId,
+              type,
+              id: element.id,
+              itemName: element.name
+            }
+          })
+        }
       } else {
         sameItem = true
         this.$refs.modal.showModal()
@@ -479,7 +532,7 @@ export default {
 
     loadImage: function (url) {
       return new Promise(function(resolve, reject) {
-        var image = new Image();
+        const image = new Image();
 
         image.onload = function() {
           resolve(image);
@@ -504,8 +557,10 @@ export default {
 
   },
   async mounted () {
+    // console.log('map mounted')
     document.body.style.overflow='hidden';
 
+    this.loading = true
     this.mapType = !!this.$route.params.buildingId ? 'floor' : 'campus'
 
     if (this.mapType === 'floor') {
@@ -517,6 +572,17 @@ export default {
       this.floorList = data.floorList;
       this.areaList = data.roomList;
       this.facilityList = data.facilityList;
+
+      // if (!this.$route.params.floorId) {
+      //   this.$router.replace({
+      //     name: this.$route.name,
+      //     params: {
+      //       ...this.$route.params,
+      //       floorId: this.selectedFloor.id
+      //     }
+      //   })
+      //   return
+      // }
 
       const iconList = []
       this.facilityList.forEach(facility => {
@@ -576,6 +642,15 @@ export default {
 
     this.checkRequestAnimationFrame();
     requestAnimationFrame(this.animate);
+
+    this.$nextTick(() => {
+      this.loading = false
+      if (this.$route.name === 'Place') {
+        const itemList = this.$route.params.type === 'facility' ? this.facilityList : this.areaList
+        const item = itemList.find((item) => item.id === parseInt(this.$route.params.id))
+        this.setSelectedItem(this.$route.params.type, item)
+      }
+    })
   },
 
   destroyed () {
@@ -583,35 +658,68 @@ export default {
   },
 
   beforeRouteUpdate (to, from, next) {
-    console.log('map update')
+    // console.log('map update')
     // console.log(from)
     // console.log(to)
     const fromBuildingId = from.params.buildingId || ''
     const fromFloorId = from.params.floorId || ''
     const toBuildingId = to.params.buildingId || ''
     const toFloorId = to.params.floorId || ''
-    if (fromBuildingId + fromFloorId !== toBuildingId + toFloorId) {
+    if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}` || to.name === "Map") { // go to another page
       this.$store.dispatch('commitModalCollapsed', true)
       this.$store.dispatch('commitPanelCollapsed', false)
+
+      // from.meta.keepAlive = false
+      // to.meta.keepAlive = false
+      // if (!from.params.buildingId && !from.params.floorId) from.meta.keepAlive = true
+      // else if (!to.params.buildingId && !to.params.floorId) to.meta.keepAlive = true
+
+    } else if (to.name === 'Place') { // find place via panel
+      const itemList = to.params.type === 'facility' ? this.facilityList : this.areaList
+      const item = itemList.find((facility) => facility.id === to.params.id)
+      this.setSelectedItem(to.params.type, item)
     }
+
+    if (to.name.indexOf('Search') !== -1) {
+      this.$store.commit('setGlobalText', decodeURIComponent(to.query.q || ''))
+    } else if (to.name === 'Place') {
+      this.$store.commit('setGlobalText', to.params.itemName || '')
+    }
+
+    $('[data-toggle="tooltip"]').tooltip('dispose');
     next()
-    // console.log(this.$route)
   },
 
-  // beforeRouteEnter (to, from, next) {
-  //   console.log(from)
-  //   console.log(to)
-  //   next()
-  // }
+  beforeRouteEnter (to, from, next) {
+    // console.log('map enter')
+    // console.log(from)
+    // console.log(to)
+
+    next(vm => {
+      if (to.name.indexOf('Search') !== -1) {
+        vm.$store.commit('setGlobalText', decodeURIComponent(to.query.q || ''))
+      } else if (to.name === 'Place') {
+        vm.$store.commit('setGlobalText', to.params.itemName || '')
+      }
+    })
+  },
 
   beforeRouteLeave (to, from, next) {
-    console.log('map leave')
+    // console.log('map leave')
     next()
   }
 
 }
 </script>
 
-<style>
+<style scoped>
+.loading {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  z-index: 1000;
+  background: #ffffff;
+}
 </style>
 

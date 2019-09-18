@@ -2,10 +2,7 @@
   <div class="history-container" ref="container">
     <div v-for="(item, index) in itemList" :key="index">
       <div v-if="item.dataType === 'building'" class="history-item"
-        :style="itemStyle(index)"
-        @touchstart="ontouchstart($event, index)"
-        @touchmove="ontouchmove"
-        @touchend="ontouchend($event, 'building')">
+        @mousedown="onmousedown($event, item)">
         <div class="history-item-icon">{{item.code}}</div>
         <div class="history-item-info">
           <div class="history-item-info-name one-line">{{item.name}}</div>
@@ -14,10 +11,7 @@
       </div>
 
       <div v-else-if="item.dataType  === 'room'" class="history-item"
-        :style="itemStyle(index)"
-        @touchstart="ontouchstart($event, index)"
-        @touchmove="ontouchmove"
-        @touchend="ontouchend($event, 'room')">
+        @mousedown="onmousedown($event, item)">
         <div class="history-item-icon">{{item.building_code}}</div>
         <div class="history-item-info">
           <div class="history-item-info-name one-line">{{item.name}}</div>
@@ -26,10 +20,7 @@
       </div>
 
       <div v-else-if="item.dataType  === 'facility'" class="history-item"
-        :style="itemStyle(index)"
-        @touchstart="ontouchstart($event, index)"
-        @touchmove="ontouchmove"
-        @touchend="ontouchend($event, 'facility')">
+        @mousedown="onmousedown($event, item)">
         <div class="history-item-icon">
           <img :src="facilityImage(item.type)" :alt="item.type">
         </div>
@@ -40,10 +31,7 @@
       </div>
 
       <div v-else-if="item.dataType  === 'query'" class="history-item"
-        :style="itemStyle(index)"
-        @touchstart="ontouchstart($event, index)"
-        @touchmove="ontouchmove"
-        @touchend="ontouchend($event, 'query')">
+        @mousedown="onmousedown($event, item)">
         <span class="history-item-query one-line">{{item.content}}</span>
       </div>
 
@@ -56,23 +44,19 @@ import floorDict from '@/assets/js/floor.json'
 import buildingDict from '@/assets/js/building.json'
 import iconPath from '@/assets/js/facilityIconPath.js'
 
+import { mapState } from 'vuex'
+
 export default {
   data () {
     return {
-      itemList: [],
-      itemSelected: false,
-      itemIndex: 0,
-      moveInItem: false,
+      // itemList: [],
+      mmove: false
     }
   },
   computed: {
-    itemStyle () {
-      return (index) => {
-        return {
-          'background-color': (this.itemIndex === index && this.itemSelected) ? '#E6E3DF' : 'transparent'
-        }
-      }
-    },
+    ...mapState({
+      itemList: state => state.searchHistory.historyList
+    }),
     itemLocation () {
       return (index, type) => {
         const item = this.itemList[index]
@@ -85,99 +69,82 @@ export default {
     },
   },
   methods: {
-    ontouchstart (e, index) {
-      this.itemIndex = index
-      this.itemSelected = true
-      this.moveInItem = false
-    },
-    ontouchmove (e) {
-      // console.log('item touchmove')
-      this.moveInItem = true
-      this.itemSelected = false
-    },
-    ontouchend (e, dataType) {
-      // console.log('item touchend')
-      this.itemSelected = false
-
-      if (!this.moveInItem) {
-        const item = this.itemList[this.itemIndex]
-        this.$emit('selectItem', { ...item, dataType })
-        this.stopBubble(e)
+    onmousedown (e, item) {
+      console.log('onmousedown')
+      if (item.dataType) {
+        this.selectItem(item)
       }
-    },
-
-    stopBubble (e) {
-      if ( e && e.stopPropagation ) e.stopPropagation()
-      else window.event.cancelBubble = true
     },
   },
   mounted () {
     // localStorage.removeItem('historyList')
-    let historyList = JSON.parse(localStorage.getItem('historyList')) || []
-    if (!(historyList instanceof Array)) historyList = []
-    this.itemList = historyList
-    console.log(this.itemList)
-    this.$nextTick(() => {
-      this.$emit('updateHeight', this.$refs.container.offsetHeight)
-    })
+    // let historyList = JSON.parse(localStorage.getItem('historyList')) || []
+    // if (!(historyList instanceof Array)) historyList = []
+    // this.itemList = historyList
+    // console.log(this.itemList)
   }
 }
 </script>
 
 <style lang="scss">
 .history-container {
-  width: 100vw;
+  width: 100%;
   height: auto;
-  padding: 2vw 0;
+  padding: 20px 0;
+
+  .history-item:hover {
+    background-color: #E6E6E6;
+  }
 
   .history-item {
     width: 100%;
     height: auto;
-    padding: 2vw 3vw;
-    border-top: 1px #C6C6C6 solid;
+    padding: 10px;
+    cursor: pointer;
+    // border-top: 1px #C6C6C6 solid;
     display: flex;
     justify-content: flex-start;
 
     &-icon {
-      width: 12vw;
-      height: 12vw;
+      width: 50px;
+      height: 50px;
       text-align: center;
       vertical-align: middle;
-      font-size: 7vw;
-      line-height: 12vw;
+      font-size: 1.8rem;
+      line-height: 1.5;
       font-weight: bold;
       color: #FFFFFF;
-      background: blue;
-      border-radius: 6vw;
+      background: #0069d9;
+      border-radius: 25px;
       flex-shrink: 0;
       display: flex;
       justify-content: center;
       align-items: center;
 
       img {
-        width: 7vw;
-        height: 7vw;
+        width: 30px;
+        height: 30px;
       }
     }
 
     &-info {
-      width: calc(100% - 12vw - 4vw);
-      height: 12vw;
-      margin-left: 4vw;
+      width: calc(100% - 50px - 15px);
+      height: 60px;
+      margin-left: 15px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
 
       &-name {
-        font-size: 5vw;
+        font-size: 1.5rem;
         line-height: 1.2;
-        height: 7vw;
+        // height: 40px;
       }
 
       &-location {
-        font-size: 3.5vw;
+        font-size: 1rem;
         line-height: 1.5;
-        color: #8E8E93;
+        color: #8E8E8E;
         flex-shrink: 0;
       }
     }
@@ -185,7 +152,7 @@ export default {
 }
 
 .history-item-query {
-  font-size: 5vw;
+  font-size: 1.5rem;
 }
 
 .one-line {

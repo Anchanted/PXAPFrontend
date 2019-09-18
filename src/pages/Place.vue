@@ -5,14 +5,14 @@
       </div>
     </div>
 
-    <div v-if="item.dataType === 'building'" class="indoor">
+    <div v-show="item.dataType === 'building' && item.baseFloorId" class="indoor">
       <button type="button" class="iconfont icon-indoor btn btn-primary indoor-button"
-        data-toggle="tooltip" data-placement="right" title="View Indoor Maps in this Building"
-        @click="$router.push({ path: `/${item.id}` })"></button>
+        data-toggle="tooltip" data-placement="left" :title="$t('tooltip.indoor')"
+        @click="$router.push({ name: 'Map', params: { buildingId: item.id, floorId: item.baseFloorId } })"></button>
     </div>
 
-    <div class="section basic px-3 pb-3" :class="item.dataTypa === 'building' ? 'pt-4' : 'pt-3'" style="border: none">
-      <h2>{{item.name}}</h2>
+    <div class="section basic p-3" style="border: none">
+      <span class="basic-name">{{item.name}}</span>
       <!-- <h5>{{item.type}}</h5> -->
       <div class="basic-type">
         <span class="basic-type-dataType">{{itemType}}</span><span class="basic-type-itemType">{{item.type}}</span>
@@ -26,12 +26,12 @@
     <!-- <div class="section-divider"></div> -->
 
     <div v-if="item.dataType === 'room'" class="section px-3 py-2">
-      <h3>Timetable</h3>
+      <span class="title">{{$t('place.timetable')}}</span>
       <timetable ref="timetable" :lessons="lessonList"></timetable>
     </div>
 
     <div v-if="item.dataType === 'building'" class="section allocation px-3 py-2">
-      <h3>Department Allocation</h3>
+      <span class="allocation-title title">{{$t('place.department')}}</span>
       <div class="allocation-detail" style="white-space: pre-line">{{departmentAllocation}}</div>
     </div>
   </div>
@@ -41,7 +41,6 @@
 import buildingDict from '@/assets/js/building.json'
 import floorDict from '@/assets/js/floor.json'
 
-import vm from '@/assets/js/eventBus'
 import Timetable from '@/components/Timetable'
 
 export default {
@@ -80,7 +79,8 @@ export default {
 
     itemType () {
       const type = this.item.dataType
-      return type ? type.charAt(0).toUpperCase() + type.slice(1) : ''
+      // return type ? type.charAt(0).toUpperCase() + type.slice(1) : ''
+      return this.item.dataType ? this.$i18n.t(`itemType.${this.item.dataType}`) : ''
     },
 
     departmentAllocation () {
@@ -120,18 +120,18 @@ export default {
       }
 
       this.$nextTick(() => {
-        // vm.$emit('updateModalHeight', this.$refs.page.clientHeight, 'place', this)
-        this.$store.dispatch('commitModalHeight', { height: this.$refs.page.clientHeight, component: 'place' })
+        this.$store.dispatch('commitModalLoading', false)
+        this.$store.dispatch('commitModalHeight', { height: this.$refs.page.offsetHeight, component: 'place' })
       })
     }
   },
   mounted () {
+    this.$store.dispatch('commitModalLoading', true)
+    this.$store.dispatch('commitPanelCollapsed', false)
+    this.$store.dispatch('commitModalCollapsed', false)
     this.getItemInfo()
+    $('[data-toggle="tooltip"]').tooltip();
   },
-
-  // beforeRouteEnter (to, from, next) {
-  //   next()
-  // }
 
 }
 </script>
@@ -139,7 +139,7 @@ export default {
 <style lang="scss" scoped>
 .modal-container {
   height: auto;
-  width: 434px;
+  width: 424px;
   position: relative;
 
   .picture-area {
@@ -160,24 +160,31 @@ export default {
     position: absolute;
     width: auto;
     height: auto;
-    top: 210px;
+    top: 215px;
     right: 20px;
 
     &-button {
-      width: 50px;
-      height: 50px;
-      border-radius: 25px;
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
       padding: 0;
-      font-size: 2rem;
+      font-size: 1.6rem;
     }
   }
 
   .basic {
+    &-name {
+      font-size: 1.8rem;
+      line-height: normal;
+      font-weight: 900;
+    }
 
     &-type {
       // position: relative;
-      font-size: 1.5rem;
+      margin-top: 0.5rem;
+      font-size: 1.2rem;
       line-height: 1.5;
+      color: #6E6E6E;
 
       &-itemType {
         position: relative;
@@ -215,11 +222,25 @@ export default {
       &-text {
         position: relative;
         display: inline-block;
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         /* float: left; */
       }
     }
   }
+
+  .allocation {
+
+    &-detail {
+      font-size: 1.2rem;
+    }
+  }
+}
+
+.title {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 .section {

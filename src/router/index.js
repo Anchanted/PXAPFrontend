@@ -103,8 +103,16 @@ const routes = [
   // { path: '/', component: OriginalMap, name: 'OriginalMap' },
 ]
 
-export const router = new Router({
+const router = new Router({
   routes,
   mode: 'history'
 })
+
+router.beforeEach((to, from, next) => {
+  if (to.params.buildingId && !to.params.floorId) next({ name: 'PageNotFound' })
+  else next()
+})
+
+export default router
+
 

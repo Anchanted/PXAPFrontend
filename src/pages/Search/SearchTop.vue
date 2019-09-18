@@ -1,78 +1,66 @@
 <template>
   <div class="search-result" ref="container">
-    <!-- <div v-if="loading" class="search-loading">
-      <spinner-circle></spinner-circle>
-    </div> -->
-
     <div v-if="hasResult" class="search-result-top">
       <div v-if="buildingTotal > 0" class="search-result-section">
-        <div class="search-result-section-type">Building</div>
+        <div class="search-result-section-type">{{$t('itemType.building')}}</div>
         <div class="search-result-section-items">
           <div v-for="building in topBuildingList" :key="building.id"
-            :style="itemStyle(building.id, 'building')"
             class="search-result-section-item"
-            @touchstart="ontouchstartitem($event, building, 'building')"
-            @touchmove="ontouchmoveitem"
-            @touchend="ontouchenditem">
-            <div class="search-result-section-item-icon">{{building.code}}</div>
-            <div class="search-result-section-item-info">
-              <div class="search-result-section-item-info-name two-line">{{building.name}}</div>
-              <div class="search-result-section-item-info-location one-line">{{itemLocation(building, 'building')}}</div>
+            @click="onclick($event, building, 'building')">
+            <div class="search-result-section-item-container">
+              <div class="search-result-section-item-icon">{{building.code}}</div>
+              <div class="search-result-section-item-info">
+                <div class="search-result-section-item-info-name two-line">{{building.name}}</div>
+                <div class="search-result-section-item-info-location one-line">{{itemLocation(building, 'building')}}</div>
+              </div>
             </div>
           </div>
           <div v-if="buildingTotal > 3" class="search-result-section-items-more">
-            <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'building' }, query: { q: query } }" tag="a">View More Results</router-link>
+            <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'building' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
           </div>
-
         </div>
       </div>
+
       <div v-if="roomTotal > 0" class="search-result-section">
-        <div class="search-result-section-type">Room</div>
+        <div class="search-result-section-type">{{$t('itemType.room')}}</div>
         <div class="search-result-section-items">
           <div v-for="room in topRoomList" :key="room.id"
-            :style="itemStyle(room.id, 'room')"
             class="search-result-section-item"
-            @touchstart="ontouchstartitem($event, room, 'room')"
-            @touchmove="ontouchmoveitem"
-            @touchend="ontouchenditem">
-            <div class="search-result-section-item-icon">{{room.building_code}}</div>
-            <div class="search-result-section-item-info">
-              <div class="search-result-section-item-info-name one-line">{{room.name}}</div>
-              <div class="search-result-section-item-info-type one-line">{{room.type}}</div>
-              <div class="search-result-section-item-info-location one-line">{{itemLocation(room, 'room')}}</div>
+            @click="onclick($event, room, 'room')">
+            <div class="search-result-section-item-container">
+              <div class="search-result-section-item-icon">{{room.building_code}}</div>
+              <div class="search-result-section-item-info">
+                <div class="search-result-section-item-info-name one-line">{{room.name}}</div>
+                <div class="search-result-section-item-info-type one-line">{{room.type}}</div>
+                <div class="search-result-section-item-info-location one-line">{{itemLocation(room, 'room')}}</div>
+              </div>
             </div>
           </div>
-          <div v-if="roomTotal > 3" class="search-result-section-items-more"
-            @touchstart="ontouchstartmore"
-            @touchmove="ontouchmovemore"
-            @touchend="ontouchendmore($event, 'room')">
-            View More Results
+          <div v-if="roomTotal > 3" class="search-result-section-items-more">
+            <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'room' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
           </div>
         </div>
       </div>
+
       <div v-if="facilityTotal > 0" class="search-result-section">
-        <div class="search-result-section-type">Facility</div>
+        <div class="search-result-section-type">{{$t('itemType.facility')}}</div>
         <div class="search-result-section-items">
           <div v-for="facility in topFacilityList" :key="facility.id"
-            :style="itemStyle(facility.id, 'facility')"
             class="search-result-section-item"
-            @touchstart="ontouchstartitem($event, facility, 'facility')"
-            @touchmove="ontouchmoveitem"
-            @touchend="ontouchenditem">
-            <div class="search-result-section-item-icon">
-              <img :src="facilityImage(facility.type)" :alt="facility.type">
-            </div>
-            <div class="search-result-section-item-info">
-              <div class="search-result-section-item-info-name one-line">{{facility.name}}</div>
-              <div class="search-result-section-item-info-type one-line">{{facility.type}}</div>
-              <div class="search-result-section-item-info-location one-line">{{itemLocation(facility, 'facility')}}</div>
+            @click="onclick($event, facility, 'facility')">
+            <div class="search-result-section-item-container">
+              <div class="search-result-section-item-icon">
+                <img :src="facilityImage(facility.type)" :alt="facility.type">
+              </div>
+              <div class="search-result-section-item-info">
+                <div class="search-result-section-item-info-name one-line">{{facility.name}}</div>
+                <div class="search-result-section-item-info-type one-line">{{facility.type}}</div>
+                <div class="search-result-section-item-info-location one-line">{{itemLocation(facility, 'facility')}}</div>
+              </div>
             </div>
           </div>
-          <div v-if="facilityTotal > 3" class="search-result-section-items-more"
-            @touchstart="ontouchstartmore"
-            @touchmove="ontouchmovemore"
-            @touchend="ontouchendmore($event, 'facility')">
-            View More Results
+          <div v-if="facilityTotal > 3" class="search-result-section-items-more">
+            <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'facility' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
           </div>
         </div>
       </div>
@@ -82,11 +70,11 @@
       Your search returned no results
     </div>
 
-    <!-- <transition name="more" v-on:enter="onenter">
-      <div v-show="show">
-        <router-view></router-view>
-      </div>
-    </transition> -->
+    <!-- <transition name="more" v-on:enter="onenter"> -->
+      <!-- <div v-show="show"> -->
+        <!-- <router-view class="search-more"></router-view> -->
+      <!-- </div> -->
+    <!-- </transition> -->
   </div>
 </template>
 
@@ -96,7 +84,6 @@ import SpinnerCircle from '@/components/Spinner/SpinnerCircle'
 import floorDict from '@/assets/js/floor.json'
 import buildingDict from '@/assets/js/building.json'
 import iconPath from '@/assets/js/facilityIconPath.js'
-import vm from '@/assets/js/eventBus'
 
 export default {
   name: 'SearchTop',
@@ -105,32 +92,19 @@ export default {
   },
   data() {
     return {
-      moveInItem: false,
-      moveInMore: false,
       topBuildingList: [],
       topRoomList: [],
       topFacilityList: [],
       buildingTotal: 0,
       roomTotal: 0,
       facilityTotal: 0,
-      itemSelected: false,
-      selectedItem: {},
-      selectedItemType: '',
       hasResult: false,
       query: null,
-      itemTimeout: 0,
       loading: true,
-      mount: true,
+      isAlive: false,
     }
   },
   computed: {
-    itemStyle () {
-      return (id, type) => {
-        return {
-          'background-color': (this.selectedItem.id === id && this.selectedItemType === type && this.itemSelected) ? '#E6E3DF' : 'transparent'
-        }
-      }
-    },
     facilityImage () {
       return type => iconPath[type]
     },
@@ -142,38 +116,6 @@ export default {
     },
   },
   methods: {
-    // async search (query) {
-    //   this.loading = true
-    //   this.query = query
-    //   try {
-    //     if (query && query.trim() !== '') {
-    //         const data = await this.$api.search.searchTop({ q: encodeURIComponent(this.query) })
-    //         console.log(data)
-    //         this.topBuildingList = data.building.content
-    //         this.buildingTotal = data.building.totalElements
-    //         this.topRoomList = data.room.content
-    //         this.roomTotal = data.room.totalElements
-    //         this.topFacilityList = data.facility.content
-    //         this.facilityTotal = data.facility.totalElements
-
-    //         this.hasResult = this.buildingTotal > 0 || this.roomTotal > 0 || this.facilityTotal > 0
-    //     } else this.hasResult = false
-
-    //   } catch (error) {
-    //     this.$toast({
-    //       message: 'Fail to search the query.\nPlease try again.',
-    //       time: 3000
-    //     })
-    //     this.hasResult = false
-    //     throw error
-    //   } finally {
-    //     this.$nextTick(() => {
-    //       this.loading = false
-    //       this.$emit('updateHeight', this.$refs.container.offsetHeight)
-    //     })
-    //   }
-
-    // },
     async search () {
       this.query = this.$route.query.q
       if (this.query) {
@@ -191,99 +133,117 @@ export default {
       } else this.hasResult = false
 
       this.$nextTick(() => {
-        // vm.$emit('updateModalHeight', this.$refs.container.clientHeight, 'searchTop', this)
-        this.$store.dispatch('commitModalHeight', { height: this.$refs.container.clientHeight, component: 'searchTop' })
+        this.$store.dispatch('commitModalLoading', false)
+        this.$store.dispatch('commitModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchTop' })
       })
     },
-    ontouchstartitem (e, item, type) {
-      this.selectedItem = item
-      this.selectedItemType = type
-      this.itemSelected = true
-      this.moveInItem = false
-      // this.itemTimeout = setTimeout(() => {
-      //   this.selectedItem = item
-      //   this.selectedItemType = type
-      //   this.itemSelected = true
-      //   this.itemTimeout = 0
-      // }, 500)
-    },
-    ontouchmoveitem (e) {
-      // console.log('item touchmove')
-      this.moveInItem = true
-      this.itemSelected = false
-      // clearTimeout(this.itemTimeout)
-      // this.itemTimeout = 0
-    },
-    ontouchenditem (e) {
-      // console.log('item touchend')
-      this.itemSelected = false
-      // clearTimeout(this.timeOutEvent)
-      if (!this.moveInItem) {
-        this.$emit('selectItem', { ...this.selectedItem, dataType: this.selectedItemType })
-        this.stopBubble(e)
-      }
+
+    onclick (e, item, type) {
+      this.selectItem({ ...item, dataType: type })
     },
 
-    ontouchstartmore (e) {
-      this.moveInMore = false
-    },
-    ontouchmovemore (e) {
-      this.moveInMore = true
-    },
-    ontouchendmore (e, type) {
-      if (!this.moveInMore) {
-        this.$emit('getMoreResults', type)
+    deleteCache () {
+      if (this.$vnode && this.$vnode.data.keepAlive) {
+        if (this.$vnode.parent && this.$vnode.parent.componentInstance && this.$vnode.parent.componentInstance.cache) {
+          if (this.$vnode.componentOptions) {
+            var key = this.$vnode.key == null
+                        ? this.$vnode.componentOptions.Ctor.cid + (this.$vnode.componentOptions.tag ? `::${this.$vnode.componentOptions.tag}` : '')
+                        : this.$vnode.key;
+            var cache = this.$vnode.parent.componentInstance.cache;
+            var keys  = this.$vnode.parent.componentInstance.keys;
+            if (cache[key]) {
+              if (keys.length) {
+                var index = keys.indexOf(key);
+                if (index > -1) {
+                    keys.splice(index, 1);
+                }
+              }
+              delete cache[key];
+            }
+          }
+        }
       }
+      this.$destroy();
     },
+
   },
   mounted () {
-    console.log('top mounted')
+    // console.log('top mounted')
+    // console.log(this)
+    // console.log(this.$vnode.parent.componentInstance.cache)
+    this.isAlive = false
+    this.$store.dispatch('commitModalLoading', true)
 
-    if (this.$route.matched.length <= 2) {
+    if (this.$route.name === 'SearchTop') {
       // console.log('top mounted rendered')
+      this.$store.dispatch('commitPanelCollapsed', false)
+      this.$store.dispatch('commitModalCollapsed', false)
       this.search()
     }
 
   },
-  destroyed () {
-    console.log('top destroyed')
-  },
+  // destroyed () {
+  //   console.log('top destroyed')
+  // },
   activated () {
-    // console.log('activated')
-    // if (this.$route.meta.updateHeight) vm.$emit('updateModalHeight', this.$refs.container.clientHeight, 'searchTop', this)
-    console.log(this)
-    if (this.$route.meta.updateHeight) this.$store.dispatch('commitModalHeight', { height: this.$refs.container.clientHeight, component: 'searchTop' })
+    // console.log('top activated')
+    if (this.isAlive) {
+      this.$store.dispatch('commitModalHeight', { height: this.$refs.container.offsetHeight, component: 'SearchTop' })
+      this.$store.dispatch('commitPanelCollapsed', false)
+      this.$store.dispatch('commitModalCollapsed', false)
+    } else this.isAlive = true
   },
   // deactivated () {
-  //   console.log('deactivated')
+  //   console.log('top deactivated')
   // },
 
-  beforeRouteEnter (to, from, next) {
-    console.log('top enter')
-    next()
-  },
+  // beforeRouteEnter (to, from, next) {
+  //   console.log('top enter')
+  //   next()
+  // },
+
+  // beforeRouteUpdate(to, from, next) {
+  //   console.log('top update')
+  //   console.log(this)
+  //   console.log(to.meta, from.meta, this.$route.meta)
+  //   from.meta.keepAlive = false
+  //   to.meta.keepAlive = true
+
+  //   next()
+  //   console.log(this)
+  //   console.log(to.meta, from.meta, this.$route.meta)
+  // },
+
+  // beforeRouteLeave (to, from, next) {
+  //   console.log('top leave', this.$vnode.tag)
+  //   console.log(this)
+  //   console.log(to.meta, from.meta, this.$route.meta)
+  //   if (from.name === 'SearchTop') {
+  //     from.meta.keepAlive = (to.name === 'SearchMore')
+  //     console.log(from.meta.keepAlive)
+  //   }
+  //   next()
+  //   console.log(this)
+  //   console.log(to.meta, from.meta, this.$route.meta)
+  // },
 
   beforeRouteUpdate(to, from, next) {
-    console.log('top update')
-    if (from.name === 'SearchTop' && to.matched.length > 2) {
-      from.meta.keepAlive = true
-      // to.meta.display = true
-    }
-    if (from.matched.length > 2 && to.name === 'SearchTop') {
-      to.meta.updateHeight = true
-    }
-    if (from.name === 'SearchTop' && to.name === 'SearchTop') {
-      from.meta.keepAlive = false
-    }
+    // console.log('top update')
+    // console.log(this.$vnode.parent.componentInstance.cache)
+
+    this.deleteCache()
     next()
+    // console.log(this.$vnode.parent.componentInstance.cache)
   },
 
   beforeRouteLeave (to, from, next) {
-    console.log('top leave')
-    if (from.name === 'SearchTop') {
-      from.meta.keepAlive = (to.name === 'SearchMore')
+    // console.log('top leave')
+    // console.log(this.$vnode.parent.componentInstance.cache)
+    if (!(from.name === 'SearchTop' && to.name === 'SearchMore')) {
+      this.deleteCache()
     }
     next()
+    // console.log(this.$vnode.parent.componentInstance.cache)
   },
 
 }
@@ -291,22 +251,13 @@ export default {
 
 <style lang="scss">
 .search-result {
-  width: 434px;
+  width: 424px;
   height: auto;
   position: relative;
   // top: 0;
   z-index: 100;
   padding: 15px 0;
   // background: #F8F7F2;
-
-  .search-loading {
-    width: 100%;
-    height: 100%;
-    padding-top: 20vw;
-    position: absolute;
-    background: #F8F7F2;
-    z-index: 150;
-  }
 
   // &-top {
   //   width: 100%;
@@ -318,15 +269,16 @@ export default {
     &-section {
       width: 100%;
       height: auto;
-      padding: 0 15px;
+      // padding: 0 15px;
       line-height: 1;
       border-top: 1px #C6C6C6 solid;
 
       &-type {
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: bold;
-        line-height: 1.5;
+        line-height: 2;
         vertical-align: middle;
+        padding: 0 15px;
       }
 
       &-items {
@@ -336,21 +288,31 @@ export default {
         .search-result-section-item {
           width: 100%;
           height: auto;
-          padding: 10px 0;
-          border-top: 1px #C6C6C6 solid;
-          display: flex;
-          justify-content: flex-start;
+          padding: 0 15px;
+          // border-top: 1px #C6C6C6 solid;
+          // display: flex;
+          // justify-content: flex-start;
+          cursor: pointer;
+
+          .search-result-section-item-container {
+            width: 100%;
+            height: auto;
+            padding: 10px 0 5px;
+            border-top: 1px #C6C6C6 solid;
+            display: flex;
+            justify-content: flex-start;
+          }
 
           &-icon {
             width: 50px;
             height: 50px;
             text-align: center;
             vertical-align: middle;
-            font-size: 2rem;
+            font-size: 1.8rem;
             line-height: 1.5;
             font-weight: bold;
             color: #FFFFFF;
-            background: blue;
+            background: #0069d9;
             border-radius: 25px;
             flex-shrink: 0;
             display: flex;
@@ -372,21 +334,21 @@ export default {
             justify-content: space-between;
 
             &-name {
-              font-size: 1.6rem;
+              font-size: 1.5rem;
               line-height: 1.2;
               height: 50px;
               flex-grow: 1;
             }
 
             &-type {
-              font-size: 1.2rem;
+              font-size: 1rem;
               line-height: 1.5;
               color: #8E8E93;
               flex-shrink: 0;
             }
 
             &-location {
-              font-size: 1.2rem;
+              font-size: 1rem;
               line-height: 1.5;
               color: #8E8E93;
               flex-shrink: 0;
@@ -394,13 +356,18 @@ export default {
           }
         }
 
+        .search-result-section-item:hover {
+          background-color: #E6E3DF !important;
+        }
+
         &-more {
-          width: 100%;
+          width: auto;
           height: auto;
+          margin: 0 15px;
           padding: 5px 0;
           border-top: 1px #C6C6C6 solid;
-          font-size: 1.5rem;
-          color: blue;
+          font-size: 1.4rem;
+          color: #0069d9;
           text-align: center;
           line-height: 1.5;
         }
@@ -417,7 +384,7 @@ export default {
 }
 
 .search-more {
-  width: 434px;
+  width: 424px;
   height: auto;
   position: absolute;
   top: 0;
@@ -431,7 +398,7 @@ export default {
   transition: transform .2s linear;
 }
 .more-enter, .more-leave-to {
-  transform: translateX(434px);
+  transform: translateX(424px);
 }
 .more-enter-to, .more-leave {
   transform: translateX(0px);

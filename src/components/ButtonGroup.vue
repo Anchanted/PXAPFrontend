@@ -2,7 +2,8 @@
   <div>
     <div class="top-button-group">
       <div v-if="buttonList.indexOf('floor') !== -1" class="dropdown">
-        <button type="button" class="btn btn-secondary btn-lg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{floorName}}</button>
+        <button type="button" class="btn btn-secondary btn-lg" data-toggle="dropdown" data-tooltip="tooltip"  aria-haspopup="true" aria-expanded="false"
+          data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.floor')">{{floorName}}</button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
           <div v-for="(floor, index) in floorList" :key="floor.id" >
             <div v-if="index !== 0" class="dropdown-divider" style="margin: 0"></div>
@@ -12,7 +13,8 @@
       </div>
       <!-- Home Button -->
       <div v-if="buttonList.indexOf('home') !== -1" class="home">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button" @click="$router.push({ path: '/' })">
+        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button" @click="$router.push({ path: '/' })"
+          data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.home')">
           <img src="/static/images/icon/home.png" alt="home">
         </button>
       </div>
@@ -21,18 +23,21 @@
     <div class="bottom-button-group">
       <!-- Occupied Room Button -->
       <div v-if="buttonList.indexOf('occupy') !== -1" class="occupation">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center occupation-button" @click="showOccupiedRoom">
+        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center occupation-button" @click="showOccupiedRoom"
+          data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="occupiedActivated ? $t('tooltip.hideOccupy') : $t('tooltip.showOccupy')">
           <img :src="occupiedActivated ? '/static/images/icon/group.png' : '/static/images/icon/group-outlined.png'" alt="group">
         </button>
       </div>
 
       <!-- Zoom Button -->
       <div v-if="buttonList.indexOf('zoom') !== -1" class="d-flex flex-column justify-content-around align-items-center zoom-button-bar">
-        <button ref="zinbtn" class="btn btn-light zoom-btn zoom-btn-upper" @click="zoomIn">
+        <button ref="zinbtn" class="btn btn-light zoom-btn zoom-btn-upper" @click="zoomIn"
+          data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.zoomIn')">
           <img class="zin" src="/static/images/icon/zoom-in.png" alt="zoomIn">
         </button>
 
-        <button ref="zoutbtn" type="button" class="btn btn-light zoom-btn" @click="zoomOut">
+        <button ref="zoutbtn" type="button" class="btn btn-light zoom-btn" @click="zoomOut"
+          data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.zoomOut')">
           <img class="zout" src="/static/images/icon/zoom-out.png" alt="zoomOut">
         </button>
       </div>
@@ -78,26 +83,30 @@ export default {
   methods: {
     refreshFunc: function () {
       if (this.scale > 2.4) {
+        $(this.$refs.zinbtn).tooltip('dispose')
         this.$refs.zinbtn.disabled = true;
       }
       if (this.scale < 2.4) {
+        $(this.$refs.zinbtn).tooltip()
         this.$refs.zinbtn.disabled = false;
       }
       if (this.scale == 1) {
+        $(this.$refs.zoutbtn).tooltip('dispose')
         this.$refs.zoutbtn.disabled = true;
       }
       if (this.scale > 1) {
+        $(this.$refs.zoutbtn).tooltip()
         this.$refs.zoutbtn.disabled = false;
       }
     },
     zoomIn: function () {
       if (!this.$refs.zinbtn.disabled) {
-        this.$emit('zoom', 200, 'click');
+        this.$emit('zoom', 200, 'button');
       }
     },
     zoomOut: function () {
       if (!this.$refs.zoutbtn.disabled) {
-        this.$emit('zoom', -200, 'click');
+        this.$emit('zoom', -200, 'button');
       }
     },
     showOccupiedRoom: function () {
@@ -122,11 +131,39 @@ export default {
   },
   mounted: function () {
     // console.log('invoked')
-    this.intervalVal = setInterval(this.refreshFunc, 100);
+    // this.intervalVal = setInterval(this.refreshFunc, 100);
+    this.$nextTick(() => {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-tooltip="tooltip"]').tooltip();
+      this.refreshFunc()
+    })
   },
+
   beforeDestroy: function () {
-    clearInterval(this.intervalVal);
-    this.intervalVal = null;
+    console.log('beforeDestroy')
+    // clearInterval(this.intervalVal);
+    // this.intervalVal = null;
+  },
+
+  watch: {
+    scale() {
+      if (this.scale > 2.4) {
+        $(this.$refs.zinbtn).tooltip('dispose')
+        this.$refs.zinbtn.disabled = true;
+      }
+      if (this.scale < 2.4) {
+        $(this.$refs.zinbtn).tooltip()
+        this.$refs.zinbtn.disabled = false;
+      }
+      if (this.scale == 1) {
+        $(this.$refs.zoutbtn).tooltip('dispose')
+        this.$refs.zoutbtn.disabled = true;
+      }
+      if (this.scale > 1) {
+        $(this.$refs.zoutbtn).tooltip()
+        this.$refs.zoutbtn.disabled = false;
+      }
+    }
   }
 }
 </script>

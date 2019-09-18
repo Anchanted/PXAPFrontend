@@ -3,13 +3,13 @@
     <thead>
       <tr>
         <th></th>
-        <th>Mon</th>
-        <th>Tue</th>
-        <th>Wed</th>
-        <th>Thu</th>
-        <th>Fri</th>
-        <th>Sat</th>
-        <th>Sun</th>
+        <th>{{$t('week.monday')}}</th>
+        <th>{{$t('week.tuesday')}}</th>
+        <th>{{$t('week.wednesday')}}</th>
+        <th>{{$t('week.thursday')}}</th>
+        <th>{{$t('week.friday')}}</th>
+        <th>{{$t('week.saturday')}}</th>
+        <th>{{$t('week.sunday')}}</th>
       </tr>
     </thead>
     <tbody id="tableBody">
@@ -335,7 +335,7 @@ export default {
           } else {
             if (weekArr[i] - weekArr[i-1] > 1) {
               if (weekArr[i-1] !== startWeekNum) newWeekStr += '-' + weekArr[i-1]
-              newWeekStr += ','
+              newWeekStr += ', '
               startWeekNum = weekArr[i]
               newWeekStr += startWeekNum
             } else if (i === weekArr.length - 1) newWeekStr += '-' + weekArr[i]

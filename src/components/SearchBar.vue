@@ -1,5 +1,5 @@
 <template>
-  <div class="shadow-sm py-3 pl-3 bg-white rounded d-flex justify-content-around align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
+  <div class="py-2 pl-3 bg-white rounded d-flex justify-content-around align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
 		<!-- <div class="icon userIcon">
 			<img class="img-fluid user-icon" src="@/assets/images/icon/user.png" alt="user.png" border="0" style="float:left"/>
 		</div> -->
@@ -15,17 +15,21 @@
         class="iconfont icon-arrow-down modal-collapse-button"
         :class="{'modal-expand-button': !modalCollapsed}"
         type="button"
-        data-toggle="tooltip" data-placement="bottom" :title="modalCollapsed ? 'Expand Modal' : 'Collapse Modal'"
+        :disabled="$route.matched.length < 2"
+        data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="modalCollapsed ? $t('tooltip.expandModal') : $t('tooltip.collapseModal')"
         @click="commitModalCollapsed(!modalCollapsed)"/>
     </div>
 
     <form class="form-inline search-form" style="" @submit.prevent>
-			<input class="search-input" type="search" placeholder="Search" aria-label="Search" v-model.trim="keyword"/>
+			<input v-model.trim="text"
+        class="search-input" type="search" :placeholder="$t('search.search')" aria-label="Search"
+        @focus="onfocus"
+        @blur="onblur"/>
       <div class="search-submit">
         <button
           class="iconfont icon-search search-submit-button"
           type="submit"
-          data-toggle="tooltip" data-placement="bottom" title="Search"
+          data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :title="$t('tooltip.search')"
           @click="submit"/>
       </div>
 		</form>
@@ -34,76 +38,89 @@
         class="iconfont icon-arrow-left panel-collapse-button"
         :class="{'panel-collapsed-button': panelCollapsed}"
         type="button"
-        data-toggle="tooltip" data-placement="right" :title="panelCollapsed ? 'Expand Panel' : 'Collapse Panel'"/>
+        data-toggle="tooltip" data-placement="right" data-trigger="hover" :data-original-title="panelCollapsed ? $t('tooltip.expandPanel') : $t('tooltip.collapsePanel')"/>
     </div>
 	</div>
 </template>
 
 <script>
-import vm from '@/assets/js/eventBus'
-
 import { mapState, mapActions } from 'vuex'
 
 export default {
   data() {
     return {
-      keyword: ''
+      text: ''
     }
   },
   computed: {
-    ...mapState(['panelCollapsed', 'modalCollapsed'])
+    ...mapState(['panelCollapsed', 'modalCollapsed', 'globalText'])
   },
   methods: {
     ...mapActions([
       "commitPanelCollapsed",
-      "commitModalCollapsed"
+      "commitModalCollapsed",
+      "searchHistory/commitDisplaySearchHistory",
     ]),
     submit () {
-      if (this.keyword && this.keyword.trim() !== '') {
-        // console.log(this.keyword)
+      if (this.text) {
+        // console.log(this.text)
         this.commitPanelCollapsed(false)
         this.commitModalCollapsed(false)
-        this.$router.push({
-          name: 'SearchTop',
-          query: {
-            q: encodeURIComponent(this.keyword)
-          },
-          params: {
-            buildingId: this.$route.params.buildingId,
-            floorId: this.$route.params.floorId
-          }
-        })
-        // vm.$emit('search', this.keyword)
+        this.selectItem({ content: this.text, dataType: 'query' })
+        this["searchHistory/commitDisplaySearchHistory"](false)
       } else console.log('invalid')
+    },
+    onfocus () {
+      // console.log('onfocus')
+      if (this.text === '') {
+        this["searchHistory/commitDisplaySearchHistory"](true)
+        if (!this.modalCollapsed) this.commitModalCollapsed(true)
+      }
+    },
+    onblur (e) {
+      // console.log('onblur')
+      this["searchHistory/commitDisplaySearchHistory"](false)
     }
   },
   mounted () {
     $('[data-toggle="tooltip"]').tooltip();
 
     const div = document.getElementsByClassName('search-bar')[0]
+  },
+  watch: {
+    text (val) {
+      if (val === '') {
+        this["searchHistory/commitDisplaySearchHistory"](true)
+        if (!this.modalCollapsed) this.commitModalCollapsed(true)
+      } else {
+        this["searchHistory/commitDisplaySearchHistory"](false)
+      }
+    },
+    globalText (val) {
+      this.text = val
+    }
   }
 }
 </script>
 
 <style>
-.search-bar
-{
+button:focus {
+  outline: none;
+}
+
+.search-bar {
   position: fixed;
 	width: auto;
 	height: auto;
 	top: 10px;
 	left: 10px;
-  transition: all ease-in-out 0.5s;
+  transition: transform ease-in-out 0.5s;
+  -webkit-box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
+  -moz-box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
+  box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
 }
 
-.user-icon
-{
-  height: 3.5rem;
-  width: 3.5rem;
-}
-
-button, input
-{
+button, input {
   margin: 0;
   padding: 0;
   background: #FFFFFF;
@@ -111,43 +128,44 @@ button, input
 	border: 0px;
 }
 
-.modal-collapse, .panel-collapse
-{
+.modal-collapse, .panel-collapse {
   width: auto;
   height: auto;
 }
 
-.modal-collapse
-{
-  margin-right: 20px;
+.modal-collapse {
+  height: 40px;
+  width: 40px;
+  margin-right: 15px;
 }
 
-.modal-collapse-button
-{
+.modal-collapse-button {
   height: 40px;
   width: 40px;
   font-size: 20px !important;
-  transition: all linear 0.2s;
+  transition: transform linear 0.2s;
 }
 
-.search-input
-{
+.modal-collapse-button:hover:not([disabled]) {
+  color: #0069d9;
+}
+
+.search-input {
   width: 300px !important;
   height: 40px;
   vertical-align: top;
+  font-size: 1.2rem;
   /* display: inline-block; */
 }
 
-.search-submit
-{
+.search-submit {
   width: auto;
   height: auto;
   display: inline-block;
-  margin-right: 20px;
+  margin-right: 15px;
 }
 
-.search-submit-button
-{
+.search-submit-button {
   height: 40px;
   width: 40px;
   vertical-align: top;
@@ -155,13 +173,11 @@ button, input
   font-size: 25px;
 }
 
-.search-submit-button:hover
-{
-  color: blue;
+.search-submit-button:hover {
+  color: #0069d9;
 }
 
-.search-form:after
-{
+.search-form:after {
   content: '';
   position: relative;
   /* left: 0; */
@@ -169,29 +185,28 @@ button, input
   height: 40px;
 }
 
-.panel-collapse
-{
+.panel-collapse {
   margin: 0 10px;
 }
 
-.panel-collapse-button
-{
+.panel-collapse-button {
   width: 20px;
   height: 40px;
 }
 
-.panel-collapsed
-{
+.panel-collapse-button:hover {
+  color: #0069d9;
+}
+
+.panel-collapsed {
   transform: translateX(-445px)
 }
 
-.panel-collapsed-button
-{
+.panel-collapsed-button {
   transform: rotate(180deg)
 }
 
-.modal-expand-button
-{
+.modal-expand-button {
   transform: rotateX(180deg)
 }
 </style>

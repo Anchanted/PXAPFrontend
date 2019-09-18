@@ -24,8 +24,8 @@ export default {
 <style>
 .sk-fading-circle {
   margin: 0 auto;
-  width: 100px;
-  height: 100px;
+  width: 60px;
+  height: 60px;
   position: relative;
 }
 
@@ -96,40 +96,40 @@ export default {
 .sk-fading-circle .sk-circle11 {
   -webkit-transform: rotate(300deg);
       -ms-transform: rotate(300deg);
-          transform: rotate(300deg); 
+          transform: rotate(300deg);
 }
 .sk-fading-circle .sk-circle12 {
   -webkit-transform: rotate(330deg);
       -ms-transform: rotate(330deg);
-          transform: rotate(330deg); 
+          transform: rotate(330deg);
 }
 .sk-fading-circle .sk-circle2:before {
   -webkit-animation-delay: -1.1s;
-          animation-delay: -1.1s; 
+          animation-delay: -1.1s;
 }
 .sk-fading-circle .sk-circle3:before {
   -webkit-animation-delay: -1s;
-          animation-delay: -1s; 
+          animation-delay: -1s;
 }
 .sk-fading-circle .sk-circle4:before {
   -webkit-animation-delay: -0.9s;
-          animation-delay: -0.9s; 
+          animation-delay: -0.9s;
 }
 .sk-fading-circle .sk-circle5:before {
   -webkit-animation-delay: -0.8s;
-          animation-delay: -0.8s; 
+          animation-delay: -0.8s;
 }
 .sk-fading-circle .sk-circle6:before {
   -webkit-animation-delay: -0.7s;
-          animation-delay: -0.7s; 
+          animation-delay: -0.7s;
 }
 .sk-fading-circle .sk-circle7:before {
   -webkit-animation-delay: -0.6s;
-          animation-delay: -0.6s; 
+          animation-delay: -0.6s;
 }
 .sk-fading-circle .sk-circle8:before {
   -webkit-animation-delay: -0.5s;
-          animation-delay: -0.5s; 
+          animation-delay: -0.5s;
 }
 .sk-fading-circle .sk-circle9:before {
   -webkit-animation-delay: -0.4s;
@@ -155,6 +155,6 @@ export default {
 
 @keyframes sk-circleFadeDelay {
   0%, 39%, 100% { opacity: 0; }
-  40% { opacity: 1; } 
+  40% { opacity: 1; }
 }
 </style>

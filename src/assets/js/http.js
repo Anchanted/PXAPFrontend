@@ -1,6 +1,6 @@
 import axios from 'axios'
 import store from '@/store';
-// import toastMessage from '@/plugins/ToastMessage'
+import alert from '@/utils/alert'
 // const qs = require('qs')
 
 const instance = axios.create()
@@ -53,13 +53,13 @@ const errorHandle = (status, other) => {
     //   break;
     // 404请求不存在
     case 404:
-      // toastMessage({
-      //   message: '请求的资源不存在',
-      //   time: 3000
-      // });
+      alert({
+        message: '请求的资源不存在',
+        time: 3000
+      });
       break;
     default:
-      console.log(other);
+      console.log(status, other);
     }}
 
 const api = {

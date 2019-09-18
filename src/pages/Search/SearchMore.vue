@@ -1,64 +1,58 @@
 <template>
   <div class="search-container pb-3" ref="container">
-    <!-- <div v-if="initializing" class="search-loading">
-      <spinner-circle></spinner-circle>
-    </div> -->
     <div v-show="$route.query.q && $route.params.type" class="search-more-topbar" :style="{ top: modalScrollTop + 'px' }">
-      <button class="iconfont icon-arrow-down search-more-topbar-back" @click="back"></button>
+      <button class="iconfont icon-arrow-down search-more-topbar-back" @click="back"
+        data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.moreBack')"></button>
       <div class="search-more-topbar-info">{{searchTitle}}</div>
     </div>
 
     <div v-if="dataType === 'building'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-      <div v-for="building in itemList" :key="building.id" class="search-section-item">
-        <div class="search-section-item-icon">{{building.code}}</div>
-        <div class="search-section-item-info">
-          <div class="search-section-item-info-name two-line">{{building.name}}</div>
-          <div class="search-section-item-info-location one-line">{{itemLocation(building, 'building')}}</div>
+      <div v-for="building in itemList" :key="building.id" class="search-section-item" @click="onclick($event, building, dataType)">
+        <div class="search-section-item-container">
+          <div class="search-section-item-icon">{{building.code}}</div>
+          <div class="search-section-item-info">
+            <div class="search-section-item-info-name two-line">{{building.name}}</div>
+            <div class="search-section-item-info-location one-line">{{itemLocation(building, 'building')}}</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div v-else-if="dataType === 'room'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-      <div v-for="room in itemList" :key="room.id"
-        :style="itemStyle(room.id, 'room')"
-        class="search-section-item"
-        @touchstart="ontouchstartitem($event, room)"
-        @touchmove="ontouchmoveitem"
-        @touchend="ontouchenditem">
-        <div class="search-section-item-icon">{{room.building_code}}</div>
-        <div class="search-section-item-info">
-          <div class="search-section-item-info-name one-line">{{room.name}}</div>
-          <div class="search-section-item-info-type one-line">{{room.type}}</div>
-          <div class="search-section-item-info-location one-line">{{itemLocation(room, 'room')}}</div>
+      <div v-for="room in itemList" :key="room.id" class="search-section-item" @click="onclick($event, room, dataType)">
+        <div class="search-section-item-container">
+          <div class="search-section-item-icon">{{room.building_code}}</div>
+          <div class="search-section-item-info">
+            <div class="search-section-item-info-name one-line">{{room.name}}</div>
+            <div class="search-section-item-info-type one-line">{{room.type}}</div>
+            <div class="search-section-item-info-location one-line">{{itemLocation(room, 'room')}}</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div v-else-if="dataType === 'facility'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-      <div v-for="facility in itemList" :key="facility.id"
-        :style="itemStyle(facility.id, 'facility')"
-        class="search-section-item"
-        @touchstart="ontouchstartitem($event, facility)"
-        @touchmove="ontouchmoveitem"
-        @touchend="ontouchenditem">
-        <div class="search-section-item-icon">
-          <img :src="facilityImage(facility.type)" :alt="facility.type">
-        </div>
-        <div class="search-section-item-info">
-          <div class="search-section-item-info-name one-line">{{facility.name}}</div>
-          <div class="search-section-item-info-type one-line">{{facility.type}}</div>
-          <div class="search-section-item-info-location one-line">{{itemLocation(facility, 'facility')}}</div>
+      <div v-for="facility in itemList" :key="facility.id" class="search-section-item" @click="onclick($event, facility, dataType)">
+        <div class="search-section-item-container">
+          <div class="search-section-item-icon">
+            <img :src="facilityImage(facility.type)" :alt="facility.type">
+          </div>
+          <div class="search-section-item-info">
+            <div class="search-section-item-info-name one-line">{{facility.name}}</div>
+            <div class="search-section-item-info-type one-line">{{facility.type}}</div>
+            <div class="search-section-item-info-location one-line">{{itemLocation(facility, 'facility')}}</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <nav aria-label="Page navigation example">
-      <ul class="pagination pagination-lg justify-content-center" style="margin-bottom:0">
-        <li class="page-item" @click.prevent="goToAnotherPage(1)"><a class="page-link" href="javascript:void(0)" aria-label="First" ><span aria-hidden="true">&lt;&lt;</span></a></li>
-        <li class="page-item" @click.prevent="goToAnotherPage(pageNum-1<1 ? 1 : pageNum-1)"><a class="page-link" href="javascript:void(0)" aria-label="Previous"><span aria-hidden="true">&lt;</span></a></li>
+    <nav class="mt-3" aria-label="Page navigation example">
+      <ul class="pagination justify-content-center page" style="margin-bottom:0">
+        <li class="page-item" @click.prevent="goToAnotherPage(1)"><a class="page-link" href="javascript:void(0)" aria-label="First" ><span class="iconfont icon-double-arrow-left page-first" aria-hidden="true"></span></a></li>
+        <li class="page-item" @click.prevent="goToAnotherPage(pageNum-1<1 ? 1 : pageNum-1)"><a class="page-link" href="javascript:void(0)" aria-label="Previous"><span class="iconfont icon-arrow-down page-previous" aria-hidden="true"></span></a></li>
         <li class="page-item" v-for="value in displayedPages" :key="value" :class="value === pageNum ? 'active' : ''" @click.prevent="goToAnotherPage(value)"><a class="page-link" href="javascript:void(0)">{{value}}</a></li>
-        <li class="page-item" @click.prevent="goToAnotherPage(pageNum+1>totalPages ? totalPages : pageNum+1)"><a class="page-link" href="javascript:void(0)" aria-label="Next"><span aria-hidden="true">&gt;</span></a></li>
-        <li class="page-item" @click.prevent="goToAnotherPage(totalPages)"><a class="page-link" href="javascript:void(0)" aria-label="Last"><span aria-hidden="true">&gt;&gt;</span></a></li>
+        <li class="page-item" @click.prevent="goToAnotherPage(pageNum+1>totalPages ? totalPages : pageNum+1)"><a class="page-link" href="javascript:void(0)" aria-label="Next"><span class="iconfont icon-arrow-down page-next" aria-hidden="true"></span></a></li>
+        <li class="page-item" @click.prevent="goToAnotherPage(totalPages)"><a class="page-link" href="javascript:void(0)" aria-label="Last"><span class="iconfont icon-double-arrow-left page-last" aria-hidden="true"></span></a></li>
       </ul>
     </nav>
 
@@ -71,24 +65,11 @@ import SpinnerCircle from '@/components/Spinner/SpinnerCircle'
 import floorDict from '@/assets/js/floor.json'
 import buildingDict from '@/assets/js/building.json'
 import iconPath from '@/assets/js/facilityIconPath.js'
-import vm from '@/assets/js/eventBus'
 
 import { mapState } from 'vuex'
 
 export default {
   name: 'SearchMore',
-  // props: {
-  //   query: {
-  //     type: String,
-  //     required: true,
-  //     default: ''
-  //   },
-  //   dataType: {
-  //     type: String,
-  //     required: true,
-  //     default: ''
-  //   }
-  // },
   components: {
     SpinnerCircle
   },
@@ -99,8 +80,6 @@ export default {
       itemList: [],
       currentPageNo: 0,
       totalPages: 0,
-      requesting: false,
-      initializing: true,
       query: null,
       dataType: null,
       invalidRequest: false, // lacks parameters, parameter type error, pageNo out of total page number
@@ -111,17 +90,11 @@ export default {
   computed: {
     ...mapState(['modalScrollTop']),
     searchTitle () {
-      return this.query && this.dataType ? `"${decodeURIComponent(this.query)}" in ${this.dataType.charAt(0).toUpperCase()}${this.dataType.slice(1)}` : ''
+      // return this.query && this.dataType ? `"${decodeURIComponent(this.query)}" in ${this.dataType.charAt(0).toUpperCase()}${this.dataType.slice(1)}` : ''
+      return this.query && this.dataType ? this.$i18n.t('search.moreTopbar',{ query: decodeURIComponent(this.query), type: this.$i18n.t(`itemType.${this.dataType}`) }) : ''
     },
     facilityImage () {
       return type => iconPath[type]
-    },
-    itemStyle () {
-      return (id, type) => {
-        return {
-          'background-color': (this.selectedItem.id === id && this.itemSelected) ? '#E6E3DF' : 'transparent'
-        }
-      }
     },
     itemLocation () {
       return (item, type) => {
@@ -184,6 +157,8 @@ export default {
       this.$router.replace({
         name: 'SearchMore',
         params: {
+          buildingId: this.$route.params.buildingId,
+          floorId: this.$route.params.floorId,
           type: this.dataType
         },
         query: {
@@ -206,29 +181,17 @@ export default {
       })
     },
 
-    ontouchstartitem (e, item) {
-      // console.log('item touchstart')
-      this.selectedItem = item
-      this.moveInItem = false
-      this.itemSelected = true
-    },
-    ontouchmoveitem (e) {
-      // console.log('item touchmove')
-      this.moveInItem = true
-      this.itemSelected = false
-    },
-    ontouchenditem (e) {
-      // console.log('item touchend')
-      this.itemSelected = false
-      if (!this.moveInItem) {
-        this.$emit('selectItem', { ...this.selectedItem, dataType: this.dataType })
-        this.stopBubble(e)
-      }
-    },
+    onclick (e, item, type) {
+      this.selectItem({ ...item, dataType: type })
+    }
   },
 
   async mounted () {
-    console.log('more mounted')
+    // console.log('more mounted')
+    $('[data-toggle="tooltip"]').tooltip();
+    this.$store.dispatch('commitModalLoading', true)
+    this.$store.commit('setModalScrollTop', 0)
+
     this.query = this.$route.query.q
     this.currentPageNo = this.$route.query.pn || 0
     this.dataType = this.$route.params.type
@@ -243,16 +206,15 @@ export default {
         this.itemList = data.content
         this.totalPages = data.totalPages
       } catch (error) {
-        // this.$toast({
-        //   message: 'Fail to load data.\nPlease try again.',
-        //   time: 3000
-        // })
+        this.$alert({
+          message: 'Fail to load data.\nPlease try again.',
+          time: 3000
+        })
         throw error
       } finally {
         this.$nextTick(() => {
-          // vm.$emit('updateModalHeight', this.$refs.container.offsetHeight, 'searchMore', this)
+          this.$store.dispatch('commitModalLoading', false)
           this.$store.dispatch('commitModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchMore' })
-          this.initializing = false
         })
       }
     } else {
@@ -261,22 +223,22 @@ export default {
 
   },
 
-  destroyed () {
-    console.log('more destroyed')
-  },
-  // beforeRouteEnter (to, from, next) {
-  //   // console.log('enter')
-  //   // console.log(to)
-  //   // console.log(from)
-  //   next()
+  // destroyed () {
+  //   console.log('more destroyed')
   // },
+  beforeRouteEnter (to, from, next) {
+    // console.log('more enter')
+    // console.log(to)
+    console.log(from)
+    next()
+  },
   beforeRouteUpdate (to, from, next) {
-    console.log('more update')
+    // console.log('more update')
     // console.log(from)
     next()
   },
   beforeRouteLeave (to, from, next) {
-    console.log('more leave')
+    // console.log('more leave')
     if (to.name === 'SearchTop') {
       to.meta.updateHeight = true
     }
@@ -287,7 +249,7 @@ export default {
 
 <style lang="scss">
 .search-more-topbar {
-  width: 434px;
+  width: 424px;
   height: 50px;
   position: absolute;
   // top: 0;
@@ -308,6 +270,10 @@ export default {
     flex-shrink: 0;
   }
 
+  &-back:hover {
+    color: #0069d9;
+  }
+
   &-info {
     width: auto;
     height: 100%;
@@ -326,7 +292,7 @@ export default {
 
 .search-container {
   position: relative;
-  width: 434px;
+  width: 424px;
   height: auto;
   background: #FFFFFF;
   // overflow: scroll;
@@ -343,20 +309,30 @@ export default {
   }
 
   .search-section-items {
-    width: 434px;
+    width: 424px;
     height: auto;
-    padding: 0 15px;
+    // padding: 0 15px;
 
     .search-section-item {
       width: 100%;
       height: auto;
-      padding: 10px 0;
-      border-top: 1px #C6C6C6 solid;
-      display: flex;
-      justify-content: flex-start;
+      padding: 0 15px;
+      // border-top: 1px #C6C6C6 solid;
+      // display: flex;
+      // justify-content: flex-start;
+      cursor: pointer;
 
-      &:first-child {
+      &:first-child > div {
         border-top: none;
+      }
+
+      .search-section-item-container {
+        width: 100%;
+        height: auto;
+        padding: 10px 0 5px;
+        border-top: 1px #C6C6C6 solid;
+        display: flex;
+        justify-content: flex-start;
       }
 
       &-icon {
@@ -364,11 +340,11 @@ export default {
         height: 50px;
         text-align: center;
         vertical-align: middle;
-        font-size: 2rem;
+        font-size: 1.8rem;
         line-height: 1.5;
         font-weight: bold;
         color: #FFFFFF;
-        background: blue;
+        background: #0069d9;
         border-radius: 25px;
         flex-shrink: 0;
         display: flex;
@@ -390,26 +366,30 @@ export default {
         justify-content: space-between;
 
         &-name {
-          font-size: 1.6rem;
+          font-size: 1.5rem;
           line-height: 1.2;
           height: 50px;
           flex-grow: 1;
         }
 
         &-type {
-          font-size: 1.2rem;
+          font-size: 1rem;
           line-height: 1.5;
           color: #8E8E93;
           flex-shrink: 0;
         }
 
         &-location {
-          font-size: 1.2rem;
+          font-size: 1rem;
           line-height: 1.5;
           color: #8E8E93;
           flex-shrink: 0;
         }
       }
+    }
+
+    .search-section-item:hover {
+      background-color: #E6E3DF;
     }
   }
 
@@ -420,6 +400,39 @@ export default {
     border-top: 1px #C6C6C6 solid;
     font-size: 1rem;
     text-align: center;
+  }
+}
+
+.page {
+
+  span {
+    line-height: 1;
+    display: inline-block;
+    font-size: 14px;
+  }
+
+  &-previous {
+    transform: rotate(90deg);
+    -o-transform: rotate(90deg);  /* Opera */
+    -ms-transform: rotate(90deg); 	/* IE 9 */
+    -moz-transform: rotate(90deg); 	/* Firefox */
+    -webkit-transform: rotate(90deg); /* Safari 和 Chrome */
+  }
+
+  &-next {
+    transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);  /* Opera */
+    -ms-transform: rotate(-90deg); 	/* IE 9 */
+    -moz-transform: rotate(-90deg); 	/* Firefox */
+    -webkit-transform: rotate(-90deg); /* Safari 和 Chrome */
+  }
+
+  &-last {
+    transform: rotateZ(180deg);
+    -o-transform: rotateZ(180deg);  /* Opera */
+    -ms-transform: rotateZ(180deg); 	/* IE 9 */
+    -moz-transform: rotateZ(180deg); 	/* Firefox */
+    -webkit-transform: rotateZ(180deg); /* Safari 和 Chrome */
   }
 }
 

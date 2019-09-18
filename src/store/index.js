@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 
 import canvasMap from './module/canvasMap.js'
+import searchHistory from './module/searchHistory.js'
 
 Vue.use(Vuex)
 
@@ -12,6 +13,8 @@ export default new Vuex.Store({
     panelCollapsed: false,
     modalScrollTop: 0,
     modalHeight: 0,
+    modalLoading: true,
+    globalText: '',
   },
   mutations: {
     setScrollBarWidth (state, payload) {
@@ -27,7 +30,13 @@ export default new Vuex.Store({
       state.modalScrollTop = payload
     },
     setModalHeight (state, payload) {
-      state.modalHeight = payload
+      state.modalHeight = payload + 1
+    },
+    setModalLoading (state, payload) {
+      state.modalLoading = payload
+    },
+    setGlobalText (state, payload) {
+      state.globalText = payload
     }
   },
   actions: {
@@ -43,9 +52,13 @@ export default new Vuex.Store({
     commitModalHeight ({ commit }, payload) {
       console.log(payload)
       commit('setModalHeight', payload.height || 0)
+    },
+    commitModalLoading ({ commit }, payload) {
+      commit('setModalLoading', payload)
     }
   },
   modules: {
-    canvasMap
+    canvasMap,
+    searchHistory
   }
 })
