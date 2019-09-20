@@ -16,13 +16,16 @@ let alert = (options) => {
     instance.show = false
     instance.message = ''
   }
-  let time = 3000
+  // let time = 3000
+  let time
   if (typeof options === 'string') {
     instance.message = options
   } else if (typeof options === 'object') {
-    let {message, time} = options
-    instance.message = message
-    instance.time = time || 3000
+    // let {message, time} = options
+    // instance.message = message
+    // instance.time = time || 3000
+    instance.message = options.message
+    time = options.time || 3000
   } else {
     return
   }
@@ -32,7 +35,8 @@ let alert = (options) => {
     clearTimeout(timer)
     timer = null
     // instance.message = ''
-  }, instance.time)
+  // }, instance.time)
+}, time)
 }
 alert.close = () => {
   if (timer) {

@@ -5,7 +5,7 @@ module.exports = {
         'viewMore': 'Ver Más Resultados',
         'moreTopbar': '\"{query}\" en {type}',
         'noMore': 'No Hay Más Resultados',
-        'noResult': 'No Hay Resultados',
+        'noResult': 'No Hay Resultados.',
     },
     itemType: {
         'building': 'Edificio',
@@ -39,6 +39,10 @@ module.exports = {
         'hideOccupy': 'Ocultar las habitaciones ocupadas',
         'zoomIn': 'Acercar',
         'zoomOut': 'Alejar',
-        'moreBack': 'Regresar'
+        'moreBack': 'Regresar',
+        'firstPage': 'Primera página',
+        'previousPage': 'Página anterior',
+        'nextPage': 'Próxima página',
+        'lastPage': 'Última página',
     }
 }

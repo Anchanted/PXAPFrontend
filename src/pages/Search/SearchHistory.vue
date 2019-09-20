@@ -1,34 +1,16 @@
 <template>
   <div class="history-container" ref="container">
     <div v-for="(item, index) in itemList" :key="index">
-      <div v-if="item.dataType === 'building'" class="history-item"
-        @mousedown="onmousedown($event, item)">
-        <div class="history-item-icon">{{item.code}}</div>
-        <div class="history-item-info">
-          <div class="history-item-info-name one-line">{{item.name}}</div>
-          <div class="history-item-info-location one-line">{{itemLocation(index, 'building')}}</div>
-        </div>
-      </div>
-
-      <div v-else-if="item.dataType  === 'room'" class="history-item"
-        @mousedown="onmousedown($event, item)">
-        <div class="history-item-icon">{{item.building_code}}</div>
-        <div class="history-item-info">
-          <div class="history-item-info-name one-line">{{item.name}}</div>
-          <div class="history-item-info-location one-line">{{itemLocation(index, 'room')}}</div>
-        </div>
-      </div>
-
-      <div v-else-if="item.dataType  === 'facility'" class="history-item"
-        @mousedown="onmousedown($event, item)">
-        <div class="history-item-icon">
+      <place-card v-if="new RegExp(/^(building|facility|room)$/).test(item.dataType)"
+        :simple="true" :type="item.dataType"
+        @mousedown.native="onmousedown($event, item)">
+        <template #icon v-if="item.dataType === 'facility'">
           <img :src="facilityImage(item.type)" :alt="item.type">
-        </div>
-        <div class="history-item-info">
-          <div class="history-item-info-name one-line">{{item.name}}</div>
-          <div class="history-item-info-location one-line">{{itemLocation(index, 'facility')}}</div>
-        </div>
-      </div>
+        </template>
+        <template #icon v-else>{{item.code}}</template>
+        <template #name>{{item.name}}</template>
+        <template #location>{{itemLocation(index, item.dataType)}}</template>
+      </place-card>
 
       <div v-else-if="item.dataType  === 'query'" class="history-item"
         @mousedown="onmousedown($event, item)">
@@ -44,13 +26,16 @@ import floorDict from '@/assets/js/floor.json'
 import buildingDict from '@/assets/js/building.json'
 import iconPath from '@/assets/js/facilityIconPath.js'
 
+import PlaceCard from '@/components/PlaceCard'
+
 import { mapState } from 'vuex'
 
 export default {
+  components: {
+    PlaceCard
+  },
   data () {
     return {
-      // itemList: [],
-      mmove: false
     }
   },
   computed: {
@@ -70,7 +55,7 @@ export default {
   },
   methods: {
     onmousedown (e, item) {
-      console.log('onmousedown')
+      // console.log('onmousedown')
       if (item.dataType) {
         this.selectItem(item)
       }
@@ -92,63 +77,19 @@ export default {
   height: auto;
   padding: 20px 0;
 
-  .history-item:hover {
-    background-color: #E6E6E6;
-  }
+}
 
-  .history-item {
-    width: 100%;
-    height: auto;
-    padding: 10px;
-    cursor: pointer;
-    // border-top: 1px #C6C6C6 solid;
-    display: flex;
-    justify-content: flex-start;
+.history-item {
+  width: 100%;
+  height: auto;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+}
 
-    &-icon {
-      width: 50px;
-      height: 50px;
-      text-align: center;
-      vertical-align: middle;
-      font-size: 1.8rem;
-      line-height: 1.5;
-      font-weight: bold;
-      color: #FFFFFF;
-      background: #0069d9;
-      border-radius: 25px;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      img {
-        width: 30px;
-        height: 30px;
-      }
-    }
-
-    &-info {
-      width: calc(100% - 50px - 15px);
-      height: 60px;
-      margin-left: 15px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-
-      &-name {
-        font-size: 1.5rem;
-        line-height: 1.2;
-        // height: 40px;
-      }
-
-      &-location {
-        font-size: 1rem;
-        line-height: 1.5;
-        color: #8E8E8E;
-        flex-shrink: 0;
-      }
-    }
-  }
+.history-item:hover {
+  background-color: #E6E6E6;
 }
 
 .history-item-query {

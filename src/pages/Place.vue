@@ -127,12 +127,9 @@ export default {
   },
   mounted () {
     this.$store.dispatch('commitModalLoading', true)
-    this.$store.dispatch('commitPanelCollapsed', false)
-    this.$store.dispatch('commitModalCollapsed', false)
     this.getItemInfo()
     $('[data-toggle="tooltip"]').tooltip();
   },
-
 }
 </script>
 

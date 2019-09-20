@@ -4,17 +4,14 @@
       <div v-if="buildingTotal > 0" class="search-result-section">
         <div class="search-result-section-type">{{$t('itemType.building')}}</div>
         <div class="search-result-section-items">
-          <div v-for="building in topBuildingList" :key="building.id"
-            class="search-result-section-item"
-            @click="onclick($event, building, 'building')">
-            <div class="search-result-section-item-container">
-              <div class="search-result-section-item-icon">{{building.code}}</div>
-              <div class="search-result-section-item-info">
-                <div class="search-result-section-item-info-name two-line">{{building.name}}</div>
-                <div class="search-result-section-item-info-location one-line">{{itemLocation(building, 'building')}}</div>
-              </div>
-            </div>
-          </div>
+          <place-card v-for="building in topBuildingList" :key="building.id"
+            :simple="false" :type="'building'"
+            @click.native="onclick($event, building, 'building')">
+            <template #icon>{{building.code}}</template>
+            <template #name>{{building.name}}</template>
+            <template #location>{{itemLocation(building, 'building')}}</template>
+          </place-card>
+
           <div v-if="buildingTotal > 3" class="search-result-section-items-more">
             <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'building' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
           </div>
@@ -24,18 +21,15 @@
       <div v-if="roomTotal > 0" class="search-result-section">
         <div class="search-result-section-type">{{$t('itemType.room')}}</div>
         <div class="search-result-section-items">
-          <div v-for="room in topRoomList" :key="room.id"
-            class="search-result-section-item"
-            @click="onclick($event, room, 'room')">
-            <div class="search-result-section-item-container">
-              <div class="search-result-section-item-icon">{{room.building_code}}</div>
-              <div class="search-result-section-item-info">
-                <div class="search-result-section-item-info-name one-line">{{room.name}}</div>
-                <div class="search-result-section-item-info-type one-line">{{room.type}}</div>
-                <div class="search-result-section-item-info-location one-line">{{itemLocation(room, 'room')}}</div>
-              </div>
-            </div>
-          </div>
+          <place-card v-for="room in topRoomList" :key="room.id"
+            :simple="false" :type="'room'"
+            @click.native="onclick($event, building, 'building')">
+            <template #icon>{{room.building_code}}</template>
+            <template #name>{{room.name}}</template>
+            <template #type>{{room.type}}</template>
+            <template #location>{{itemLocation(room, 'room')}}</template>
+          </place-card>
+
           <div v-if="roomTotal > 3" class="search-result-section-items-more">
             <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'room' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
           </div>
@@ -45,20 +39,17 @@
       <div v-if="facilityTotal > 0" class="search-result-section">
         <div class="search-result-section-type">{{$t('itemType.facility')}}</div>
         <div class="search-result-section-items">
-          <div v-for="facility in topFacilityList" :key="facility.id"
-            class="search-result-section-item"
-            @click="onclick($event, facility, 'facility')">
-            <div class="search-result-section-item-container">
-              <div class="search-result-section-item-icon">
-                <img :src="facilityImage(facility.type)" :alt="facility.type">
-              </div>
-              <div class="search-result-section-item-info">
-                <div class="search-result-section-item-info-name one-line">{{facility.name}}</div>
-                <div class="search-result-section-item-info-type one-line">{{facility.type}}</div>
-                <div class="search-result-section-item-info-location one-line">{{itemLocation(facility, 'facility')}}</div>
-              </div>
-            </div>
-          </div>
+          <place-card v-for="facility in topFacilityList" :key="facility.id"
+            :simple="false" :type="'facility'"
+            @click.native="onclick($event, building, 'building')">
+            <template #icon>
+              <img :src="facilityImage(facility.type)" :alt="facility.type">
+            </template>
+            <template #name>{{facility.name}}</template>
+            <template #type>{{facility.type}}</template>
+            <template #location>{{itemLocation(facility, 'facility')}}</template>
+          </place-card>
+
           <div v-if="facilityTotal > 3" class="search-result-section-items-more">
             <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'facility' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
           </div>
@@ -80,6 +71,7 @@
 
 <script>
 import SpinnerCircle from '@/components/Spinner/SpinnerCircle'
+import PlaceCard from '@/components/PlaceCard'
 
 import floorDict from '@/assets/js/floor.json'
 import buildingDict from '@/assets/js/building.json'
@@ -88,7 +80,8 @@ import iconPath from '@/assets/js/facilityIconPath.js'
 export default {
   name: 'SearchTop',
   components: {
-    SpinnerCircle
+    SpinnerCircle,
+    PlaceCard
   },
   data() {
     return {
@@ -173,14 +166,7 @@ export default {
     // console.log(this.$vnode.parent.componentInstance.cache)
     this.isAlive = false
     this.$store.dispatch('commitModalLoading', true)
-
-    if (this.$route.name === 'SearchTop') {
-      // console.log('top mounted rendered')
-      this.$store.dispatch('commitPanelCollapsed', false)
-      this.$store.dispatch('commitModalCollapsed', false)
-      this.search()
-    }
-
+    this.search()
   },
   // destroyed () {
   //   console.log('top destroyed')
@@ -189,8 +175,8 @@ export default {
     // console.log('top activated')
     if (this.isAlive) {
       this.$store.dispatch('commitModalHeight', { height: this.$refs.container.offsetHeight, component: 'SearchTop' })
-      this.$store.dispatch('commitPanelCollapsed', false)
-      this.$store.dispatch('commitModalCollapsed', false)
+      // this.$store.dispatch('commitPanelCollapsed', false)
+      // this.$store.dispatch('commitModalCollapsed', false)
     } else this.isAlive = true
   },
   // deactivated () {
@@ -256,7 +242,7 @@ export default {
   position: relative;
   // top: 0;
   z-index: 100;
-  padding: 15px 0;
+  padding: 0 0 15px;
   // background: #F8F7F2;
 
   // &-top {
@@ -285,81 +271,6 @@ export default {
         width: 100%;
         height: auto;
 
-        .search-result-section-item {
-          width: 100%;
-          height: auto;
-          padding: 0 15px;
-          // border-top: 1px #C6C6C6 solid;
-          // display: flex;
-          // justify-content: flex-start;
-          cursor: pointer;
-
-          .search-result-section-item-container {
-            width: 100%;
-            height: auto;
-            padding: 10px 0 5px;
-            border-top: 1px #C6C6C6 solid;
-            display: flex;
-            justify-content: flex-start;
-          }
-
-          &-icon {
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 1.8rem;
-            line-height: 1.5;
-            font-weight: bold;
-            color: #FFFFFF;
-            background: #0069d9;
-            border-radius: 25px;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            img {
-              width: 30px;
-              height: 30px;
-            }
-          }
-
-          &-info {
-            width: calc(100% - 50px - 15px);
-            height: 80px;
-            margin-left: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-
-            &-name {
-              font-size: 1.5rem;
-              line-height: 1.2;
-              height: 50px;
-              flex-grow: 1;
-            }
-
-            &-type {
-              font-size: 1rem;
-              line-height: 1.5;
-              color: #8E8E93;
-              flex-shrink: 0;
-            }
-
-            &-location {
-              font-size: 1rem;
-              line-height: 1.5;
-              color: #8E8E93;
-              flex-shrink: 0;
-            }
-          }
-        }
-
-        .search-result-section-item:hover {
-          background-color: #E6E3DF !important;
-        }
-
         &-more {
           width: auto;
           height: auto;
@@ -377,6 +288,8 @@ export default {
 
   &-no {
     width: 100%;
+    height: 300px;
+    line-height: 300px;
     padding-top: 10px;
     font-size: 1.5rem;
     text-align: center;
@@ -402,18 +315,5 @@ export default {
 }
 .more-enter-to, .more-leave {
   transform: translateX(0px);
-}
-
-.one-line {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.two-line {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
 }
 </style>

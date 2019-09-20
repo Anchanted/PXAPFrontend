@@ -36,12 +36,27 @@ export default {
       return scrollbarWidth;//返回滚动条宽度
     }
   },
-  mounted () {
+  created () {
+    const lang = navigator.language || ''
+    if (lang.length >= 2) {
+      switch (lang.substring(0, 2)) {
+        case 'es':
+          this.$i18n.locale = 'es'
+          break;
+        case 'zh':
+          this.$i18n.locale = 'zh'
+          break;
+        default:
+          this.$i18n.locale = 'en'
+          break;
+      }
+    }
+
     const scrollBarWidth = this.getScrollbarWidth()
     console.log('scrollBarWidth', scrollBarWidth)
     this.$store.dispatch('commitScrollBarWidth', scrollBarWidth)
     this.$store.dispatch('searchHistory/refreshHistoryList')
-  }
+  },
 }
 </script>
 

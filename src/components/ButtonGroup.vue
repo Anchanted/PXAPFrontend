@@ -99,12 +99,12 @@ export default {
         this.$refs.zoutbtn.disabled = false;
       }
     },
-    zoomIn: function () {
+    zoomIn () {
       if (!this.$refs.zinbtn.disabled) {
         this.$emit('zoom', 200, 'button');
       }
     },
-    zoomOut: function () {
+    zoomOut () {
       if (!this.$refs.zoutbtn.disabled) {
         this.$emit('zoom', -200, 'button');
       }

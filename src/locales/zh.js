@@ -5,7 +5,7 @@ module.exports = {
         'viewMore': '查看更多搜索结果',
         'moreTopbar': '{type}中搜索\"{query}\"',
         'noMore': '没有更多搜索结果了',
-        'noResult': '没有找到搜索结果',
+        'noResult': '没有找到搜索结果。',
     },
     itemType: {
         'building': '建筑',
@@ -38,6 +38,10 @@ module.exports = {
         'hideOccupy': '隐藏正在使用的房间',
         'zoomIn': '放大',
         'zoomOut': '缩小',
-        'moreBack': '返回'
+        'moreBack': '返回',
+        'firstPage': '首页',
+        'previousPage': '前一页',
+        'nextPage': '后一页',
+        'lastPage': '尾页',
     }
 }

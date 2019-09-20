@@ -1,15 +1,5 @@
 <template>
   <div class="py-2 pl-3 bg-white rounded d-flex justify-content-around align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
-		<!-- <div class="icon userIcon">
-			<img class="img-fluid user-icon" src="@/assets/images/icon/user.png" alt="user.png" border="0" style="float:left"/>
-		</div> -->
-
-		<!-- <nav class="navbar navbar-light bg-light"> -->
-		<!-- <form class="form-inline search-form" style="display:inline-block; float:right">
-			<input class="form-control form-control-sm mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
-			<button class="btn btn-sm btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-		</form> -->
-		<!-- </nav> -->
     <div class="modal-collapse">
       <button
         class="iconfont icon-arrow-down modal-collapse-button"
@@ -21,7 +11,7 @@
     </div>
 
     <form class="form-inline search-form" style="" @submit.prevent>
-			<input v-model.trim="text"
+			<input v-model.trim="text" ref="input"
         class="search-input" type="search" :placeholder="$t('search.search')" aria-label="Search"
         @focus="onfocus"
         @blur="onblur"/>
@@ -90,8 +80,10 @@ export default {
   watch: {
     text (val) {
       if (val === '') {
-        this["searchHistory/commitDisplaySearchHistory"](true)
-        if (!this.modalCollapsed) this.commitModalCollapsed(true)
+        if (this.$refs.input == document.activeElement) {
+          this["searchHistory/commitDisplaySearchHistory"](true)
+          if (!this.modalCollapsed) this.commitModalCollapsed(true)
+        }
       } else {
         this["searchHistory/commitDisplaySearchHistory"](false)
       }
