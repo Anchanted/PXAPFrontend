@@ -699,7 +699,7 @@ export default {
       if (this.$route.name === 'Place') {
         const itemList = this.$route.params.type === 'facility' ? this.facilityList : this.areaList
         const item = itemList.find((item) => item.id === parseInt(this.$route.params.id))
-        this.setSelectedItem(this.$route.params.type, item)
+        if (item) this.setSelectedItem(this.$route.params.type, item)
       }
     })
   },
@@ -719,7 +719,7 @@ export default {
       if (to.name === 'Place') {
         const itemList = to.params.type === 'facility' ? this.facilityList : this.areaList
         const item = itemList.find((facility) => facility.id === to.params.id)
-        this.setSelectedItem(to.params.type, item)
+        if (item) this.setSelectedItem(to.params.type, item)
       } else if (to.name.indexOf('Search') !== -1) {
         if (JSON.stringify(this.selectedItem) !== "{}") {
           this.lastMarkerAnimation = {

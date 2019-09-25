@@ -4,10 +4,11 @@
       <place-card v-if="new RegExp(/^(building|facility|room)$/).test(item.dataType)"
         :simple="true" :type="item.dataType"
         @mousedown.native="onmousedown($event, item)">
-        <template #icon v-if="item.dataType === 'facility'">
+        <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
+        <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
+        <template #icon v-else-if="item.dataType === 'facility'">
           <img :src="facilityImage(item.type)" :alt="item.type">
         </template>
-        <template #icon v-else>{{item.code}}</template>
         <template #name>{{item.name}}</template>
         <template #location>{{itemLocation(index, item.dataType)}}</template>
       </place-card>

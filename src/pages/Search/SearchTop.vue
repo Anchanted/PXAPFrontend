@@ -57,9 +57,7 @@
       </div>
     </div>
 
-    <div v-else class="search-result-no">
-      Your search returned no results
-    </div>
+    <div v-else class="search-result-no">{{$t('search.noResult')}}</div>
 
     <!-- <transition name="more" v-on:enter="onenter"> -->
       <!-- <div v-show="show"> -->
@@ -183,10 +181,11 @@ export default {
   //   console.log('top deactivated')
   // },
 
-  // beforeRouteEnter (to, from, next) {
-  //   console.log('top enter')
-  //   next()
-  // },
+  beforeRouteEnter (to, from, next) {
+    // console.log('top enter')
+    if (!to.query.q) next({ name: 'PageNotFound' })
+    else next()
+  },
 
   // beforeRouteUpdate(to, from, next) {
   //   console.log('top update')
@@ -218,7 +217,8 @@ export default {
     // console.log(this.$vnode.parent.componentInstance.cache)
 
     this.deleteCache()
-    next()
+    if (!to.query.q) next({ name: 'PageNotFound' })
+    else next()
     // console.log(this.$vnode.parent.componentInstance.cache)
   },
 

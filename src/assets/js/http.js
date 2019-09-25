@@ -60,6 +60,10 @@ const errorHandle = (status, other) => {
       break;
     default:
       console.log(status, other);
+      alert({
+        message: status,
+        time: 3000
+      })
     }}
 
 const api = {

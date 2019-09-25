@@ -90,9 +90,8 @@ export default {
   },
   methods: {
     async getItemInfo () {
-      const {type, id} = this.$route.params
+      const { type, id } = this.$route.params
       let data
-      if ((type !== 'building' && type !== 'room' && type !== 'facility') || !id ) this.$router.push({ name: 'PageNotFound' })
       switch (type) {
         case 'room':
           data = await this.$api.room.getRoomInfo(id)

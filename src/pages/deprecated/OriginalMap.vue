@@ -7,13 +7,14 @@
 
 <script>
 export default {
-  data() {
+  data () {
     return {
       mapWidth: 0,
       mapHeight: 0,
       context: null,
       pointArr: [],
-      image: {}
+      image: {},
+      displayMap: true,
     }
   },
   methods: {
@@ -23,7 +24,7 @@ export default {
       if (ev.button === 0) {
         mousePos = this.getMousePos(ev)
         this.pointArr.push(mousePos)
-      } else if (ev.button === 1) {
+      } else if (ev.button === 2) {
         this.pointArr.pop()
       }
       let pointStr = ''
@@ -97,7 +98,7 @@ export default {
     },
     animate () {
       this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
-      this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
+      if (this.displayMap) this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
       this.context.lineWidth = 3
       this.context.strokeStyle = '#FFFF00'
       this.context.fillStyle = 'red'
@@ -112,6 +113,15 @@ export default {
       this.context.fill()
       this.context.globalAlpha = 1
       requestAnimationFrame(this.animate)
+    },
+    deletePoint () {
+      console.log('keyup')
+      // this.pointArr.pop()
+      // for (let i = 0; i < this.pointArr.length; i++) {
+      //   pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
+      // }
+      // console.log(pointStr)
+      // if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
     }
   },
   async mounted () {

@@ -44,16 +44,6 @@ export default {
       type: String,
       required: true
     }
-  },
-  data () {
-    return {
-
-    }
-  },
-  methods: {
-    onclick () {
-
-    }
   }
 }
 </script>

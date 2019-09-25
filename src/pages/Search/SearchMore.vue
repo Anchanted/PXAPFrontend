@@ -229,6 +229,7 @@ export default {
             }
           })
           empty = true
+          return
         }
 
         this.itemList = data.content
@@ -256,17 +257,16 @@ export default {
   // destroyed () {
   //   console.log('more destroyed')
   // },
-  // beforeRouteEnter (to, from, next) {
-  //   // console.log('more enter')
-  //   // console.log(to)
-  //   console.log(from)
-  //   next()
-  // },
-  // beforeRouteUpdate (to, from, next) {
-  //   // console.log('more update')
-  //   // console.log(from)
-  //   next()
-  // },
+  beforeRouteEnter (to, from, next) {
+    // console.log('more enter')
+    if (!to.query.q) next({ name: 'PageNotFound' })
+    else next()
+  },
+  beforeRouteUpdate (to, from, next) {
+    // console.log('more update')
+    if (!to.query.q) next({ name: 'PageNotFound' })
+    else next()
+  },
   // beforeRouteLeave (to, from, next) {
   //   // console.log('more leave')
   //   if (to.name === 'SearchTop') {
