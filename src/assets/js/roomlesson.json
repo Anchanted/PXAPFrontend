@@ -1,0 +1,16 @@
+[
+  {"day": 2, "startTime": 13, "endTime": 14, "moduleCode": "ENV207", "roomName": "ES126", "type": "Tutorial-D1/1", "staff": null, "week": null},
+  {"day": 2, "startTime": 16, "endTime": 17, "moduleCode": "ENG105", "roomName": "ES101", "type": "Lecture-D1/1", "staff": null, "week": null},
+  {"day": 2, "startTime": 11, "endTime": 13, "moduleCode": "COM101", "roomName": "ES101", "type": "Lecture-D1/1", "staff": "Michael High", "week": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14]},
+  {"day": 2, "startTime": 14, "endTime": 15, "moduleCode": "COM211", "roomName": "HS131", "type": "Lecture-D1/1", "staff": null, "week": null},
+  {"day": 2, "startTime": 11, "endTime": 12, "moduleCode": "CCS104", "roomName": "HSG26", "type": "Lecture-D1/1", "staff": null, "week": null},
+  {"day": 2, "startTime": 16, "endTime": 18, "moduleCode": "MAN207", "roomName": "BS494", "type": "Lecture-D1/1", "staff": "Ellen Touchstone", "week": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14]},
+  {"day": 2, "startTime": 9, "endTime": 11, "moduleCode": "CHE203", "roomName": "SD220", "type": "Lecture-D1/1", "staff": null, "week": null},
+  {"day": 2, "startTime": 13, "endTime": 14, "moduleCode": "CCS201", "roomName": "ES121", "type": "Lecture-D1/1", "staff": null, "week": null},
+  {"day": 3, "startTime": 9, "endTime": 11, "moduleCode": "BIO309", "roomName": "SD220", "type": "Lecture-D1/1", "staff": "Hebin Liu", "week": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14]},
+  {"day": 2, "startTime": 15, "endTime": 16, "moduleCode": "ACF315", "roomName": "BS4102", "type": "Tutorial-D1/1", "staff": null, "week": null},
+  {"day": 3, "startTime": 11, "endTime": 12, "moduleCode": "MTH312", "roomName": "MB237", "type": "Lecture-D2/1", "staff": null, "week": null},
+  {"day": 3, "startTime": 9, "endTime": 11, "moduleCode": "DPH101", "roomName": "HSG23", "type": "Lab-D2/1", "staff": null, "week": null},
+  {"day": 3, "startTime": 12, "endTime": 13, "moduleCode": "MAN106", "roomName": "BS4102", "type": "Tutorial-D1/1", "staff": null, "week": null},
+  {"day": 3, "startTime": 10, "endTime": 12, "moduleCode": "ECO219", "roomName": "BSG38", "type": "Lecture-D1/1", "staff": "Mofei Jia", "week": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14]}
+]

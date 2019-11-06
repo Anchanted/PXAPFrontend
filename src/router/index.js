@@ -5,6 +5,9 @@ import Place from '@/pages/Place'
 import SearchTop from '@/pages/Search/SearchTop'
 import SearchMore from '@/pages/Search/SearchMore'
 import OriginalMap from '@/pages/deprecated/OriginalMap'
+import CheckMap from '@/pages/deprecated/CheckMap'
+import TimetableForm from '@/pages/deprecated/TimetableForm'
+import TimetableCheck from '@/pages/deprecated/TimetableCheck'
 import CanvasMap from '@/pages/CanvasMap'
 
 import store from '@/store'
@@ -18,9 +21,24 @@ const routes = [
     name: 'PageNotFound'
   },
   {
-    path: "/original",
+    path: "/original/:buildingCode([a-z]{2})/:floorIndex(-?\\d+)",
     component: OriginalMap,
     name: 'OriginalMap'
+  },
+  {
+    path: "/check/:buildingCode([a-z]{2})/:floorIndex(-?\\d+)",
+    component: CheckMap,
+    name: 'CheckMap'
+  },
+  {
+    path: "/timetable/form",
+    component: TimetableForm,
+    name: 'TimetableForm'
+  },
+  {
+    path: "/timetable/table",
+    component: TimetableCheck,
+    name: 'TimetableCheck'
   },
   {
     path: '/:buildingId(\\d+)?/:floorId(\\d+)?',
@@ -58,7 +76,8 @@ const routes = [
 
 const router = new Router({
   routes,
-  mode: 'history'
+  mode: 'history',
+  base: '/pxap/'
 })
 
 router.beforeEach((to, from, next) => {

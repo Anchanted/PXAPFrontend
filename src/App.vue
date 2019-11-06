@@ -1,4 +1,5 @@
 <template>
+  <!-- <div style="display: inline-block; font-size: 0;" id="app"> -->
   <div id="app">
     <!-- <keep-alive :exclude="['Modal', 'ButtonGroup']"> -->
     <!-- <keep-alive> -->
@@ -62,6 +63,10 @@ export default {
 
 <style>
 @import "./assets/css/reset.css";
+
+html {
+  overflow: auto;
+}
 
 .tooltip {
   font-size: 1rem;

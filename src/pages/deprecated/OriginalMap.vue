@@ -1,12 +1,18 @@
 <template>
-  <div class="" @mousedown="mousedown">
+  <div style="display: inline-block;" @mousedown="mousedown">
     <!-- <img src="/static/images/map/campus/campus-map.png" alt=""> -->
-    <canvas ref="map"></canvas>
+    <panel :points="pointArr" @updateCoords="changeCoords" @deletePoint="removePoint" @deletePoints="removePoints"></panel>
+    <canvas style="display: block; " ref="map"></canvas>
   </div>
 </template>
 
 <script>
+import OriginalMapPanel from '@/components/OriginalMapPanel'
+
 export default {
+  components: {
+    panel: OriginalMapPanel
+  },
   data () {
     return {
       mapWidth: 0,
@@ -15,22 +21,23 @@ export default {
       pointArr: [],
       image: {},
       displayMap: true,
+      buildingCode: null,
+      floorIndex: null
     }
   },
   methods: {
     mousedown (ev) {
+      // console.log(ev)
       ev = ev || window.event;
       let mousePos
       if (ev.button === 0) {
         mousePos = this.getMousePos(ev)
         this.pointArr.push(mousePos)
-      } else if (ev.button === 2) {
+      } else if (ev.button === 1) {
         this.pointArr.pop()
       }
       let pointStr = ''
-      for (let i = 0; i < this.pointArr.length; i++) {
-        pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
-      }
+      for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
       console.log(pointStr)
       if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
       // console.log(mousePos.x + ',' + mousePos.y);
@@ -41,6 +48,8 @@ export default {
       let scrollY = document.documentElement.scrollTop || document.body.scrollTop;
       let x = e.pageX || e.clientX + scrollX;
       let y = e.pageY || e.clientY + scrollY;
+      console.log(e.pageX, e.clientX)
+      console.log(e.pageY, e.clientY)
       //alert('x: ' + x + '\ny: ' + y);
       return { 'x': x, 'y': y };
     },
@@ -53,7 +62,8 @@ export default {
         };
 
         image.onerror = function() {
-          reject(new Error('Could not load image at ' + url))
+          // reject(new Error('Could not load image at ' + url))
+          reject(new Error('Could not load image'))
         };
 
         image.src = url
@@ -99,33 +109,62 @@ export default {
     animate () {
       this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
       if (this.displayMap) this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
-      this.context.lineWidth = 3
-      this.context.strokeStyle = '#FFFF00'
-      this.context.fillStyle = 'red'
-      this.context.globalAlpha = 0.5
+
       if (this.pointArr.length) {
+        this.context.lineWidth = 3
+        this.context.strokeStyle = '#FFFF00'
+        this.context.fillStyle = 'red'
+        this.context.globalAlpha = 0.5
         this.context.beginPath()
         for (let i = 0; i < this.pointArr.length; i ++) {
           if (i == 0) this.context.moveTo(this.pointArr[i].x, this.pointArr[i].y)
           else this.context.lineTo(this.pointArr[i].x, this.pointArr[i].y)
         }
+        this.context.fill()
+        this.context.globalAlpha = 1
       }
-      this.context.fill()
-      this.context.globalAlpha = 1
+
       requestAnimationFrame(this.animate)
     },
-    deletePoint () {
-      console.log('keyup')
-      // this.pointArr.pop()
-      // for (let i = 0; i < this.pointArr.length; i++) {
-      //   pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
-      // }
-      // console.log(pointStr)
-      // if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
+    changeCoords (index, dim, value) {
+      // console.log(index, dim, value)
+      if (/^\d+$/.test(value)) {
+        this.pointArr[index][dim] = parseInt(value)
+        let pointStr = ''
+        for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
+        console.log(pointStr)
+        if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
+      }
+    },
+    removePoint (index) {
+      this.pointArr.splice(index, 1)
+    },
+    removePoints () {
+      this.pointArr = []
     }
   },
   async mounted () {
-    this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + '/static/static/images/map/building/s/S1F.png')
+    const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB"]
+    this.buildingCode = this.$route.params.buildingCode.toUpperCase()
+    this.floorIndex = parseInt(this.$route.params.floorIndex)
+
+    try {
+      const result = buildingArr.find(code => code === this.buildingCode)
+      if (!result) throw new Error('Building not found.')
+
+      const codeInitChar = this.buildingCode.charAt(0)
+      const imageCode = codeInitChar === 'S' || codeInitChar === 'M' ? codeInitChar : this.buildingCode
+
+      let floorName
+      if (this.floorIndex > 0) floorName = this.floorIndex
+      else if (this.floorIndex === 0) floorName = 'G'
+      else if (this.floorIndex === -1) floorName = 'B'
+
+      this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
+    } catch (error) {
+      alert(error.message)
+      return
+    }
 
     this.context = this.$refs.map.getContext('2d')
 
@@ -134,6 +173,10 @@ export default {
 
     this.$refs.map.setAttribute("width", this.mapWidth)
     this.$refs.map.setAttribute("height", this.mapHeight)
+    this.$refs.map.style.width = this.mapWidth + 'px'
+    this.$refs.map.style.height = this.mapHeight + 'px'
+
+    document.body.style.width=this.mapWidth + 'px'
 
     requestAnimationFrame(this.animate)
   }
@@ -141,4 +184,13 @@ export default {
 </script>
 
 <style>
+button {
+  background-color: #CCC !important;
+  border: 1px solid #AAA !important;
+}
+
+input, select {
+  outline-color: #888 !important;
+  border: 1px solid #AAA !important;
+}
 </style>
