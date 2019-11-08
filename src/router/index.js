@@ -7,7 +7,7 @@ import SearchMore from '@/pages/Search/SearchMore'
 import OriginalMap from '@/pages/deprecated/OriginalMap'
 import CheckMap from '@/pages/deprecated/CheckMap'
 import TimetableForm from '@/pages/deprecated/TimetableForm'
-import TimetableCheck from '@/pages/deprecated/TimetableCheck'
+import TimetableCheck from '@/pages/deprecated/TimetableTest2'
 import CanvasMap from '@/pages/CanvasMap'
 
 import store from '@/store'
