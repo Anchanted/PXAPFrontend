@@ -3,13 +3,13 @@
     <thead>
       <tr>
         <th></th>
-        <th colspan="12"><span>Mon</span></th>
-        <th colspan="12"><span>Tue</span></th>
-        <th colspan="12"><span>Wed</span></th>
-        <th colspan="12"><span>Thu</span></th>
-        <th colspan="12"><span>Fri</span></th>
-        <th colspan="12"><span>Sat</span></th>
-        <th colspan="12"><span>Sun</span></th>
+        <th v-for="day in 7" :key="day"
+        class="week-th"
+        :colspan="thColspan(day)"
+        :style="thStyle(day)"
+        @click.stop="selectedBlock = null">
+          <span>{{$t(`week.${selectedBlock ? "full" : "abbr"}.${week[day-1]}`)}}</span>
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -22,7 +22,10 @@
             :style="tdStyle(i, j, k)" class="frame-td"
             v-html="tdLessonTable(i, j, k)"
             @click="selectBlock(i, j, k)">
-
+            <!-- <table class="lesson" v-html="tdLessonTable(i, j, k)"></table>
+            <div v-if="selectedBlock && selectedBlock.row === i && selectedBlock.col === j && k === 1"
+              class="iconfont icon-close close"
+              @click.stop="selectedBlock = null"></div> -->
           </td>
         </template>
       </tr>
@@ -31,23 +34,34 @@
 </template>
 
 <script>
-import lessonList from '@/assets/js/roomlesson'
+// import lessonList from '@/assets/js/roomlesson'
 
 export default {
   data () {
     return {
       lessonMetrix: new Array(7),
       blockList: [],
-      selectedBlock: null
+      selectedBlock: null,
+      week: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     }
   },
   computed: {
+    thColspan () {
+      return (day) => {
+        return (!this.selectedBlock || this.selectedBlock.col !== day) ? 12 : 12
+      }
+    },
+    thStyle () {
+      return (day) => {
+        return (this.selectedBlock && this.selectedBlock.col !== day) ? { "display": 'none' } : null
+      }
+    },
     tdBlockRowspan () {
       return (i, j, k) => {
-        const block = this.blockList.find(block => block.day === j && block.startRow === i)
+        const block = this.blockList.find(block => block.startRow <= i && block.endRow > i && block.day === j)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            if (k === 1) return block.endRow - block.startRow
+            if (i === block.startRow && k === 1) return block.endRow - block.startRow
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k)
@@ -59,10 +73,10 @@ export default {
     },
     tdBlockColspan () {
       return (i, j, k) => {
-        const block = this.blockList.find(block => block.day === j && block.startRow === i)
+        const block = this.blockList.find(block => block.startRow <= i && block.endRow > i && block.day === j)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            if (block && k === 1) return 12
+            if (i === block.startRow && k === 1) return 12
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k)
@@ -74,10 +88,11 @@ export default {
     },
     tdStyle () {
       return (i, j, k) => {
+        if (this.selectedBlock && this.selectedBlock.col !== j) return { "display": 'none' }
         const block = this.blockList.find(block => block.day === j && block.startRow <= i && block.endRow > i)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            if (block.startRow < i || k > 1) return { display: 'none' }
+            if (block.startRow < i || k > 1) return { "display": 'none' }
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 <= i - 1 && (lesson["endTime"] - 9) * 2 > i - 1 && lesson["startCol"] <= k && lesson["startCol"] + lesson["span"] > k)
@@ -89,20 +104,23 @@ export default {
     },
     tdLessonTable () {
       return (i, j, k) => {
-        const block = this.blockList.find(block => block.day === j && block.startRow === i)
+        const block = this.blockList.find(block => block.startRow <= i && block.endRow > i && block.day === j)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            const lessonList = block.lessonList || []
-            if (lessonList.length === 0) return '0'
-            else if (lessonList.length === 1) return lessonList[0]["moduleCode"]
-            else return '· · ·'
+            if (i === block.startRow && k === 1) {
+              const lessonList = block.lessonList || []
+              if (lessonList.length === 0) return '0'
+              else if (lessonList.length === 1) return lessonList[0]["moduleCode"]
+              else return '· · ·'
+            }
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k)
             if (lesson) {
-              let weekArr = ''
-              if (lesson.week) lesson.week.forEach((week, index) => weekArr += week + (index < lesson.week.length - 1 ? ',' : ''))
-              return `<table class="lesson">
+              // let weekArr = ''
+              // if (lesson.week) lesson.week.forEach((week, index) => weekArr += week + (index < lesson.week.length - 1 ? ',' : ''))
+              return `
+                      <table class="lesson">
                         <tbody>
                           <tr>
                             <td>${lesson.moduleCode}</td>
@@ -114,7 +132,7 @@ export default {
                             <td>${lesson.staff}</td>
                           </tr>
                           <tr>
-                            <td>Week: ${this.calculateWeeks(weekArr)}</td>
+                            <td>Week: ${this.calculateWeeks(lesson.week)}</td>
                           </tr>
                         </tbody>
                       </table>`
@@ -165,9 +183,9 @@ export default {
   methods: {
     selectBlock (i, j, k) {
       const block = this.blockList.find(block => block.day === j && block.startRow <= i && block.endRow > i)
-      console.log(!!block, !this.selectedBlock, this.selectedBlock ? `${this.selectedBlock.row} ${this.selectedBlock.col}` : null, i, j, this.selectedBlock && block ? !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day) : null)
+      // console.log(!!block, !this.selectedBlock, this.selectedBlock ? `${this.selectedBlock.row} ${this.selectedBlock.col}` : null, i, j, this.selectedBlock && block ? !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day) : null)
       if (!!block && (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day))) {
-        console.log('here')
+        console.log('valid')
         this.selectedBlock = {
           row: block.startRow,
           col: block.day
@@ -209,7 +227,7 @@ export default {
     }
   },
 
-  mounted () {
+  async mounted () {
     // lessonList.forEach(lesson => {
     //   if (lesson["endTime"] <= lesson["startTime"]) {
     //     console.error("time error")
@@ -217,6 +235,9 @@ export default {
     //   }
     //   lesson["duration"] = lesson["endTime"] - lesson["startTime"]
     // })
+    const data = await this.$api.room.getRoomInfo(6)
+    console.log(data)
+    const lessonList = data.timetable
 
     for (let day = 1; day <= 7; day++) {
       const dailyLessonList = []
@@ -277,6 +298,8 @@ export default {
 
         lesson["startCol"] = Math.max.apply(null, colList.slice(startIndex, endIndex)) + 1
         for (let i = startIndex; i < endIndex; i++) colList[i] += lesson["span"]
+
+        console.log((lesson["startTime"] - 9) * 2, lesson["startCol"])
       })
     })
 
@@ -302,6 +325,7 @@ td {
 
 .frame {
   transition: all 0.5s;
+  border: 2px solid #000;
 }
 
 .frame-td:first-child {
@@ -320,9 +344,10 @@ td {
 .frame-td {
   color: #666;
   height: 40px;
-  width: auto;
+  width: 100px;
   text-align: center;
   // padding: 0 10px;
+  position: relative;
 }
 
 .nonemptycell {
@@ -339,6 +364,10 @@ table thead th {
     display: inline-block;
     width: 80px;
   }
+}
+
+.week-th {
+  // width: 1000px;
 }
 
 .grid-td {
@@ -359,5 +388,22 @@ table thead th {
 
 .row-header {
   padding: 0 10px;
+  height: 80px;
+}
+
+.close {
+  position: absolute;
+  left: 10px;
+  top: 5px;
+  background: #E6E3DF;
+  color: #8E8E93;
+  font-size: 15px;
+  height: 30px;
+  width: 30px;
+  line-height: 30px;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 15px;
+  z-index: 3001;
 }
 </style>

@@ -38,8 +38,8 @@ export default {
       }
       let pointStr = ''
       for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
-      console.log(pointStr)
-      if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
+      // console.log(pointStr)
+      // if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
       // console.log(mousePos.x + ',' + mousePos.y);
     },
     getMousePos (event) {
@@ -48,8 +48,8 @@ export default {
       let scrollY = document.documentElement.scrollTop || document.body.scrollTop;
       let x = e.pageX || e.clientX + scrollX;
       let y = e.pageY || e.clientY + scrollY;
-      console.log(e.pageX, e.clientX)
-      console.log(e.pageY, e.clientY)
+      // console.log(e.pageX, e.clientX)
+      // console.log(e.pageY, e.clientY)
       //alert('x: ' + x + '\ny: ' + y);
       return { 'x': x, 'y': y };
     },
@@ -111,17 +111,29 @@ export default {
       if (this.displayMap) this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
 
       if (this.pointArr.length) {
+        this.pointArr.forEach(point => {
+          this.context.beginPath()
+          this.context.arc(point.x, point.y, 6, 0, 2*Math.PI)
+          this.context.fillStyle="yellow"
+          this.context.fill()
+        })
+
         this.context.lineWidth = 3
         this.context.strokeStyle = '#FFFF00'
         this.context.fillStyle = 'red'
+        this.context.strokeStyle = 'rgb(255, 0, 0)'
+        this.context.lineWidth = 3
         this.context.globalAlpha = 0.5
         this.context.beginPath()
         for (let i = 0; i < this.pointArr.length; i ++) {
           if (i == 0) this.context.moveTo(this.pointArr[i].x, this.pointArr[i].y)
           else this.context.lineTo(this.pointArr[i].x, this.pointArr[i].y)
         }
+        this.context.closePath()
         this.context.fill()
         this.context.globalAlpha = 1
+        // this.context.stroke()
+        this.context.lineWidth = 1
       }
 
       requestAnimationFrame(this.animate)
@@ -144,7 +156,7 @@ export default {
     }
   },
   async mounted () {
-    const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB"]
+    const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB", "IA", "IR", "GM"]
     this.buildingCode = this.$route.params.buildingCode.toUpperCase()
     this.floorIndex = parseInt(this.$route.params.floorIndex)
 
@@ -160,7 +172,8 @@ export default {
       else if (this.floorIndex === 0) floorName = 'G'
       else if (this.floorIndex === -1) floorName = 'B'
 
-      this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
+      this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/EMPBF.png`)
+      // this.image  = await this.loadImage(require('@/assets/images/map/campus/campus-map.png'))
     } catch (error) {
       alert(error.message)
       return

@@ -50,6 +50,8 @@
 </template>
 
 <script>
+import lessonType from '@/assets/js/lessonType.json'
+
 export default {
   data () {
     return {
@@ -59,7 +61,7 @@ export default {
       roomNo: null,
       moduleCode: null,
       staffName: null,
-      classTypeArr: ['Seminar', 'Lecture', 'Tutorial'],
+      classTypeArr: lessonType.map(type => type["name"].charAt(0).toUpperCase() + type["name"].slice(1)),
       classType: null,
       classTime: null,
       classNo: null

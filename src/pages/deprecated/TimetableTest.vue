@@ -1,64 +1,29 @@
 <template>
-  <div>
-    <table class="frame" border="1" cellpadding="0" cellspacing="0">
-      <thead>
-        <tr>
-          <th></th>
-          <th><span>Mon</span></th>
-          <th><span>Tue</span></th>
-          <th><span>Wed</span></th>
-          <th><span>Thu</span></th>
-          <th><span>Fri</span></th>
-          <th><span>Sat</span></th>
-          <th><span>Sun</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="i in 24" :key="i">
-          <td v-if="i % 2 === 1" rowspan="2" class="frame-td row-header">{{((i - 1) / 2 + 9 >= 13 ? (i - 1) / 2 + 9 - 12 : (i - 1) / 2 + 9) + ((i - 1) / 2 + 9 >= 12 ? 'PM' : 'AM')}}</td>
-          <td v-else style="display:none" class="frame-td"></td>
-          <template v-for="j in 7">
-            <td :key="j" :rowspan="tdBlockRowspan(i, j)" :colspan="tdBlockColspan(i, j)" :style="tdStyle(i, j)" class="frame-td">
-              <table v-if="blockList.find(block => block.col === j && block.startRow === i)" style="width: 100%; height: 100%;">
-                <tbody>
-                  <tr v-for="m in tdBlockRowspan(i, j)" :key="m">
-                    <td v-for="n in 12" :key="n" :rowspan="tdLessonRowspan(i, j, m, n)" :colspan="tdLessonColspan(i, j, m, n)" class="grid-td" :style="tdInfoGridStyle(i, j, m, n)" v-html="tdLessonTable(i, j, m, n)">
-                    <!-- <td v-for="n in 12" :key="n" :rowspan="tdLessonRowspan(i, j, m, n)" :colspan="tdLessonColspan(i, j, m, n)" class="grid-td" :style="tdInfoGridStyle(m)"> -->
+  <table class="frame" border="1" cellpadding="0" cellspacing="0">
+    <thead>
+      <tr>
+        <th></th>
+        <th colspan="12"><span>Mon</span></th>
+        <th colspan="12"><span>Tue</span></th>
+        <th colspan="12"><span>Wed</span></th>
+        <th colspan="12"><span>Thu</span></th>
+        <th colspan="12"><span>Fri</span></th>
+        <th colspan="12"><span>Sat</span></th>
+        <th colspan="12"><span>Sun</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="i in 24" :key="i" class="frame-tr">
+        <td v-if="i % 2 === 1" rowspan="2" class="frame-td row-header">{{((i - 1) / 2 + 9 >= 13 ? (i - 1) / 2 + 9 - 12 : (i - 1) / 2 + 9) + ((i - 1) / 2 + 9 >= 12 ? 'PM' : 'AM')}}</td>
+        <td v-else style="display:none" class="frame-td"></td>
+        <template v-for="j in 7">
+          <td v-for="k in 12" :key="`${j}${k >= 10 ? k : '0' + k}`" :rowspan="tdBlockRowspan(i, j, k)" :colspan="tdBlockColspan(i, j, k)" :style="tdStyle(i, j, k)" class="frame-td" v-html="tdLessonTable(i, j, k)">
 
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <!-- {{tdText(i, j)}} -->
-            </td>
-          </template>
-        </tr>
-      </tbody>
-    </table>
-    <!-- <table class="grid" border="1" cellpadding="0" cellspacing="0" style="position: absolute; top: 0;">
-      <thead>
-        <tr>
-          <th></th>
-          <th v-for="i in 7" :key="i"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td></td>
-          <td v-for="(day, i) in lessonMetrix" :key="i" style="">
-            <div class="grid-container">
-              <div v-for="(lesson, j) in day" :key="j" class="item" :style="itemStyle(lesson)">
-                {{lesson["moduleCode"]}}<br>
-                {{lesson["type"]}}<br>
-                {{lesson["roomName"]}}<br>
-                {{calculateWeeks(lesson["week"])}}
-              </div>
-            </div>
           </td>
-        </tr>
-      </tbody>
-    </table> -->
-  </div>
+        </template>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <script>
@@ -72,98 +37,67 @@ export default {
     }
   },
   computed: {
+    // tdBlockRowspan () {
+    //   return (row, day, col) => {
+    //     const block = this.blockList.find(block => block.day === day && block.startRow === row)
+    //     return (block && col === 1) ? block.endRow - block.startRow : 1
+    //   }
+    // },
+    // tdBlockColspan () {
+    //   return (row, day, col) => {
+    //     const block = this.blockList.find(block => block.day === day && block.startRow === row)
+    //     return (block && col === 1) ? 12 : 1
+    //   }
+    // },
+    // tdStyle () {
+    //   return (row, day, col) => {
+    //     const block = this.blockList.find(block => block.day === day && block.startRow <= row && block.endRow > row)
+    //     if (block)
+    //       if (block.startRow < row || col > 1)
+    //         return { display: 'none' }
+    //     return null
+    //   }
+    // },
     tdBlockRowspan () {
-      return (row, col) => {
-        const block = this.blockList.find(block => block.col === col && block.startRow === row)
-        if (block) return block.endRow - block.startRow
-        return 1
+      return (row, day, col) => {
+        const lesson = this.findLessonGrid(row, day, col)
+        return lesson ? (lesson["endTime"] - lesson["startTime"]) * 2 : 1
       }
     },
     tdBlockColspan () {
-      return (row, col) => {
-        return 1
+      return (row, day, col) => {
+        const lesson = this.findLessonGrid(row, day, col)
+        return lesson ? lesson["span"] : 1
       }
     },
     tdStyle () {
-      return (row, col) => {
-        const block = this.blockList.find(block => block.col === col && block.startRow < row && block.endRow > row)
-        if (block) return { display: 'none' }
-        return null
-      }
-    },
-    tdText () {
-      return (row, col) => {
-        const block = this.blockList.find(block => block.col === col && block.startRow === row)
-        if (block) {
-          if (block.lessonList.length === 1) {
-            return block.lessonList[0]["moduleCode"]
-          } else if (block.lessonList.length > 1) {
-            return '· · ·'
-          }
-        }
-      }
-    },
-    tdInfoGridStyle () {
-      return (i, j, m, n) => {
-        let styleObj = {
-          "border-top": m > 1 ? '2px solid #000' :'none',
-          "border-bottom": m < 12 ? '2px solid #000' :'none'
-        }
-        if (!this.findLessonGrid(i, j, m, n)) {
-          const block = this.blockList.find(block => block.col === j && block.startRow <= i && block.endRow > i)
+      return (i, j, k) => {
+        if (!this.findLessonGrid(i, j, k)) {
+          const block = this.blockList.find(block => block.day === j && block.startRow <= i && block.endRow > i)
           if (block) {
             const lessonList = block.lessonList || []
-            const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 <= i + m - 2 && (lesson["endTime"] - 9) * 2 > i + m - 2 && lesson["startCol"] <= n && lesson["startCol"] + lesson["span"] > n)
-            if (lesson) styleObj = {
-              ...styleObj,
-              "display": 'none'
-            }
+            const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 <= i - 1 && (lesson["endTime"] - 9) * 2 > i - 1 && lesson["startCol"] <= k && lesson["startCol"] + lesson["span"] > k)
+            if (lesson) return { "display": 'none' }
           }
-        } else {
-          styleObj = {
-            ...styleObj,
-            "background": 'RGB(170,170,255)'
-          }
+          return null
         }
-        return styleObj
-      }
-    },
-    // tdInfoGridStyle () {
-    //   return (m) => {
-    //     return {
-    //       "border-top": m > 1 ? '2px solid #000' :'none',
-    //       "border-bottom": m < 12 ? '2px solid #000' :'none'
-    //     }
-    //   }
-    // },
-    tdLessonRowspan () {
-      return (i, j, m, n) => {
-        const lesson = this.findLessonGrid(i, j, m, n)
-        if (lesson)  return lesson["duration"] * 2
-        else return 1
-      }
-    },
-    tdLessonColspan () {
-      return (i, j, m, n) => {
-        const lesson = this.findLessonGrid(i, j, m, n)
-        if (lesson) return lesson["span"]
-        else return 1
+        return { "border": '2px solid #000' }
       }
     },
     findLessonGrid () {
-      return (i, j, m, n) => {
-        const block = this.blockList.find(block => block.col === j && block.startRow === i)
+      return (i, j, k) => {
+        const block = this.blockList.find(block => block.day === j && block.startRow === i)
         if (block) {
           const lessonList = block.lessonList || []
-          const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i + m - 2 && lesson["startCol"] === n)
+          const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k)
           return lesson
         }
         return
       }
     },
     tdLessonTable () {
-      return (i, j, m, n) => {
-        const lesson = this.findLessonGrid(i, j, m, n)
+      return (i, j, k) => {
+        const lesson = this.findLessonGrid(i, j, k)
         if (lesson) {
           let weekArr = ''
           if (lesson.week) lesson.week.forEach((week, index) => weekArr += week + (index < lesson.week.length - 1 ? ',' : ''))
@@ -179,21 +113,13 @@ export default {
                         <td>${lesson.staff}</td>
                       </tr>
                       <tr>
-                        <td>${this.calculateWeeks(weekArr)}</td>
+                        <td>Week: ${this.calculateWeeks(weekArr)}</td>
                       </tr>
                     </tbody>
                   </table>`
         }
-        return ''
+        return
 
-      }
-    },
-    itemStyle () {
-      return (lesson) => {
-        return {
-          'grid-column-start': `span ${lesson["span"]}`,
-          'grid-row': `${(lesson["startTime"] - 9) * 2 + 1} / span ${lesson["duration"] * 2}`
-        }
       }
     },
     calculateWeeks () {
@@ -210,7 +136,7 @@ export default {
               startWeekNum = weekArr[i]
               newWeekStr += startWeekNum
             } else {
-              if (weekArr[i] - weekArr[i-1] > 1) {
+              if (weekArr[i] - weekArr[i-1] > 1 || weekArr[i-1] === 4) {
                 if (weekArr[i-1] !== startWeekNum) newWeekStr += '-' + weekArr[i-1]
                 newWeekStr += ', '
                 startWeekNum = weekArr[i]
@@ -258,13 +184,13 @@ export default {
   },
 
   mounted () {
-    lessonList.forEach(lesson => {
-      if (lesson["endTime"] <= lesson["startTime"]) {
-        console.error("time error")
-        alert("time error")
-      }
-      lesson["duration"] = lesson["endTime"] - lesson["startTime"]
-    })
+    // lessonList.forEach(lesson => {
+    //   if (lesson["endTime"] <= lesson["startTime"]) {
+    //     console.error("time error")
+    //     alert("time error")
+    //   }
+    //   lesson["duration"] = lesson["endTime"] - lesson["startTime"]
+    // })
 
     for (let day = 1; day <= 7; day++) {
       const dailyLessonList = []
@@ -293,16 +219,16 @@ export default {
 
         if (this.blockList.length === 0) { // no block in blockList, add a new block
           this.blockList.push({
-            col: day,
+            day,
             startRow,
             endRow,
             lessonList: [lesson]
           })
         } else { // blockList already has elements
           const lastIndex = this.blockList.length - 1
-          if (this.blockList[lastIndex].col != lesson["day"] || startRow >= this.blockList[lastIndex].endRow || lesson["span"] === 12) { // add a new block
+          if (this.blockList[lastIndex].day != lesson["day"] || startRow >= this.blockList[lastIndex].endRow || lesson["span"] === 12) { // add a new block
             this.blockList.push({
-              col: day,
+              day,
               startRow,
               endRow,
               lessonList: [lesson]
@@ -342,6 +268,12 @@ table {
   background-color: transparent;
 }
 
+td {
+  border: 2px solid #000;
+  border-left: none;
+  border-right: none;
+}
+
 .frame {
   z-index: 100;
 }
@@ -350,11 +282,19 @@ table {
   z-index: 1;
 }
 
+.frame-td:nth-child(12n+2) {
+  border-left: 2px solid #000;
+}
+
+.frame-td:nth-child(12n+13) {
+  border-right: 2px solid #000;
+}
+
 .frame-td {
-  border: 2px solid #000;
   color: #666;
   height: 40px;
   width: auto;
+  padding: 0 10px;
 }
 
 .grid td{
@@ -381,30 +321,14 @@ table thead th {
 
 .lesson {
   // background:red;
+  margin: 0 auto;
 }
 
 .lesson td{
   border: none !important;
   width: 150px;
-}
-
-.grid-container {
-  width: 100%;
-  height: 950px;
-  // background-color: #aaa;
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(24, 1fr);
-
-}
-
-.item {
-  background: #aaa;
-  margin: 2px;
-  padding: 2px;
-  border-radius: 10px;
-  border: 2px solid black;
-  // font-size: 18px;
+  text-align: center;
+  padding: 5px 10px;
 }
 
 .row-header {

@@ -7,7 +7,8 @@ import SearchMore from '@/pages/Search/SearchMore'
 import OriginalMap from '@/pages/deprecated/OriginalMap'
 import CheckMap from '@/pages/deprecated/CheckMap'
 import TimetableForm from '@/pages/deprecated/TimetableForm'
-import TimetableCheck from '@/pages/deprecated/TimetableTest2'
+// import TimetableCheck from '@/pages/deprecated/TimetableTest3'
+import TimetableCheck from '@/components/deprecated/ElasticTimetable'
 import CanvasMap from '@/pages/CanvasMap'
 
 import store from '@/store'
@@ -77,7 +78,8 @@ const routes = [
 const router = new Router({
   routes,
   mode: 'history',
-  base: '/pxap/'
+  // base: '/pxap/'
+  base: '/'
 })
 
 router.beforeEach((to, from, next) => {

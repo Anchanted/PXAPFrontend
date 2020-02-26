@@ -17,13 +17,24 @@ module.exports = {
         'department': 'Department Allocation'
     },
     week: {
-        'monday': 'Mon',
-        'tuesday': 'Tue',
-        'wednesday': 'Wed',
-        'thursday': 'Thu',
-        'friday': 'Fri',
-        'saturday': 'Sat',
-        'sunday': 'Sun'
+        abbr: {
+            'monday': 'Mon',
+            'tuesday': 'Tue',
+            'wednesday': 'Wed',
+            'thursday': 'Thu',
+            'friday': 'Fri',
+            'saturday': 'Sat',
+            'sunday': 'Sun'
+        },
+        full: {
+            'monday': 'Monday',
+            'tuesday': 'Tuesday',
+            'wednesday': 'Wednesday',
+            'thursday': 'Thursday',
+            'friday': 'Friday',
+            'saturday': 'Saturday',
+            'sunday': 'Sunday'
+        }
     },
     tooltip: {
         'collapseModal': 'Hide information panel',

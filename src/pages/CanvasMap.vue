@@ -544,7 +544,6 @@ export default {
       } else {
         this.occupiedRoomList = []
       }
-
     },
 
     getCentroid: function (coordsStr) {

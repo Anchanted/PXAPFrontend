@@ -18,13 +18,24 @@ module.exports = {
         'department': 'Asignación de Departamento'
     },
     week: {
-        'monday': 'Lun',
-        'tuesday': 'Mar',
-        'wednesday': 'Mié',
-        'thursday': 'Jue',
-        'friday': 'Vie',
-        'saturday': 'Sab',
-        'sunday': 'Dom'
+        abbr: {
+            'monday': 'Lun',
+            'tuesday': 'Mar',
+            'wednesday': 'Mié',
+            'thursday': 'Jue',
+            'friday': 'Vie',
+            'saturday': 'Sáb',
+            'sunday': 'Dom'
+        },
+        full: {
+            'monday': 'Lunes',
+            'tuesday': 'Martes',
+            'wednesday': 'Miécoles',
+            'thursday': 'Jueves',
+            'friday': 'Viernes',
+            'saturday': 'Sábado',
+            'sunday': 'Domingo'
+        }
     },
     tooltip: {
         'collapseModal': 'Ocultar el panel de información',

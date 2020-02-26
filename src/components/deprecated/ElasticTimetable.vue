@@ -3,18 +3,18 @@
     <thead>
       <tr>
         <th></th>
-        <th colspan="12"><span>Mon</span></th>
-        <th colspan="12"><span>Tue</span></th>
-        <th colspan="12"><span>Wed</span></th>
-        <th colspan="12"><span>Thu</span></th>
-        <th colspan="12"><span>Fri</span></th>
-        <th colspan="12"><span>Sat</span></th>
-        <th colspan="12"><span>Sun</span></th>
+        <th v-for="day in 7" :key="day"
+        class="week"
+        :colspan="thColspan(day)"
+        :style="thStyle(day)"
+        @click.stop="selectedBlock = null">
+          <span>{{$t(`week.${selectedBlock ? "full" : "abbr"}.${week[day-1]}`)}}</span>
+        </th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="i in 24" :key="i" class="frame-tr">
-        <td v-if="i % 2 === 1" rowspan="2" class="frame-td row-header">{{((i - 1) / 2 + 9 >= 13 ? (i - 1) / 2 + 9 - 12 : (i - 1) / 2 + 9) + ((i - 1) / 2 + 9 >= 12 ? 'PM' : 'AM')}}</td>
+        <td v-if="i % 2 === 1" rowspan="2" class="frame-td row-header"><span>{{((i - 1) / 2 + 9 >= 13 ? (i - 1) / 2 + 9 - 12 : (i - 1) / 2 + 9) + ((i - 1) / 2 + 9 >= 12 ? 'PM' : 'AM')}}</span></td>
         <td v-else style="display:none" class="frame-td"></td>
         <template v-for="j in 7">
           <td v-for="k in 12" :key="`${j}${k >= 10 ? k : '0' + k}`"
@@ -22,7 +22,10 @@
             :style="tdStyle(i, j, k)" class="frame-td"
             v-html="tdLessonTable(i, j, k)"
             @click="selectBlock(i, j, k)">
-
+            <!-- <table class="lesson" v-html="tdLessonTable(i, j, k)"></table>
+            <div v-if="selectedBlock && selectedBlock.row === i && selectedBlock.col === j && k === 1"
+              class="iconfont icon-close close"
+              @click.stop="selectedBlock = null"></div> -->
           </td>
         </template>
       </tr>
@@ -31,23 +34,41 @@
 </template>
 
 <script>
-import lessonList from '@/assets/js/roomlesson'
+import lessonType from '@/assets/js/lessonType.json'
 
 export default {
+  props: {
+    lessons: {
+      type: Array,
+      required: true,
+      default: () => []
+    },
+  },
   data () {
     return {
-      lessonMetrix: new Array(7),
+      lessonList: [],
       blockList: [],
-      selectedBlock: null
+      selectedBlock: null,
+      week: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     }
   },
   computed: {
+    thColspan () {
+      return (day) => {
+        return (!this.selectedBlock || this.selectedBlock.col !== day) ? 12 : 12
+      }
+    },
+    thStyle () {
+      return (day) => {
+        return (this.selectedBlock && this.selectedBlock.col !== day) ? { "display": 'none' } : null
+      }
+    },
     tdBlockRowspan () {
       return (i, j, k) => {
-        const block = this.blockList.find(block => block.day === j && block.startRow === i)
+        const block = this.blockList.find(block => block.startRow <= i && block.endRow > i && block.day === j)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            if (k === 1) return block.endRow - block.startRow
+            if (i === block.startRow && k === 1) return block.endRow - block.startRow
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k)
@@ -59,10 +80,10 @@ export default {
     },
     tdBlockColspan () {
       return (i, j, k) => {
-        const block = this.blockList.find(block => block.day === j && block.startRow === i)
+        const block = this.blockList.find(block => block.startRow <= i && block.endRow > i && block.day === j)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            if (block && k === 1) return 12
+            if (i === block.startRow && k === 1) return 12
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k)
@@ -74,14 +95,45 @@ export default {
     },
     tdStyle () {
       return (i, j, k) => {
-        const block = this.blockList.find(block => block.day === j && block.startRow <= i && block.endRow > i)
+        if (this.selectedBlock && this.selectedBlock.col !== j) return { "display": 'none' }
+        const block = this.blockList.find(block => block.startRow <= i && block.endRow > i && block.day === j)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            if (block.startRow < i || k > 1) return { display: 'none' }
+            // if (block.startRow < i || k > 1) return { "display": 'none' }
+            if (i === block.startRow && k === 1) {
+              const lessonList = block.lessonList || []
+              let color = null
+              if (lessonList.length === 1) {
+                if (!!lessonList[0]["name"]) {
+                  const type = lessonType.find(type => lessonList[0]["name"].toLowerCase().indexOf(type["name"]) === 0)
+                  if (type) color = type["color"]
+                }
+              } else if (lessonList.length > 1) color = "red"
+              return {
+                "background-color": color,
+                "cursor": "pointer"
+              }
+            }
+            return { "display": 'none' }
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 <= i - 1 && (lesson["endTime"] - 9) * 2 > i - 1 && lesson["startCol"] <= k && lesson["startCol"] + lesson["span"] > k)
-            if (lesson) return (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k ? { "border": '2px solid #000' } : { "display": 'none' }
+            // if (lesson) return (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k ? { "border": '2px solid #EAEAEA' } : { "display": 'none' }
+            if (lesson) {
+              if ((lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k) {
+                let color = null
+                if (lesson["name"]) {
+                  const type = lessonType.find(type => lesson["name"].toLowerCase().indexOf(type["name"]) === 0)
+                  if (type) color = type["color"]
+                }
+                return {
+                  "border": '2px solid #EAEAEA',
+                  "background-color": color,
+                  "cursor": "pointer"
+                }
+              }
+              return { "display": 'none' }
+            }
           }
         }
         return null
@@ -89,20 +141,28 @@ export default {
     },
     tdLessonTable () {
       return (i, j, k) => {
-        const block = this.blockList.find(block => block.day === j && block.startRow === i)
+        const block = this.blockList.find(block => block.startRow <= i && block.endRow > i && block.day === j)
         if (block) {
           if (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day)) {
-            const lessonList = block.lessonList || []
-            if (lessonList.length === 0) return '0'
-            else if (lessonList.length === 1) return lessonList[0]["moduleCode"]
-            else return '· · ·'
+            if (i === block.startRow && k === 1) {
+              const lessonList = block.lessonList || []
+              if (lessonList.length === 0) return '0'
+              else if (lessonList.length === 1) {
+                const lesson = lessonList[0]
+                let moduleCode = lesson["moduleCode"]
+                if (moduleCode.indexOf(' ') === -1 && moduleCode.indexOf('-') === -1) moduleCode = `${moduleCode.slice(0,3)}${!!this.selectedBlock ? "" : " "}${moduleCode.slice(3)}`
+                return moduleCode
+              } else return '· · ·'
+            }
           } else {
             const lessonList = block.lessonList || []
             const lesson = lessonList.find(lesson => (lesson["startTime"] - 9) * 2 === i - 1 && lesson["startCol"] === k)
             if (lesson) {
-              let weekArr = ''
-              if (lesson.week) lesson.week.forEach((week, index) => weekArr += week + (index < lesson.week.length - 1 ? ',' : ''))
-              return `<table class="lesson">
+              // let weekArr = ''
+              // if (lesson.week) lesson.week.forEach((week, index) => weekArr += week + (index < lesson.week.length - 1 ? ',' : ''))
+              const weekArr = lesson.week
+              return `
+                      <table class="lesson">
                         <tbody>
                           <tr>
                             <td>${lesson.moduleCode}</td>
@@ -165,15 +225,12 @@ export default {
   methods: {
     selectBlock (i, j, k) {
       const block = this.blockList.find(block => block.day === j && block.startRow <= i && block.endRow > i)
-      console.log(!!block, !this.selectedBlock, this.selectedBlock ? `${this.selectedBlock.row} ${this.selectedBlock.col}` : null, i, j, this.selectedBlock && block ? !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day) : null)
+      // console.log(!!block, !this.selectedBlock, this.selectedBlock ? `${this.selectedBlock.row} ${this.selectedBlock.col}` : null, i, j, this.selectedBlock && block ? !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day) : null)
       if (!!block && (!this.selectedBlock || !(this.selectedBlock.row === block.startRow && this.selectedBlock.col === block.day))) {
-        console.log('here')
         this.selectedBlock = {
           row: block.startRow,
           col: block.day
         }
-      } else {
-        console.log('invalid')
       }
     },
     compare () {
@@ -210,6 +267,8 @@ export default {
   },
 
   mounted () {
+    this.lessonList = this.lessons;
+
     // lessonList.forEach(lesson => {
     //   if (lesson["endTime"] <= lesson["startTime"]) {
     //     console.error("time error")
@@ -220,7 +279,7 @@ export default {
 
     for (let day = 1; day <= 7; day++) {
       const dailyLessonList = []
-      lessonList.forEach(lesson => {
+      this.lessonList.forEach(lesson => {
         if (lesson["day"] === day) dailyLessonList.push(lesson)
       })
       dailyLessonList.sort(this.compare())
@@ -288,76 +347,92 @@ export default {
 <style lang='scss'>
 table {
   border-collapse: collapse;
-  // text-align: center;
   table-layout: fixed;
   // width: 1400px;
   background-color: transparent;
 }
 
+th {
+  border: 2px solid #EAEAEA;
+  color: #666;
+  height: 35px;
+  text-align: center;
+}
+
 td {
-  border: 2px solid #000;
+  border: 2px solid #EAEAEA;
   border-left: none;
   border-right: none;
+  height: 40px;
+}
+
+span {
+  display: inline-block;
 }
 
 .frame {
-  transition: all 0.5s;
-}
+  border: 2px solid #EAEAEA;
 
-.frame-td:first-child {
-  border-left: 2px solid #000;
-  border-right: 2px solid #000;
-}
+  .week {
+    width: 1000px;
+  }
 
-.frame-td:nth-child(12n+2) {
-  border-left: 2px solid #000;
-}
+  .row-header {
+    padding: 0 5px;
+    // width: 50px;
+    height: 80px;
+  }
 
-.frame-td:nth-child(12n+13) {
-  border-right: 2px solid #000;
-}
+  .frame-td {
+    color: #666;
+    // width: 100px;
+    text-align: center;
+    // padding: 0 10px;
+    position: relative;
 
-.frame-td {
-  color: #666;
-  height: 40px;
-  width: auto;
-  text-align: center;
-  // padding: 0 10px;
+    .lesson {
+      margin: 0 auto;
+    }
+
+    .lesson td{
+      border: none !important;
+      width: 150px;
+      text-align: center;
+      padding: 5px 10px;
+    }
+  }
+
+  .frame-td:first-child {
+    border-left: 2px solid #EAEAEA;
+    border-right: 2px solid #EAEAEA;
+  }
+
+  .frame-td:nth-child(12n+2) {
+    border-left: 2px solid #EAEAEA;
+  }
+
+  .frame-td:nth-child(12n+13) {
+    border-right: 2px solid #EAEAEA;
+  }
 }
 
 .nonemptycell {
   padding: 0 10px;
 }
 
-table thead th {
-  border: 2px solid #000;
-  color: #666;
-  height: 50px;
+.close {
+  position: absolute;
+  left: 10px;
+  top: 5px;
+  background: #E6E3DF;
+  color: #8E8E93;
+  font-size: 15px;
+  height: 30px;
+  width: 30px;
+  line-height: 30px;
   text-align: center;
-
-  span {
-    display: inline-block;
-    width: 80px;
-  }
-}
-
-.grid-td {
-  border: none;
-}
-
-.lesson {
-  // background:red;
-  margin: 0 auto;
-}
-
-.lesson td{
-  border: none !important;
-  width: 150px;
-  text-align: center;
-  padding: 5px 10px;
-}
-
-.row-header {
-  padding: 0 10px;
+  vertical-align: middle;
+  border-radius: 15px;
+  z-index: 3001;
 }
 </style>

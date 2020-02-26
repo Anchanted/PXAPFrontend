@@ -42,23 +42,25 @@ export default {
       this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
       if (this.displayMap) this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
       roomList.forEach(room => {
-        const pointArr = room['areaCoords']
-        const level = room['level']
+        if (room['floorIndex'] === parseInt(this.$route.params.floorIndex)) {
+          const pointArr = room['areaCoords']
+          const level = room['level']
 
-        if (pointArr.length) {
-          this.context.lineWidth = 3
-          this.context.strokeStyle = '#FFFF00'
-          if (level === 1) this.context.fillStyle = 'red'
-          else if (level === 2) this.context.fillStyle = 'green'
-          else if (level === 3) this.context.fillStyle = 'blue'
-          this.context.globalAlpha = 0.5
-          this.context.beginPath()
-          for (let i = 0; i < pointArr.length; i ++) {
-            if (i == 0) this.context.moveTo(pointArr[i].x, pointArr[i].y)
-            else this.context.lineTo(pointArr[i].x, pointArr[i].y)
+          if (pointArr.length) {
+            this.context.lineWidth = 3
+            this.context.strokeStyle = '#FFFF00'
+            if (level === 1) this.context.fillStyle = 'red'
+            else if (level === 2) this.context.fillStyle = 'green'
+            else if (level === 3) this.context.fillStyle = 'blue'
+            this.context.globalAlpha = 0.5
+            this.context.beginPath()
+            for (let i = 0; i < pointArr.length; i ++) {
+              if (i == 0) this.context.moveTo(pointArr[i].x, pointArr[i].y)
+              else this.context.lineTo(pointArr[i].x, pointArr[i].y)
+            }roomList
+            this.context.fill()
+            this.context.globalAlpha = 1
           }
-          this.context.fill()
-          this.context.globalAlpha = 1
         }
       })
 

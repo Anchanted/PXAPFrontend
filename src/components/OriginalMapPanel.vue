@@ -1,41 +1,45 @@
 <template>
-  <div class="panel-container" :class="{'panel-collapsed': panelCollapsed}" :style="{ 'max-height': `${screenHeight - 20 - 50}px` }">
+  <div class="panel" :class="{'panel-collapsed': panelCollapsed}" :style="{ 'max-height': `${screenHeight - 20 - 50}px` }">
     <!-- <div class="panel-collapse" @click="(panelCollapsed = !panelCollapsed)"> -->
+    <div class="panel-button-container">
       <button
         class="iconfont icon-arrow-left panel-button"
         :class="{'panel-collapsed-button': panelCollapsed}"
         :style="{top: $route.params.buildingCode.toUpperCase().charAt(0) === 'M' ? '300px' : ''}"
         type="button"
         @mousedown.stop="(panelCollapsed = !panelCollapsed)"></button>
+    </div>
     <!-- </div> -->
-    <div class="shadow bg-white rounded panel-container-area" @mousedown.stop>
-      <div>
-        <div class="row"><label class="row-name">Building:</label>&nbsp;<span style="color: red">{{buildingCode}}</span></div>
-        <div class="row">
-          <label class="row-name">Floor:</label>&nbsp;{{floor}}
+    <div class="shadow bg-white rounded panel-container" :style="{ height: `${screenHeight - 20 - 50}px` }" @mousedown.stop>
+      <div class="panel-body">
+        <div>
+          <div class="row"><label class="row-name">Building:</label>&nbsp;<span style="color: red">{{buildingCode}}</span></div>
+          <div class="row">
+            <label class="row-name">Floor:</label>&nbsp;{{floor}}
+          </div>
+          <div class="row"><label class="row-name">Room Name:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="roomName" :placeholder="`e.g. ${buildingCode}213`"></div>
+          <div class="row">
+            <label class="row-name">Room Type:</label>&nbsp;
+            <select ref="type">
+              <option value="Other" style="color: red">Other - 其他</option>
+              <option v-for="(type, index) in roomTypeArr" :key="index" :value="type.en">{{type.en}} - {{type.zh}}</option>
+            </select>
+          </div>
+          <div class="row">
+            <label class="row-name">Room Level:</label>&nbsp;
+            <select ref="level">
+              <option v-for="n in 3" :key="n" :value="n">{{n}}</option>
+            </select>
+          </div>
         </div>
-        <div class="row"><label class="row-name">Room Name:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="roomName" :placeholder="`e.g. ${buildingCode}213`"></div>
-        <div class="row">
-          <label class="row-name">Room Type:</label>&nbsp;
-          <select ref="type">
-            <option value="Other" style="color: red">Other - 其他</option>
-            <option v-for="(type, index) in roomTypeArr" :key="index" :value="type.en">{{type.en}} - {{type.zh}}</option>
-          </select>
+        <div v-for="(point, index) in points" :key="index" style="padding: 10px 10px;">
+          {{index + 1}}. x:<input type="text" :value="point.x" class="coordinate-input" @input="updateCoords(index, 'x', $event.target.value)">&nbsp;y:<input type="text" :value="point.y" class="coordinate-input" @input="updateCoords(index, 'y', $event.target.value)">
+          <button class="panel-body-delete" @click="deleteCoords(index)">X</button>
         </div>
-        <div class="row">
-          <label class="row-name">Room Level:</label>&nbsp;
-          <select ref="level">
-            <option v-for="n in 3" :key="n" :value="n">{{n}}</option>
-          </select>
+        <div>
+          <button v-show="points.length" @click="clearData">{{`Clear Point${points.length > 1 ? 's' : ''}`}}</button>
+          <button v-show="points.length >= 3" class="duplicate-button" @click="getData">Generate Data</button>
         </div>
-      </div>
-      <div v-for="(point, index) in points" :key="index" style="padding: 10px 10px;">
-        {{index + 1}}. x:<input type="text" :value="point.x" class="coordinate-input" @input="updateCoords(index, 'x', $event.target.value)">&nbsp;y:<input type="text" :value="point.y" class="coordinate-input" @input="updateCoords(index, 'y', $event.target.value)">
-        <button class="panel-container-area-delete" @click="deleteCoords(index)">X</button>
-      </div>
-      <div>
-        <button v-show="points.length" @click="clearData">{{`Clear Point${points.length > 1 ? 's' : ''}`}}</button>
-        <button v-show="points.length >= 3" class="duplicate-button" @click="getData">Generate Data</button>
       </div>
     </div>
   </div>
@@ -175,49 +179,57 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.panel-container {
-  overflow-x: hidden;
-  overflow-y: overlay;
+.panel {
   position: fixed;
-  width: 400px;
+  width: 350px;
   top: 20px;
 	left: 10px;
   transition: transform ease-in-out 0.5s;
   background-color: transparent;
 
-  &-area {
-    min-height: 400px;
-    width: 350px;
-    padding: 20px 0;
+  &-container {
+    overflow-x: hidden;
+    overflow-y: overlay;
+    width: 100%;
+    height: 100%;
     position: relative;
-    font-size: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 
-    .row {
-      margin: 10px 0;
+    .panel-body {
+      // overflow-x: hidden;
+      // overflow-y: overlay;
+      // min-height: 400px;
+      // width: 350px;
+      width: 100%;
+      padding: 20px 0;
+      font-size: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
 
-      select {
-        width: 150px;
+      .row {
+        margin: 10px 0;
+
+        select {
+          width: 150px;
+        }
+
+        .row-name {
+          display: inline-block;
+          width: 130px;
+          text-align: right;
+          margin-bottom: 0px;
+        }
       }
 
-      .row-name {
-        display: inline-block;
-        width: 130px;
-        text-align: right;
-        margin-bottom: 0px;
+      &-delete {
+        margin-left: 10px;
+        width: 30px;
+        height: 30px;
       }
-    }
 
-    &-delete {
-      margin-left: 10px;
-      width: 30px;
-      height: 30px;
-    }
-
-    .duplicate-button {
-      margin-left: 10px;
+      .duplicate-button {
+        margin-left: 10px;
+      }
     }
   }
 }
@@ -230,16 +242,20 @@ export default {
   transform: rotate(180deg)
 }
 
-.panel-button {
+.panel-button-container {
   position: absolute;
   top: 0;
   // right: -36px;
   left: 350px;
   // margin-left: 350px;
-  padding: 18px 12px;
-  font-size: 18px;
-  margin: 0;
-	border: 0px;
+
+  .panel-button {
+    padding: 18px 12px;
+    font-size: 18px;
+    margin: 0;
+    border: 0px;
+    display: inline-block;
+  }
 }
 
 .coordinate-input {

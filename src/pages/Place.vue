@@ -63,8 +63,8 @@ export default {
       switch (this.item.dataType) {
         case 'room':
           building = this.item.building || {}
-          floor = this.item.floor || {}
-          str = `${floorDict[floor.name]}, ${building.name}, ${buildingDict[building.code]}`
+          floor = this.item.floorInfo || []
+          str = `${floor.map((e) => floorDict[e.floorName]).join(" and ")}, ${building.name}, ${buildingDict[building.code]}`
           break
         case 'facility':
           building = this.item.building || {}
@@ -97,7 +97,7 @@ export default {
           data = await this.$api.room.getRoomInfo(id)
           console.log(data)
           this.item = { ...data.room }
-          this.lessonList = data.timetable
+          this.lessonList = data.timetable || []
           // this.description = data.description;
           break
         case 'facility':
