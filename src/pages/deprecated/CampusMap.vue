@@ -436,9 +436,6 @@ export default {
 
     this.checkRequestAnimationFrame();
     requestAnimationFrame(this.animate);
-
-    this.$store.dispatch('commitPanelCollapsed', false)
-    this.$store.dispatch('commitModalCollapsed', true)
   },
 
   destroyed: function () {

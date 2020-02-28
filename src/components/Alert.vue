@@ -1,6 +1,6 @@
 <template>
   <transition name="alert">
-    <div class="alert alert-danger message-box" v-if="show">{{message}}</div>
+    <div class="alert message-box" :class="`alert-${type || 'danger'}`" v-if="show">{{message}}</div>
   </transition>
 </template>
 
@@ -11,7 +11,8 @@ export default {
   data () {
     return {
       message: '',
-      show: false
+      show: false,
+      type: null
     }
   }
 }
@@ -25,7 +26,7 @@ export default {
   right: 0;
   top: 90px;
   // padding: 2vw;
-  font-size: 2rem;
+  font-size: 1.2rem;
   // border-radius: 2vw;
   // text-align: center;
   max-width: 60vw;
@@ -35,7 +36,7 @@ export default {
 
 .alert-enter-active,
 .alert-leave-active {
-  transition: transform 0.5s;
+  transition: transform 0.5s, opacity 0.5s;
 }
 
 .alert-enter,

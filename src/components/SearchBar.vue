@@ -7,7 +7,7 @@
         type="button"
         :disabled="$route.matched.length < 2"
         data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="modalCollapsed ? $t('tooltip.expandModal') : $t('tooltip.collapseModal')"
-        @click="commitModalCollapsed(!modalCollapsed)"/>
+        @click="$store.commit('setModalCollapsed', !modalCollapsed)"/>
     </div>
 
     <form class="form-inline search-form" style="" @submit.prevent>
@@ -23,7 +23,7 @@
           @click="submit"/>
       </div>
 		</form>
-    <div class="panel-collapse" @click="commitPanelCollapsed(!panelCollapsed)">
+    <div class="panel-collapse" @click="$store.commit('setPanelCollapsed', !panelCollapsed)">
       <button
         class="iconfont icon-arrow-left panel-collapse-button"
         :class="{'panel-collapsed-button': panelCollapsed}"
@@ -47,15 +47,11 @@ export default {
   },
   methods: {
     ...mapActions([
-      "commitPanelCollapsed",
-      "commitModalCollapsed",
       "searchHistory/commitDisplaySearchHistory",
     ]),
     submit () {
       if (this.text) {
         // console.log(this.text)
-        this.commitPanelCollapsed(false)
-        this.commitModalCollapsed(false)
         this.selectItem({ content: this.text, dataType: 'query' })
         this["searchHistory/commitDisplaySearchHistory"](false)
       } else console.log('invalid')
@@ -64,7 +60,7 @@ export default {
       // console.log('onfocus')
       if (this.text === '') {
         this["searchHistory/commitDisplaySearchHistory"](true)
-        if (!this.modalCollapsed) this.commitModalCollapsed(true)
+        if (!this.modalCollapsed) this.$store.commit('setModalCollapsed', true)
       }
     },
     onblur (e) {
@@ -82,7 +78,7 @@ export default {
       if (val === '') {
         if (this.$refs.input == document.activeElement) {
           this["searchHistory/commitDisplaySearchHistory"](true)
-          if (!this.modalCollapsed) this.commitModalCollapsed(true)
+          if (!this.modalCollapsed) this.$store.commit('setModalCollapsed', true)
         }
       } else {
         this["searchHistory/commitDisplaySearchHistory"](false)

@@ -1,12 +1,12 @@
-import api from '@/assets/js/http'
+import api from './api'
 
 const room = {
   getRoomInfo (id) {
     return api.get(`/room/${id}`)
   },
 
-  getOccupiedRoom (id) {
-    return api.get(`/room/occupied/${id}`)
+  getOccupiedRoom (id, params) {
+    return api.get(`/room/occupied/${id}`, params)
   }
 }
 

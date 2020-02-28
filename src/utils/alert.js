@@ -15,6 +15,7 @@ let alert = (options) => {
     timer = null
     instance.show = false
     instance.message = ''
+    instance.type = null
   }
   // let time = 3000
   let time
@@ -26,6 +27,7 @@ let alert = (options) => {
     // instance.time = time || 3000
     instance.message = options.message
     time = options.time || 3000
+    instance.type = options.type || "danger"
   } else {
     return
   }
@@ -44,6 +46,7 @@ alert.close = () => {
     timer = null
     instance.show = false
     instance.message = ''
+    instance.type = null
   }
 }
 alert.install = (Vue) => {

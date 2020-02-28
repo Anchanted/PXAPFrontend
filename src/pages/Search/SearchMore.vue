@@ -205,7 +205,7 @@ export default {
   async mounted () {
     // console.log('more mounted')
     $('[data-toggle="tooltip"]').tooltip();
-    this.$store.dispatch('commitModalLoading', true)
+    this.$store.commit('setModalLoading', true)
     this.$store.commit('setModalScrollTop', 0)
 
     this.query = this.$route.query.q
@@ -244,8 +244,8 @@ export default {
       } finally {
         if (empty) return
         this.$nextTick(() => {
-          this.$store.dispatch('commitModalLoading', false)
-          this.$store.dispatch('commitModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchMore' })
+          this.$store.commit('setModalLoading', false)
+          this.$store.commit('setModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchMore' })
         })
       }
     } else {

@@ -15,7 +15,7 @@
       <span class="basic-name">{{item.name}}</span>
       <!-- <h5>{{item.type}}</h5> -->
       <div class="basic-type">
-        <span class="basic-type-dataType">{{itemType}}</span><span class="basic-type-itemType">{{item.type}}</span>
+        <span class="basic-type-dataType">{{$t(`itemType.${item.dataType || ''}`)}}</span><span class="basic-type-itemType"><b>&nbsp;&nbsp;·&nbsp;&nbsp;</b>{{basicItemType}}</span>
       </div>
       <div class="basic-location">
         <div class="iconfont icon-marker basic-location-icon"></div>
@@ -23,16 +23,35 @@
       </div>
     </div>
 
-    <!-- <div class="section-divider"></div> -->
+    <div v-if="item.phone || item.email" class="section contact px-3 py-2">
+      <span class="title">{{$t('place.contact')}}</span>
+      <div v-if="item.phone" class="contact-section contact-phone">
+        <div class="iconfont icon-phone contact-section-icon"></div>
+        <div class="contact-section-text">
+          <span v-for="(e, index) in item.phone" :key="index" style="display: block;">+86&nbsp;<a :href="`tel:${e}`">{{e}}</a></span>
+        </div>
+      </div>
+      <div v-if="item.email" class="contact-section contact-email">
+        <div class="iconfont icon-mail contact-section-icon"></div>
+        <div class="contact-section-text">
+          <a v-for="(e, index) in item.email" :key="index" :href="`mailto:${e}`" style="display: block;">{{e}}</a>
+        </div>
+      </div>
+    </div>
 
-    <div v-if="item.dataType === 'room'" class="section px-3 py-2">
+    <div v-if="item.dataType === 'room' && lessonList.length > 0" class="section px-3 py-2">
       <span class="title">{{$t('place.timetable')}}</span>
       <timetable ref="timetable" :lessons="lessonList"></timetable>
     </div>
 
     <div v-if="item.dataType === 'building'" class="section allocation px-3 py-2">
-      <span class="allocation-title title">{{$t('place.department')}}</span>
+      <span class="title">{{$t('place.department')}}</span>
       <div class="allocation-detail" style="white-space: pre-line">{{departmentAllocation}}</div>
+    </div>
+
+    <div v-if="item.description" class="section description  px-3 py-2">
+      <div class="title">{{$t('place.description')}}</div>
+      <div class="description-text" v-html="itemDescription"></div>
     </div>
   </div>
 </template>
@@ -40,6 +59,7 @@
 <script>
 import buildingDict from '@/assets/js/building.json'
 import floorDict from '@/assets/js/floor.json'
+import { titleCase } from "@/utils/myUtilFunctions.js"
 
 import Timetable from '@/components/Timetable'
 
@@ -60,21 +80,43 @@ export default {
       let str
       let building
       let floor
+      let zone
+      // const zoneStr = (zone) => {
+      //   if (zone && typeof zone === 'string') {
+      //     zone = zone.toLowerCase()
+      //     if (zone.startsWith('n')) return 'North Campus'
+      //     else if (zone.startsWith('s')) return 'South Campus'
+      //   }
+      //   return null
+      // }
       switch (this.item.dataType) {
         case 'room':
           building = this.item.building || {}
           floor = this.item.floorInfo || []
-          str = `${floor.map((e) => floorDict[e.floorName]).join(" and ")}, ${building.name}, ${buildingDict[building.code]}`
+          zone = this.item.zone || "b"
+          str = `${floor.map(e => this.$t("place.floor." + e.floorName || "GF")).join(this.$t("place.floor.conj"))}, ${building.name}, ${this.$t("place.zone." + zone)}`
           break
         case 'facility':
           building = this.item.building || {}
           floor = this.item.floor || {}
-          str = `${floorDict[floor.name]}, ${building.name}, ${buildingDict[building.code]}`
+          zone = this.item.zone || "b"
+          const locationArr = []
+          if (floor.name) locationArr.push(this.$t("place.floor." + floor.name))
+          if (building.name) locationArr.push(building.name)
+          locationArr.push(this.$t("place.zone." + zone))
+          str = locationArr.join(', ')
           break
         case 'building':
-          str = `${buildingDict[this.item.code || 'FB']}`
+          zone = this.item.zone || "b"
+          str = `${this.$t("place.zone." + zone)}`
       }
       return str
+    },
+
+    basicItemType () {
+      if (this.item.dataType === 'building') return this.item.code
+      if (!!this.item.type && this.item.type instanceof Array) return this.item.type.map(e => titleCase(e || '')).join(', ')
+      return null
     },
 
     itemType () {
@@ -86,6 +128,10 @@ export default {
     departmentAllocation () {
       const str = this.item.department
       return str ? str.replace(/,/g, '\n') : 'None'
+    },
+
+    itemDescription () {
+      return this.item.description.replace(/\\n/g, "<br />")
     }
   },
   methods: {
@@ -119,16 +165,16 @@ export default {
       }
 
       this.$nextTick(() => {
-        this.$store.dispatch('commitModalLoading', false)
-        this.$store.dispatch('commitModalHeight', { height: this.$refs.page.offsetHeight, component: 'place' })
+        this.$store.commit('setModalLoading', false)
+        this.$store.commit('setModalHeight', { height: this.$refs.page.offsetHeight, component: 'place' })
       })
     }
   },
   mounted () {
-    this.$store.dispatch('commitModalLoading', true)
+    this.$store.commit('setModalLoading', true)
     this.getItemInfo()
     $('[data-toggle="tooltip"]').tooltip();
-  },
+  }
 }
 </script>
 
@@ -181,24 +227,6 @@ export default {
       font-size: 1.2rem;
       line-height: 1.5;
       color: #6E6E6E;
-
-      &-itemType {
-        position: relative;
-        margin-left: 1.5rem;
-      }
-
-      &-itemType::before {
-        position: absolute;
-        left: -1rem;
-        top: 0;
-        bottom: 0;
-        margin: auto;
-        width: 0.3rem;
-        height: 0.3rem;
-        content: "";
-        background: grey;
-        border-radius: 0.15rem;
-      }
     }
 
     .basic-location {
@@ -213,6 +241,36 @@ export default {
         margin-right: 10px;
         font-size: 2rem;
         line-height: 2rem;
+        text-align: center;
+      }
+
+      &-text {
+        position: relative;
+        display: inline-block;
+        font-size: 1.2rem;
+        /* float: left; */
+      }
+    }
+  }
+
+  .contact {
+    &-section {
+      display: flex;
+      align-items: center;
+      line-height: 2rem;
+      text-align: center;
+      vertical-align: middle;
+
+      &.contact-email {
+        margin-top: 0.5rem;
+      }
+
+      &-icon {
+        width: 2rem;
+        height: 2rem;
+        margin-right: 10px;
+        font-size: 1.5rem;
+        font-weight: bold;
       }
 
       &-text {
@@ -225,9 +283,18 @@ export default {
   }
 
   .allocation {
-
     &-detail {
       font-size: 1.2rem;
+    }
+  }
+
+  .description {
+    &-text {
+      font-size: 1rem;
+      line-height: 1.5;
+      // white-space: pre-line;
+      word-wrap: break-word;
+      // word-break: normal;
     }
   }
 }

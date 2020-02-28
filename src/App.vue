@@ -9,6 +9,7 @@
 </template>
 
 <script>
+import { Settings } from 'luxon'
 
 export default {
   components: {
@@ -38,24 +39,31 @@ export default {
     }
   },
   created () {
-    const lang = navigator.language || ''
-    if (lang.length >= 2) {
-      switch (lang.substring(0, 2)) {
-        case 'es':
-          this.$i18n.locale = 'es'
-          break;
-        case 'zh':
-          this.$i18n.locale = 'zh'
-          break;
-        default:
-          this.$i18n.locale = 'en'
-          break;
+    let lang = localStorage.getItem('language')
+    if (!lang) {
+      lang = navigator.language || ''
+      if (lang.length >= 2) {
+        switch (lang.substring(0, 2)) {
+          case 'es':
+            this.$i18n.locale = 'es'
+            break;
+          case 'zh':
+            this.$i18n.locale = 'zh'
+            break;
+          default:
+            this.$i18n.locale = 'en'
+            break;
+        }
       }
-    }
+    } else this.$i18n.locale = lang
+
+    Settings.defaultLocale = this.$i18n.locale
+
+    localStorage.setItem('language', this.$i18n.locale)
 
     const scrollBarWidth = this.getScrollbarWidth()
     console.log('scrollBarWidth', scrollBarWidth)
-    this.$store.dispatch('commitScrollBarWidth', scrollBarWidth)
+    this.$store.commit('setScrollBarWidth', scrollBarWidth)
     this.$store.dispatch('searchHistory/refreshHistoryList')
   },
 }
@@ -64,9 +72,9 @@ export default {
 <style>
 @import "./assets/css/reset.css";
 
-html {
+/* html {
   overflow: auto;
-}
+} */
 
 .tooltip {
   font-size: 1rem;

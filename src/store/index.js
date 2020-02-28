@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-import canvasMap from './module/canvasMap.js'
 import searchHistory from './module/searchHistory.js'
+import button from './module/button.js'
 
 Vue.use(Vuex)
 
@@ -30,7 +30,8 @@ export default new Vuex.Store({
       state.modalScrollTop = payload
     },
     setModalHeight (state, payload) {
-      state.modalHeight = payload + 1
+      console.log(payload)
+      state.modalHeight = (payload && payload.height || 0) + 1
     },
     setModalLoading (state, payload) {
       state.modalLoading = payload
@@ -40,25 +41,9 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    commitScrollBarWidth ({ commit }, payload) {
-      commit('setScrollBarWidth', payload)
-    },
-    commitModalCollapsed ({ commit }, payload) {
-      commit('setModalCollapsed', payload)
-    },
-    commitPanelCollapsed ({ commit }, payload) {
-      commit('setPanelCollapsed', payload)
-    },
-    commitModalHeight ({ commit }, payload) {
-      console.log(payload)
-      commit('setModalHeight', payload.height || 0)
-    },
-    commitModalLoading ({ commit }, payload) {
-      commit('setModalLoading', payload)
-    }
   },
   modules: {
-    canvasMap,
-    searchHistory
+    searchHistory,
+    button
   }
 })

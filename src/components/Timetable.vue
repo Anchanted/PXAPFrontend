@@ -10,7 +10,9 @@
         </template>
         <template v-else>
           <th @click.stop="selectedBlock = null" class="week frame-th-detail" colspan="12">
+            <span class="iconfont icon-arrow-down"></span>
             <span>{{$t(`week.full.${week[selectedBlock.col-1]}`)}}</span>
+            <span class="iconfont icon-arrow-down"></span>
           </th>
         </template>
       </tr>
@@ -143,7 +145,7 @@ export default {
               else if (lessonList.length === 1) {
                 const lesson = lessonList[0]
                 let moduleCode = lesson["moduleCode"]
-                if (moduleCode.indexOf(' ') === -1 && moduleCode.indexOf('-') === -1) moduleCode = `${moduleCode.slice(0,3)}${!!this.selectedBlock ? "" : " "}${moduleCode.slice(3)}`
+                if (moduleCode.indexOf(' ') === -1 && moduleCode.indexOf('-') === -1) moduleCode = `${moduleCode.slice(0,3)}${!!this.selectedBlock ? "" : "<br/>"}${moduleCode.slice(3)}`
                 return moduleCode
               } else return '· · ·'
             }
@@ -153,7 +155,7 @@ export default {
             if (lesson) {
               // let weekArr = ''
               // if (lesson.week) lesson.week.forEach((week, index) => weekArr += week + (index < lesson.week.length - 1 ? ',' : ''))
-              const weekArr = lesson.week
+              // const weekArr = lesson.week
               return `
                       <table class="lesson">
                         <tbody>
@@ -167,7 +169,7 @@ export default {
                             <td>${lesson.staff}</td>
                           </tr>
                           <tr>
-                            <td>Week: ${this.calculateWeeks(weekArr)}</td>
+                            <td>Week: ${this.calculateWeeks(lesson.week.join(','))}</td>
                           </tr>
                         </tbody>
                       </table>`
@@ -350,6 +352,28 @@ span {
 
   .frame-th-detail {
     cursor: pointer;
+    position: relative;
+
+    :first-child {
+      position: absolute;
+      left: 0;
+      margin-left: 8px;
+      transform: rotate(-90deg);
+      // font-size: 3.5vw;
+      animation: l2r 1s linear infinite normal;
+      // -moz-animation: l2r 1s infinite alternate;	/* Firefox */
+      // -webkit-animation: l2r 1s infinite alternate;	/* Safari 和 Chrome */
+      // -o-animation: l2r 1s infinite alternate;	/* Opera */
+    }
+
+    :last-child {
+      position: absolute;
+      right: 0;
+      margin-right: 8px;
+      transform: rotate(90deg);
+      // font-size: 3.5vw;
+      animation: r2l 1s linear infinite normal;
+    }
   }
 
   .row-header {
@@ -414,5 +438,21 @@ span {
   vertical-align: middle;
   border-radius: 15px;
   z-index: 3001;
+}
+
+@keyframes l2r
+{
+  0% {left: 0;}
+  35% {left: 10px;}
+  70% {left: 0;}
+  100% {left: 0;}
+}
+
+@keyframes r2l
+{
+  0% {right: 0;}
+  35% {right: 10px;}
+  70% {right: 0;}
+  100% {right: 0;}
 }
 </style>

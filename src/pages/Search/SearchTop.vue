@@ -124,8 +124,8 @@ export default {
       } else this.hasResult = false
 
       this.$nextTick(() => {
-        this.$store.dispatch('commitModalLoading', false)
-        this.$store.dispatch('commitModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchTop' })
+        this.$store.commit('setModalLoading', false)
+        this.$store.commit('setModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchTop' })
       })
     },
 
@@ -163,7 +163,7 @@ export default {
     // console.log(this)
     // console.log(this.$vnode.parent.componentInstance.cache)
     this.isAlive = false
-    this.$store.dispatch('commitModalLoading', true)
+    this.$store.commit('setModalLoading', true)
     this.search()
   },
   // destroyed () {
@@ -172,9 +172,9 @@ export default {
   activated () {
     // console.log('top activated')
     if (this.isAlive) {
-      this.$store.dispatch('commitModalHeight', { height: this.$refs.container.offsetHeight, component: 'SearchTop' })
-      // this.$store.dispatch('commitPanelCollapsed', false)
-      // this.$store.dispatch('commitModalCollapsed', false)
+      this.$store.commit('setModalHeight', { height: this.$refs.container.offsetHeight, component: 'SearchTop' })
+      // this.$store.commit('setPanelCollapsed', false)
+      // this.$store.commit('setModalCollapsed', false)
     } else this.isAlive = true
   },
   // deactivated () {

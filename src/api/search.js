@@ -1,4 +1,4 @@
-import api from '@/assets/js/http'
+import api from './api'
 
 const search = {
   searchTop (params) {

@@ -11,7 +11,6 @@ const mixin = {
       if (item.dataType) {
         this.saveHistoryList(item)
 
-        const previousPath = this.$route.fullPath
         if (item.dataType === 'query') {
           this.$router.push({
             name: 'SearchTop',
@@ -33,16 +32,6 @@ const mixin = {
               id: item.id
             }
           })
-        }
-        if (previousPath === this.$route.fullPath) {
-          this.$store.dispatch('commitPanelCollapsed', false)
-          this.$store.dispatch('commitModalCollapsed', false)
-
-          if (to.name.indexOf('Search') !== -1) {
-            this.$store.commit('setGlobalText', decodeURIComponent(this.$store.query.q || ''))
-          } else if (to.name === 'Place') {
-            this.$store.commit('setGlobalText', this.$store.params.itemName || '')
-          }
         }
       }
     },

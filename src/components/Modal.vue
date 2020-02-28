@@ -62,23 +62,9 @@ export default {
     },
   },
   methods: {
-    async getItemInfo (type, id, name) {
-      this.showModal()
-      this.$router.push({
-        name: 'Place',
-        params: {
-          buildingId: this.$route.params.buildingId,
-          floorId: this.$route.params.floorId,
-          type,
-          id,
-          itemName: name
-        }
-      })
-    },
-
     showModal () {
-      this.$store.dispatch('commitPanelCollapsed', false)
-      this.$store.dispatch('commitModalCollapsed', false)
+      this.$store.commit('setPanelCollapsed', false)
+      this.$store.commit('setModalCollapsed', false)
     },
 
     onscroll () {

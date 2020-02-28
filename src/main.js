@@ -11,6 +11,9 @@ import mixin from '@/utils/mixin.js'
 import api from '@/api';
 import i18n from '@/locales'
 
+import { Datetime } from 'vue-datetime'
+import 'vue-datetime/dist/vue-datetime.css'
+
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import '../node_modules/bootstrap/dist/js/bootstrap.min.js'
 
@@ -56,6 +59,9 @@ Vue.use(VueLazyload, {
 })
 
 Vue.mixin(mixin)
+
+Vue.use(Datetime)
+Vue.component('datetime', Datetime);
 
 new Vue({
   el: '#app',

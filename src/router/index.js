@@ -91,16 +91,16 @@ router.beforeEach((to, from, next) => {
       const toBuildingId = to.params.buildingId || ''
       const toFloorId = to.params.floorId || ''
       if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}` || to.name === "Map") { // go to another page
-        store.dispatch('commitModalCollapsed', true)
-        store.dispatch('commitPanelCollapsed', false)
+        store.commit('setPanelCollapsed', false)
+        store.commit('setModalCollapsed', true)
+        // store.commit('setGlobalText', decodeURIComponent(''))
       }
 
       if (to.matched.length > 1) {
+        store.commit('setPanelCollapsed', false)
+        store.commit('setModalCollapsed', false)
         if (to.name.indexOf('Search') !== -1) store.commit('setGlobalText', decodeURIComponent(to.query.q || ''))
         else if (to.name === 'Place') store.commit('setGlobalText', to.params.itemName || '')
-
-        store.dispatch('commitModalCollapsed', false)
-        store.dispatch('commitPanelCollapsed', false)
       }
     }
     next()
