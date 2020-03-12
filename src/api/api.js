@@ -1,6 +1,6 @@
 import axios from 'axios'
 import store from '@/store';
-import alert from '@/utils/alert'
+import alert from '@/plugins/AlertMessage'
 import i18n from '@/locales'
 // const qs = require('qs')
 

@@ -1,63 +1,72 @@
 <template>
   <div class="search-result" ref="container">
-    <div v-if="hasResult" class="search-result-top">
-      <div v-if="buildingTotal > 0" class="search-result-section">
-        <div class="search-result-section-type">{{$t('itemType.building')}}</div>
-        <div class="search-result-section-items">
-          <place-card v-for="building in topBuildingList" :key="building.id"
-            :simple="false" :type="'building'"
-            @click.native="onclick($event, building, 'building')">
-            <template #icon>{{building.code}}</template>
-            <template #name>{{building.name}}</template>
-            <template #location>{{itemLocation(building, 'building')}}</template>
-          </place-card>
+    <loading-panel
+      v-if="loading"
+      :has-error="loadingError"
+      class="search-top-loading-panel"
+      @refresh="search">
+    </loading-panel>
 
-          <div v-if="buildingTotal > 3" class="search-result-section-items-more">
-            <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'building' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
+    <template v-else>
+      <div v-if="hasResult" class="search-result-top">
+        <div v-if="buildingTotal > 0" class="search-result-section">
+          <div class="search-result-section-type">{{$t('itemType.building')}}</div>
+          <div class="search-result-section-items">
+            <place-card v-for="building in topBuildingList" :key="building.id"
+              :simple="false" :type="'building'"
+              @click.native="onclick($event, building, 'building')">
+              <template #icon>{{building.code}}</template>
+              <template #name>{{building.name}}</template>
+              <template #location>{{itemLocation(building, 'building')}}</template>
+            </place-card>
+
+            <div v-if="buildingTotal > 3" class="search-result-section-items-more">
+              <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'building' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="roomTotal > 0" class="search-result-section">
+          <div class="search-result-section-type">{{$t('itemType.room')}}</div>
+          <div class="search-result-section-items">
+            <place-card v-for="room in topRoomList" :key="room.id"
+              :simple="false" :type="'room'"
+              @click.native="onclick($event, building, 'building')">
+              <template #icon>{{room.building_code}}</template>
+              <template #name>{{room.name}}</template>
+              <template #type>{{room.type}}</template>
+              <template #location>{{itemLocation(room, 'room')}}</template>
+            </place-card>
+
+            <div v-if="roomTotal > 3" class="search-result-section-items-more">
+              <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'room' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="facilityTotal > 0" class="search-result-section">
+          <div class="search-result-section-type">{{$t('itemType.facility')}}</div>
+          <div class="search-result-section-items">
+            <place-card v-for="facility in topFacilityList" :key="facility.id"
+              :simple="false" :type="'facility'"
+              @click.native="onclick($event, building, 'building')">
+              <template #icon>
+                <img :src="facilityImage(facility.type)" :alt="facility.type">
+              </template>
+              <template #name>{{facility.name}}</template>
+              <template #type>{{facility.type}}</template>
+              <template #location>{{itemLocation(facility, 'facility')}}</template>
+            </place-card>
+
+            <div v-if="facilityTotal > 3" class="search-result-section-items-more">
+              <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'facility' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-if="roomTotal > 0" class="search-result-section">
-        <div class="search-result-section-type">{{$t('itemType.room')}}</div>
-        <div class="search-result-section-items">
-          <place-card v-for="room in topRoomList" :key="room.id"
-            :simple="false" :type="'room'"
-            @click.native="onclick($event, building, 'building')">
-            <template #icon>{{room.building_code}}</template>
-            <template #name>{{room.name}}</template>
-            <template #type>{{room.type}}</template>
-            <template #location>{{itemLocation(room, 'room')}}</template>
-          </place-card>
-
-          <div v-if="roomTotal > 3" class="search-result-section-items-more">
-            <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'room' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="facilityTotal > 0" class="search-result-section">
-        <div class="search-result-section-type">{{$t('itemType.facility')}}</div>
-        <div class="search-result-section-items">
-          <place-card v-for="facility in topFacilityList" :key="facility.id"
-            :simple="false" :type="'facility'"
-            @click.native="onclick($event, building, 'building')">
-            <template #icon>
-              <img :src="facilityImage(facility.type)" :alt="facility.type">
-            </template>
-            <template #name>{{facility.name}}</template>
-            <template #type>{{facility.type}}</template>
-            <template #location>{{itemLocation(facility, 'facility')}}</template>
-          </place-card>
-
-          <div v-if="facilityTotal > 3" class="search-result-section-items-more">
-            <router-link :to="{ name: 'SearchMore', params: { buildingId: $route.params.buildingId, floorId: $route.params.floorId, type: 'facility' }, query: { q: query } }" tag="a">{{$t('search.viewMore')}}</router-link>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-else class="search-result-no">{{$t('search.noResult')}}</div>
+      <div v-else class="search-result-no">{{$t('search.noResult')}}</div>
+    </template>
 
     <!-- <transition name="more" v-on:enter="onenter"> -->
       <!-- <div v-show="show"> -->
@@ -68,8 +77,8 @@
 </template>
 
 <script>
-import SpinnerCircle from '@/components/Spinner/SpinnerCircle'
 import PlaceCard from '@/components/PlaceCard'
+import LoadingPanel from "@/components/LoadingPanel"
 
 import floorDict from '@/assets/js/floor.json'
 import buildingDict from '@/assets/js/building.json'
@@ -78,8 +87,8 @@ import iconPath from '@/assets/js/facilityIconPath.js'
 export default {
   name: 'SearchTop',
   components: {
-    SpinnerCircle,
-    PlaceCard
+    PlaceCard,
+    LoadingPanel
   },
   data() {
     return {
@@ -93,6 +102,8 @@ export default {
       query: null,
       loading: true,
       isAlive: false,
+      loading: true,
+      loadingError: false
     }
   },
   computed: {
@@ -108,25 +119,35 @@ export default {
   },
   methods: {
     async search () {
-      this.query = this.$route.query.q
-      if (this.query) {
-        const data = await this.$api.search.searchTop({ q: this.query })
-        console.log(data)
-        this.topBuildingList = data.building.content
-        this.buildingTotal = data.building.totalElements
-        this.topRoomList = data.room.content
-        this.roomTotal = data.room.totalElements
-        this.topFacilityList = data.facility.content
-        this.facilityTotal = data.facility.totalElements
-
-        this.hasResult = this.buildingTotal > 0 || this.roomTotal > 0 || this.facilityTotal > 0
-        // this.bounce = true
-      } else this.hasResult = false
-
+      this.loading = true
+      this.loadingError = false
       this.$nextTick(() => {
-        this.$store.commit('setModalLoading', false)
-        this.$store.commit('setModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchTop' })
+        this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'Place' })
       })
+
+      try {
+        this.query = this.$route.query.q
+        if (this.query) {
+          const data = await this.$api.search.searchTop({ q: this.query })
+          console.log(data)
+          this.topBuildingList = data.building.content
+          this.buildingTotal = data.building.totalElements
+          this.topRoomList = data.room.content
+          this.roomTotal = data.room.totalElements
+          this.topFacilityList = data.facility.content
+          this.facilityTotal = data.facility.totalElements
+
+          this.hasResult = this.buildingTotal > 0 || this.roomTotal > 0 || this.facilityTotal > 0
+        } else this.hasResult = false
+
+        this.loading = false
+        this.$nextTick(() => {
+          this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchTop' })
+        })
+      } catch (error) {
+        console.log(error)
+        this.loadingError = true
+      }
     },
 
     onclick (e, item, type) {
@@ -163,16 +184,13 @@ export default {
     // console.log(this)
     // console.log(this.$vnode.parent.componentInstance.cache)
     this.isAlive = false
-    this.$store.commit('setModalLoading', true)
     this.search()
   },
-  // destroyed () {
-  //   console.log('top destroyed')
-  // },
+
   activated () {
     // console.log('top activated')
     if (this.isAlive) {
-      this.$store.commit('setModalHeight', { height: this.$refs.container.offsetHeight, component: 'SearchTop' })
+      this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchTop' })
       // this.$store.commit('setPanelCollapsed', false)
       // this.$store.commit('setModalCollapsed', false)
     } else this.isAlive = true
@@ -186,31 +204,6 @@ export default {
     if (!to.query.q) next({ name: 'PageNotFound' })
     else next()
   },
-
-  // beforeRouteUpdate(to, from, next) {
-  //   console.log('top update')
-  //   console.log(this)
-  //   console.log(to.meta, from.meta, this.$route.meta)
-  //   from.meta.keepAlive = false
-  //   to.meta.keepAlive = true
-
-  //   next()
-  //   console.log(this)
-  //   console.log(to.meta, from.meta, this.$route.meta)
-  // },
-
-  // beforeRouteLeave (to, from, next) {
-  //   console.log('top leave', this.$vnode.tag)
-  //   console.log(this)
-  //   console.log(to.meta, from.meta, this.$route.meta)
-  //   if (from.name === 'SearchTop') {
-  //     from.meta.keepAlive = (to.name === 'SearchMore')
-  //     console.log(from.meta.keepAlive)
-  //   }
-  //   next()
-  //   console.log(this)
-  //   console.log(to.meta, from.meta, this.$route.meta)
-  // },
 
   beforeRouteUpdate(to, from, next) {
     // console.log('top update')
@@ -236,6 +229,21 @@ export default {
 </script>
 
 <style lang="scss">
+.search-top-loading-panel {
+  width: 100%;
+  height: 300px;
+  position: relative;
+  background-color: #ffffff;
+
+  .refresh {
+    font-size: 1.2rem !important;
+  }
+
+  button {
+    font-size: 1rem !important;
+  }
+}
+
 .search-result {
   width: 424px;
   height: auto;

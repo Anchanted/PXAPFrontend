@@ -1,7 +1,5 @@
 import Vue from 'vue'
 import App from '@/App.vue'
-// import Vuex from 'vuex'
-// import axios from 'axios'
 import VueLazyload from 'vue-lazyload'
 
 import store from '@/store/index.js'
@@ -17,16 +15,7 @@ import 'vue-datetime/dist/vue-datetime.css'
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import '../node_modules/bootstrap/dist/js/bootstrap.min.js'
 
-import Loading from "@/components/Spinner/index"
-
-import alert from '@/utils/alert'
-
-Vue.use(Loading)
-
-Vue.use(alert)
-
-// Vue.use(Vuex)
-// Vue.use(axios)
+import alert from '@/plugins/AlertMessage'
 
 const errorHandler = (err, vm, info) => {
   console.error('抛出全局异常')
@@ -59,6 +48,8 @@ Vue.use(VueLazyload, {
 })
 
 Vue.mixin(mixin)
+
+Vue.use(alert)
 
 Vue.use(Datetime)
 Vue.component('datetime', Datetime);

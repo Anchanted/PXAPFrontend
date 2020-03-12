@@ -43,8 +43,8 @@ module.exports = {
     // Paths
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
-    publicPath: "/pxap/",
-    assetsPublicPath: '/pxap/',
+    publicPath: "/",
+    assetsPublicPath: '/',
 
     /**
      * Source Maps

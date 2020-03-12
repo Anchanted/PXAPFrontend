@@ -1,25 +1,29 @@
 <template>
-  <div class="history-container" ref="container">
-    <div v-for="(item, index) in itemList" :key="index">
-      <place-card v-if="new RegExp(/^(building|facility|room)$/).test(item.dataType)"
-        :simple="true" :type="item.dataType"
-        @mousedown.native="onmousedown($event, item)">
-        <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
-        <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
-        <template #icon v-else-if="item.dataType === 'facility'">
-          <img :src="facilityImage(item.type)" :alt="item.type">
-        </template>
-        <template #name>{{item.name}}</template>
-        <template #location>{{itemLocation(index, item.dataType)}}</template>
-      </place-card>
+  <div v-if="itemList && itemList.length" class="history-container">
+    <template>
+      <div v-for="(item, index) in itemList" :key="index">
+        <place-card v-if="new RegExp(/^(building|facility|room)$/).test(item.dataType)"
+          :simple="true" :type="item.dataType"
+          @mousedown.native="onmousedown($event, item)">
+          <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
+          <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
+          <template #icon v-else-if="item.dataType === 'facility'">
+            <img :src="facilityImage(item.type)" :alt="item.type">
+          </template>
+          <template #name>{{item.name}}</template>
+          <template #location>{{itemLocation(index, item.dataType)}}</template>
+        </place-card>
 
-      <div v-else-if="item.dataType  === 'query'" class="history-item"
-        @mousedown="onmousedown($event, item)">
-        <span class="history-item-query one-line">{{item.content}}</span>
+        <div v-else-if="item.dataType  === 'query'" class="history-item"
+          @mousedown="onmousedown($event, item)">
+          <span class="history-item-query one-line">{{item.content}}</span>
+        </div>
       </div>
-
-    </div>
+    </template>
   </div>
+  <span v-else class="no-history">
+    No Search History
+  </span>
 </template>
 
 <script>
@@ -73,11 +77,19 @@ export default {
 </script>
 
 <style lang="scss">
+.no-history {
+  position: relative;
+  margin-top: 100px;
+  text-align: center;
+  font-size: 1.5rem;
+  display: block;
+}
+
 .history-container {
   width: 100%;
   height: auto;
   padding: 20px 0;
-
+  position: relative;
 }
 
 .history-item {

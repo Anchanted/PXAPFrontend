@@ -44,7 +44,7 @@ const routes = [
   {
     path: '/:buildingId(\\d+)?/:floorId(\\d+)?',
     component: CanvasMap,
-    name: 'Map',
+    name: "Map",
     children: [
       {
         path: 'search',
@@ -78,7 +78,6 @@ const routes = [
 const router = new Router({
   routes,
   mode: 'history',
-  // base: '/pxap/'
   base: '/'
 })
 
@@ -93,15 +92,17 @@ router.beforeEach((to, from, next) => {
       if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}` || to.name === "Map") { // go to another page
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', true)
-        // store.commit('setGlobalText', decodeURIComponent(''))
       }
 
+      let globalText = ""
       if (to.matched.length > 1) {
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', false)
-        if (to.name.indexOf('Search') !== -1) store.commit('setGlobalText', decodeURIComponent(to.query.q || ''))
-        else if (to.name === 'Place') store.commit('setGlobalText', to.params.itemName || '')
+        if (to.name.indexOf('Search') !== -1) globalText = decodeURIComponent(to.query.q || '')
+        else if (to.name === 'Place') globalText = to.params.itemName || ''
       }
+
+      store.commit('setGlobalText', globalText)
     }
     next()
   }

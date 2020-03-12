@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import Alert from '@/components/Alert.vue'
+import Alert from './index.vue'
 let ToastTem = Vue.extend(Alert)
 let instance
 let timer = null

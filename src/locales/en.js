@@ -104,7 +104,7 @@ module.exports = {
     },
     error: {
         refresh: {
-            text: 'Failed to load data, please refresh page.',
+            text: 'Failed to load data, please refresh the page.',
             button: 'Refresh'
         }
   }

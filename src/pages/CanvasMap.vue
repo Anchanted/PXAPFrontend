@@ -1,10 +1,6 @@
 <template>
   <!-- <div style="position:absolute; top:50%;left:50%;transform:translate(-50%,-50%);"> -->
-  <div style="overflow: hidden">
-    <div v-if="loading" class="d-flex flex-column justify-content-center loading">
-      <loading></loading>
-    </div>
-
+  <div style="overflow: hidden;">
     <canvas id="indoormap" ref="indoorMap"
       @mousedown="onmousedown"
       @mouseup="onmouseup"
@@ -51,6 +47,13 @@
         <span v-else>{{$t('datePicker.ok')}}</span>
       </template>
     </datetime>
+
+    <loading-panel
+      v-if="loading"
+      :has-error="loadingError"
+      class="canvas-map-loading-panel"
+      @refresh="$router.go(0)">
+    </loading-panel>
   </div>
 </template>
 
@@ -59,9 +62,10 @@ import SearchBar from '@/components/SearchBar'
 import ButtonGroup from '@/components/ButtonGroup'
 import Modal from '@/components/Modal'
 import SearchHistoryModal from '@/components/SearchHistoryModal'
+import LoadingPanel from "@/components/LoadingPanel"
 
 import iconPath from '@/assets/js/facilityIconPath.js'
-import { easeOutBack, easeOutCirc, arrowAnimation } from '@/utils/myUtilFunctions.js'
+import { easeOutBack, easeOutCirc, arrowAnimation, locationAnimation } from '@/utils/myUtilFunctions.js'
 import weekInfo from '@/assets/js//week.json'
 import { DateTime, Interval } from 'luxon'
 
@@ -73,7 +77,8 @@ export default {
     SearchBar,
     ButtonGroup,
     Modal,
-    SearchHistoryModal
+    SearchHistoryModal,
+    LoadingPanel
   },
   data() {
     return {
@@ -138,11 +143,17 @@ export default {
         times: 0,
         totalZoom: 0,
       },
+      location: {
+        x: null,
+        y: null,
+        timer: 0
+      },
+      geoWatchId: null,
       occupationTime: null,
       iconSize: null,
       mapMarginColor: null,
       loading: true,
-      errorRefresh: false,
+      loadingError: false,
       occupationRequesting: false,
       gateRequesting: false,
       virtualButton: {
@@ -161,11 +172,15 @@ export default {
     ...mapState({
       displaySearchHistory: state => state.searchHistory.displaySearchHistory,
       gateActivated: state => state.button.gateActivated,
-      occupationActivated: state => state.button.occupationActivated
+      occupationActivated: state => state.button.occupationActivated,
+      locationActivated: state => state.button.locationActivated
     }),
     buttonList () {
-      const buttonList = this.mapType === "floor" ? ["floor","home","occupation"] : ["location"]
-      if (this.mapType === "floor" && this.selectedFloor.hasGate) buttonList.push("gate")
+      const buttonList = this.mapType === "floor" ? ["floor","home"] : ["location"]
+      if (this.mapType === "floor") {
+        if (this.selectedFloor.hasGate) buttonList.push("gate")
+        if (this.selectedFloor.hasOccupation) buttonList.push("occupation")
+      }
       return buttonList
     },
     datetimeStyle () {
@@ -280,7 +295,10 @@ export default {
             this.lastMarkerAnimation.triggered = false
           }
 
+          ctx.shadowBlur = 10
+          ctx.shadowColor = "#ffffff"
           this.drawImage(this.imageMap['marker'], this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, size, size/2, size, true, true)
+          ctx.shadowBlur = 0
         }
 
         if (JSON.stringify(this.selectedItem) !== "{}") {
@@ -294,16 +312,28 @@ export default {
             this.currentMarkerAnimation.triggered = false
           }
 
+          ctx.shadowBlur = 10
+          ctx.shadowColor = "#ffffff"
           this.drawImage(this.imageMap['marker'], this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, size, size/2, size, true, true)
+          ctx.shadowBlur = 0
         }
       }
 
       if (this.occupationActivated && this.occupiedRoomList) {
-        const size = 60;
+        const size = this.iconSize;
         this.occupiedRoomList.forEach(room => {
           const centroid = room.location
           this.drawImage(this.imageMap['group'], centroid.x, centroid.y, size, size, size/2, size/2, false, true)
         })
+      }
+
+      if (this.locationActivated && this.location.x && this.location.y) {
+        const size = parseInt(this.iconSize * 1.5)
+        this.drawImage(this.imageMap["locationMarker"], this.location.x, this.location.y, size, size, size/2, size/2, true, false)
+        const locationDuration = 2
+        const aniSize = parseInt(size * 0.3 + locationAnimation(this.location.timer, size * 0.15, locationDuration))
+        this.drawImage(this.imageMap["locationCircle"], this.location.x, this.location.y, aniSize, aniSize, aniSize/2, aniSize/2, true, false)
+        this.location.timer = (this.location.timer + 0.016 > locationDuration) ? 0 : this.location.timer + 0.016
       }
 
       if (this.virtualButton.display) {
@@ -340,7 +370,7 @@ export default {
       }
     },
 
-    drawRotateImage (image, x, y, sizeX, sizeY, imgOffsetX, imgOffsetY, fixSize, selfRotate, degree, translateX, translateY) {
+    drawRotateImage (image, x, y, sizeX, sizeY, imgOffsetX, imgOffsetY, fixSize, selfRotate, degree, translateX = 0, translateY = 0) {
       const scaleX = this.scale.x * this.scaleAdaption
       const scaleY = this.scale.y * this.scaleAdaption
       const offsetX = this.position.x + this.positionAdaption.x
@@ -597,11 +627,11 @@ export default {
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
 
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size/2), parseInt(this.currentMarkerAnimation.y * scaleY + offsetY - size), size, size)
-          else ctx.rect(parseInt(this.canvasHeight - (this.currentMarkerAnimation.y * scaleY + offsetY + size/2)), parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size), size, size)
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.currentMarkerAnimation.y * scaleY + offsetY - size), size * 0.8, size)
+          else ctx.rect(parseInt(this.canvasHeight - (this.currentMarkerAnimation.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size), size * 0.8, size)
 
           if (ctx.isPointInPath(px, py)) {
-            this.adjustMapPosition('include')
+            this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
             this.lastDoubleClick = true
             return
           }
@@ -628,7 +658,7 @@ export default {
           }
           if(ctx.isPointInPath(px, py)){
             sameItem = this.setSelectedItem(element)
-            this.adjustMapPosition('include')
+            this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
             return true
           }
         })
@@ -638,7 +668,7 @@ export default {
         // Click on nothing, modal hides
         if (!found && !sameItem && JSON.stringify(this.selectedItem) !== "{}") {
           this.setSelectedItem()
-          this.$store.commit('setGlobalText', decodeURIComponent(''))
+          this.$store.commit('setGlobalText', "")
         }
       }
     },
@@ -652,7 +682,7 @@ export default {
       if (this.selectedItem.type !== element.itemType || this.selectedItem.id !== element.id) {
         // click on another item or no item clicked before or click on nothing
         sameItem = false
-        if (this.selectedItem.x)
+        if (!!this.selectedItem.x)
           this.lastMarkerAnimation = {
             triggered: true,
             duration: 0,
@@ -667,17 +697,17 @@ export default {
           ...element.location
         } : element
       } else {
-        console.log("same item")
+        // console.log("same item")
         this.$refs.modal.showModal()
       }
       return sameItem
     },
 
-    adjustMapPosition (type) {
-      if (JSON.stringify(this.selectedItem) !== '{}' && !!this.selectedItem.x) {
-        if (type === 'middle') {
-          this.scale.x = 3
-          this.scale.y = 3
+    adjustMapPosition ({ posX, posY }, type, scale) {
+      if ((posX != null && typeof(posX) != undefined) && (posY != null && typeof(posY) != undefined)) {
+        if (type === 'middle' && scale) {
+          this.scale.x = scale
+          this.scale.y = scale
         }
 
         const scaleX = this.scale.x * this.scaleAdaption
@@ -692,15 +722,15 @@ export default {
         let newPosY = this.position.y
 
         if (type === 'middle') {
-          newPosX = this.position.x + parseInt(this.canvasWidth / 2 - (this.selectedItem.x * scaleX + offsetX))
-          newPosY = this.position.y + parseInt(this.canvasHeight / 2 - (this.selectedItem.y * scaleY + offsetY))
+          newPosX = this.position.x + parseInt(this.canvasWidth / 2 - (posX * scaleX + offsetX))
+          newPosY = this.position.y + parseInt(this.canvasHeight / 2 - (posY * scaleY + offsetY))
         } else if (type === 'include') {
           const imgSize = 60 * 2.5
 
-          const left = parseInt(this.selectedItem.x * scaleX + offsetX - imgSize / 2)
-          const right = parseInt(this.selectedItem.x * scaleX + offsetX + imgSize / 2)
-          const top = parseInt(this.selectedItem.y * scaleY + offsetY - imgSize)
-          const bottom = parseInt(this.selectedItem.y * scaleY + offsetY)
+          const left = parseInt(posX * scaleX + offsetX - imgSize / 2)
+          const right = parseInt(posX * scaleX + offsetX + imgSize / 2)
+          const top = parseInt(posY * scaleY + offsetY - imgSize)
+          const bottom = parseInt(posY * scaleY + offsetY)
 
           if (left < 0) newPosX = this.position.x - left // - (left - 0)
           if (right - this.canvasWidth > 0) newPosX = this.position.x - (right - this.canvasWidth)
@@ -798,13 +828,43 @@ export default {
       const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
       this.virtualButton.position.x = canvasWidth * 0.98 - this.virtualButton.size
       this.virtualButton.position.y = (canvasHeight - this.virtualButton.size) / 2
+    },
+
+    geolocationInfo (position) {
+      // const lng = position.coords.longitude;
+      // const lat = position.coords.latitude;
+
+      console.log(position);
+    },
+
+    geolocationError (error) {
+      let errorMessage
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = "User denied the request for Geolocation."
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = "Location information is unavailable."
+          break;
+        case error.TIMEOUT:
+          errorMessage = "Location request timed out."
+          break;
+        // case error.UNKNOWN_ERROR:
+        default:
+          errorMessage = "An unknown error occurred."
+          break;
+      }
+      this.$alert({
+        message: errorMessage,
+        time: 3000
+      })
+      // throw new Error("errorMessage")
     }
 
   },
   async mounted () {
     // console.log('map mounted')
     document.body.style.overflow='hidden';
-    this.loading = true
 
     try {
       this.mapType = !!this.$route.params.buildingId ? 'floor' : 'campus'
@@ -830,6 +890,9 @@ export default {
         console.log(data)
 
         this.imageMap['map'] = await this.loadImage(require('@/assets/images/map/campus/campus-map.png'))
+        this.imageMap['locationMarker'] = await this.loadImage(require('@/assets/images/icon/location-marker.png'))
+        // this.imageMap['locationProbe'] = await this.loadImage(require('@/assets/images/icon/location-probe.png'))
+        this.imageMap['locationCircle'] = await this.loadImage(require('@/assets/images/icon/location-circle.png'))
       }
       this.imageMap['marker'] = await this.loadImage(require('@/assets/images/icon/marker.png'))
       this.imageMap["eye"] = await this.loadImage(require('@/assets/images/icon/eye.png'))
@@ -903,15 +966,14 @@ export default {
           const item = this.itemList.find(e => e.id === parseInt(this.$route.params.id) && e.itemType === this.$route.params.type)
           if (item) {
             this.setSelectedItem(item)
-            this.adjustMapPosition('middle')
+            this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'middle', 3)
             this.$store.commit('setGlobalText', item.name || "")
           }
         }
       })
     } catch (error) {
       console.log(error)
-      this.errorRefresh = true
-      // this.loading = false
+      this.loadingError = true
     }
   },
 
@@ -944,16 +1006,19 @@ export default {
             }
           })
         } else {
-          this.$store.commit('setModalCollapsed', true)
-          setTimeout(() => {
-            this.$router.push({
-              name: 'Map',
-              params: {
-                buildingId: this.$route.params.buildingId,
-                floorId: this.$route.params.floorId
-              }
-            })
-          }, 500)
+          if (this.$route.name.indexOf("Search") === -1) {
+            // not from place to search
+            this.$store.commit('setModalCollapsed', true)
+            setTimeout(() => {
+              this.$router.push({
+                name: "Map",
+                params: {
+                  buildingId: this.$route.params.buildingId,
+                  floorId: this.$route.params.floorId
+                }
+              })
+            }, 500)
+          }
         }
       }
     },
@@ -1033,6 +1098,44 @@ export default {
           this.gateRequesting = false
         }
       }
+    },
+
+    locationActivated (val) {
+      try {
+        if (val) {
+          if (navigator.geolocation) {
+            if (this.imgWidth && this.imgHeight) {
+              this.location.x = this.imgWidth / 2
+              this.location.y = this.imgHeight / 2
+              this.adjustMapPosition({ posX: this.location.x, posY: this.location.y }, "middle")
+            }
+            this.location.timer = 0
+
+            const options = {
+              enableHighAccuracy: true,
+              timeout: 2000,
+              maximumAge: 2000
+            }
+            // navigator.geolocation.getCurrentPosition(displayLocationInfo, handleLocationError, options);
+            this.geoWatchId = navigator.geolocation.watchPosition(this.geolocationInfo, this.geolocationError, options)
+          } else {
+            throw new Error("Geolocation is not supported in this browser.")
+          }
+        } else {
+          navigator.geolocation.clearWatch(this.geoWatchId)
+          this.geoWatchId = null
+
+          this.location.x = null
+          this.location.y = null
+        }
+      } catch (error) {
+        console.log(error)
+        this.$alert({
+          message: error.message,
+          time: 3000
+        })
+        this.$store.commit("button/setLocationActivated", false)
+      }
     }
   },
 
@@ -1067,13 +1170,12 @@ export default {
 </script>
 
 <style scoped>
-.loading {
-  width: 100%;
-  height: 100%;
-  position: absolute;
+.canvas-map-loading-panel {
+  position: fixed;
   top: 0;
-  z-index: 1000;
-  background: #ffffff;
+  left: 0;
+  background-color: #ffffff;
+  z-index: 0;
 }
 </style>
 

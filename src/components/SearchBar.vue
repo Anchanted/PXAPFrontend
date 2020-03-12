@@ -70,13 +70,18 @@ export default {
   },
   mounted () {
     $('[data-toggle="tooltip"]').tooltip();
-
-    const div = document.getElementsByClassName('search-bar')[0]
+    $('[data-tooltip="tooltip"]').tooltip();
+    this.text = this.globalText
   },
   watch: {
     text (val) {
       if (val === '') {
         if (this.$refs.input == document.activeElement) {
+          if (this.$route.name.indexOf("Search") !== -1)
+            this.$router.push({
+              name: "Map",
+              params: this.$route.params
+            })
           this["searchHistory/commitDisplaySearchHistory"](true)
           if (!this.modalCollapsed) this.$store.commit('setModalCollapsed', true)
         }

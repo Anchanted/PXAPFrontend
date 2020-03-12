@@ -2,25 +2,15 @@
   <div class="shadow bg-white rounded modal-area" :style="modalStyle" :class="{'panel-collapsed': panelCollapsed}">
     <div class="modal-window" ref="modal" @scroll="onscroll">
       <!-- <div class="modal-container pb-3" ref="modalContainer"> -->
-        <div v-if="modalLoading" class="d-flex flex-column justify-content-center loading" :style="{ height: modalStyle.height }">
-          <loading></loading>
-        </div>
+        <!-- <div v-if="modalLoading" class="d-flex flex-column justify-content-center loading" :style="{ height: modalStyle.height }">
+          HI
+        </div> -->
 
         <keep-alive :max="1">
           <router-view v-if="$route.meta.keepAlive" :key="key"></router-view>
         </keep-alive>
         <router-view v-if="!$route.meta.keepAlive" :key="key"></router-view>
         <!-- <router-view :key="key"></router-view> -->
-
-
-        <!-- <keep-alive>
-          <router-view v-if="$route.meta.keepAlive && $route.name !== 'CampusSearchMore'"></router-view>
-        </keep-alive>
-        <router-view v-if="!$route.meta.keepAlive && $route.name !== 'CampusSearchMore'" :key="key"></router-view> -->
-
-        <!-- <transition name="more" mode="in-out" @enter="onenter">
-          <router-view v-if="!$route.meta.keepAlive && $route.name === 'CampusSearchMore'" :key="key" style="position:absolute;top:0"></router-view>
-        </transition> -->
       <!-- </div> -->
     </div>
   </div>

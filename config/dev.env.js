@@ -4,5 +4,5 @@ const prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  VUE_APP_BASE_API: '"http://xmap.top:8888/"'
+  VUE_APP_BASE_API: '"http://api.xmap.top:8080/"'
 })

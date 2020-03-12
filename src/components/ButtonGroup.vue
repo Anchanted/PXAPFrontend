@@ -1,11 +1,43 @@
 <template>
-  <div>
+  <div class="button-group-container" :style="containerStyle">
     <div class="top-button-group">
+      <div class="top-button-group-secondary">
+        <!-- Menu Dropdown -->
+        <div class="menu">
+          <button type="button" class="btn btn-secondary menu-button" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
+            data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.menu')">
+            <div class="bar"></div>
+          </button>
+          <div class="dropdown-menu">
+            <!-- Language Button -->
+            <button class="dropdown-item language" type="button"
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.language')"
+              @click="changeLanguage">{{langAbbr}}</button>
+            <!-- Help Button -->
+            <div class="dropdown-divider" style="margin: 0"></div>
+            <button class="dropdown-item iconfont icon-help-outline" type="button"
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"></button>
+            <!-- Hide Button -->
+            <template v-if="!loading">
+              <div class="dropdown-divider" style="margin: 0"></div>
+              <button class="dropdown-item iconfont icon-hide" type="button" @click="hideButton"
+                data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.hideButton')"></button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Home Button -->
+        <div v-if="buttonList.indexOf('home') !== -1" class="home button-container">
+          <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button button iconfont icon-home" @click="$router.push({ path: '/' })"
+            data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.home')"></button>
+        </div>
+      </div>
+
       <!-- Floor Dropdown -->
-      <div v-if="buttonList.indexOf('floor') !== -1" class="floor">
+      <div v-if="buttonList.indexOf('floor') !== -1 && !loading" class="floor">
         <button type="button" class="btn btn-outline-secondary dropdown-building" disabled>{{buildingCode}}</button>
         <button type="button" class="btn btn-secondary dropdown-floor" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
-          data-placement="right" data-trigger="hover" :data-original-title="$t('tooltip.floor')">{{floorName}}</button>
+          data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.floor')">{{floorName}}</button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
           <div v-for="(floor, index) in floorList" :key="floor.id" >
             <div v-if="index !== 0" class="dropdown-divider" style="margin: 0"></div>
@@ -13,37 +45,9 @@
           </div>
         </div>
       </div>
-      <!-- Menu Dropdown -->
-      <div class="menu">
-        <button type="button" class="btn btn-secondary menu-button" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
-          data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.menu')">
-          <div class="bar"></div>
-        </button>
-        <div class="dropdown-menu">
-          <!-- Language Button -->
-          <button class="dropdown-item language" type="button"
-            data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.language')"
-            @click="changeLanguage">{{langAbbr}}</button>
-          <!-- Help Button -->
-          <div class="dropdown-divider" style="margin: 0"></div>
-          <button class="dropdown-item iconfont icon-help-outline" type="button"
-            data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"></button>
-          <!-- Hide Button -->
-          <template v-if="!loading">
-            <div class="dropdown-divider" style="margin: 0"></div>
-            <button class="dropdown-item iconfont icon-hide" type="button" @click="hideButton"
-              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.hideButton')"></button>
-          </template>
-        </div>
-      </div>
-      <!-- Home Button -->
-      <div v-if="buttonList.indexOf('home') !== -1" class="home button-container">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button button iconfont icon-home" @click="$router.push({ path: '/' })"
-          data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.home')"></button>
-      </div>
     </div>
 
-    <div class="bottom-button-group">
+    <div v-show="!loading" class="bottom-button-group">
       <!-- Gate Button -->
       <div v-if="buttonList.indexOf('gate') !== -1" class="gate button-container" :style="{ 'z-index': gateRequesting ? 1 : null }">
         <button class="btn btn-light d-flex flex-column justify-content-around align-items-center gate-button button iconfont icon-entrance" :style="{ color : gateActivated ? '#007bff' : '#555555' }"
@@ -80,7 +84,6 @@
       </div>
 
       <div v-if="occupationRequesting || gateRequesting" class="occupation-requesting-shade"></div>
-
     </div>
   </div>
 </template>
@@ -119,7 +122,12 @@ export default {
       occupationActivated: state => state.button.occupationActivated,
       locationActivated: state => state.button.locationActivated
     }),
-    floorName: function () {
+    containerStyle () {
+      return {
+        "z-index": this.loading ? 1 : 0
+      }
+    },
+    floorName () {
       if (!this.currentFloor) {
         if (!this.floorList) return ''
         if (this.floorList.find(floor => floor.name === 'GF')) {
@@ -148,24 +156,6 @@ export default {
     hideButton () {
       this.$emit("hideButtonGroup");
     },
-    refreshFunc: function () {
-      if (this.scale > 3.9) {
-        $(this.$refs.zinbtn).tooltip('dispose')
-        this.$refs.zinbtn.disabled = true;
-      }
-      if (this.scale < 3.9) {
-        $(this.$refs.zinbtn).tooltip()
-        this.$refs.zinbtn.disabled = false;
-      }
-      if (this.scale == 1) {
-        $(this.$refs.zoutbtn).tooltip('dispose')
-        this.$refs.zoutbtn.disabled = true;
-      }
-      if (this.scale > 1) {
-        $(this.$refs.zoutbtn).tooltip()
-        this.$refs.zoutbtn.disabled = false;
-      }
-    },
     zoomIn () {
       if (!this.$refs.zinbtn.disabled) {
         this.$emit('zoom', 200, 'button');
@@ -185,7 +175,7 @@ export default {
     chooseOtherFloor: function (e, floor) {
       if (floor.id !== this.currentFloor.id){
         this.$router.push({
-          name: 'Map',
+          name: "Map",
           params: {
             buildingId: floor.buildingId,
             floorId: floor.id,
@@ -206,55 +196,6 @@ export default {
     },
     clickLocation () {
       this.$store.commit("button/reverseLocationActivated")
-
-      const that = this
-
-      if (navigator.geolocation)
-        navigator.geolocation.getCurrentPosition(displayLocationInfo, handleLocationError, { timeout: 2000 });
-      else
-        this.$alert({
-          message: "Geolocation is not supported in this browser.",
-          time: 3000
-        })
-
-      function displayLocationInfo(position) {
-        const lng = position.coords.longitude;
-        const lat = position.coords.latitude;
-
-        // console.log(position);
-        that.$alert({
-          message: `altitude: ${position.coords.altitude}
-                    heading: ${position.coords.heading}
-                    latitude: ${position.coords.latitude}
-                    longitude: ${position.coords.longitude}`,
-          time: 3000
-        })
-        accuracy: 1155531
-
-      }
-
-      function handleLocationError(error) {
-        let errorMessage
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "User denied the request for Geolocation."
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information is unavailable."
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out."
-            break;
-          // case error.UNKNOWN_ERROR:
-          default:
-            errorMessage = "An unknown error occurred."
-            break;
-        }
-        that.$alert({
-          message: errorMessage,
-          time: 3000
-        })
-      }
     }
   },
   mounted () {
@@ -264,17 +205,16 @@ export default {
     this.$nextTick(() => {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-tooltip="tooltip"]').tooltip();
-      // this.refreshFunc()
     })
   },
 
   watch: {
     scale() {
-      if (this.scale > 2.4) {
+      if (this.scale > 3.9) {
         $(this.$refs.zinbtn).tooltip('dispose')
         this.$refs.zinbtn.disabled = true;
       }
-      if (this.scale < 2.4) {
+      if (this.scale < 3.9) {
         $(this.$refs.zinbtn).tooltip()
         this.$refs.zinbtn.disabled = false;
       }
@@ -297,7 +237,7 @@ export default {
     },
     buttonList (val) {
       if (val && val instanceof Array) {
-        if (val.find(e => e === "gate")) {
+        if (val.find(e => e === "gate" || e === "occupation")) {
           this.$nextTick(() => {
             $('[data-toggle="tooltip"]').tooltip();
             $('[data-tooltip="tooltip"]').tooltip();
@@ -316,6 +256,10 @@ img
   width: 30px;
 }
 
+.button-group-container {
+  position: relative;
+}
+
 .top-button-group {
   position: fixed;
   height: auto;
@@ -323,8 +267,8 @@ img
   top: 20px;
   right: 30px;
   display: flex;
-  // justify-content: space-between;
-  align-items: center;
+  flex-direction: row-reverse;
+  justify-content: start;
 
   >div {
     margin-left: 20px;
@@ -333,7 +277,6 @@ img
   .floor {
     width: auto;
     height: auto;
-    margin: auto;
     display: flex;
     /* justify-content: center; */
 
@@ -379,6 +322,12 @@ img
 
     .dropdown-menu::-webkit-scrollbar {
       display: none;
+    }
+  }
+
+  &-secondary {
+    >div {
+      margin-bottom: 20px;
     }
   }
 
@@ -450,7 +399,6 @@ img
       min-width: 0;
       padding: 0;
       margin: 0;
-      z-index: -1;
 
       .dropdown-item {
         width: 100%;

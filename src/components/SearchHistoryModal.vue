@@ -1,10 +1,8 @@
 <template>
-  <div class="shadow bg-white rounded modal-area" :style="modalStyle" :class="{'panel-collapsed': panelCollapsed}">
-    <div class="modal-window" ref="modal">
-      <!-- <div class="modal-container pb-3" ref="modalContainer"> -->
-      <search-history></search-history>
-      <!-- </div> -->
-    </div>
+  <div class="shadow bg-white rounded modal-window" :style="modalStyle" :class="{'panel-collapsed': panelCollapsed}">
+    <!-- <div class="modal-container pb-3" ref="modalContainer"> -->
+    <search-history></search-history>
+    <!-- </div> -->
   </div>
 </template>
 
@@ -63,32 +61,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.modal-area {
+.modal-window {
   position: fixed;
   height: auto;
   width: 424px;
   top: 66px;
 	left: 10px;
   min-height: 300px;
-  // padding-top: 68px;
-  /* padding-bottom: 50px; */
-  /* min-height: 300px; */
   overflow: auto;
   /* overflow-y: overlay; */
 }
-
-.modal-window {
-  height: 100%;
-  width: 100%;
-  // position: relative;
-  overflow-y: auto;
-
-  .modal-container {
-    height: auto;
-    width: 424px;
-    position: relative;
-
-  }
-}
-
 </style>

@@ -6,75 +6,84 @@
       <div class="search-more-topbar-info">{{searchTitle}}</div>
     </div>
 
-    <div v-if="dataType === 'building'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-      <place-card class="search-section-item"
-        v-for="building in itemList" :key="building.id"
-        :simple="false" :type="'building'"
-        @click.native="onclick($event, building, dataType)">
-        <template #icon>{{building.code}}</template>
-        <template #name>{{building.name}}</template>
-        <template #location>{{itemLocation(building, 'building')}}</template>
-      </place-card>
-    </div>
+    <loading-panel
+      v-if="loading"
+      :has-error="loadingError"
+      class="search-more-loading-panel"
+      @refresh="initialSearch">
+    </loading-panel>
 
-    <div v-else-if="dataType === 'room'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-      <place-card class="search-section-item"
-        v-for="room in itemList" :key="room.id"
-        :simple="false" :type="'room'"
-        @click.native="onclick($event, room, dataType)">
-        <template #icon>{{room.building_code}}</template>
-        <template #name>{{room.name}}</template>
-        <template #type>{{room.type}}</template>
-        <template #location>{{itemLocation(room, 'room')}}</template>
-      </place-card>
-    </div>
+    <template v-else>
+      <div v-if="dataType === 'building'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
+        <place-card class="search-section-item"
+          v-for="building in itemList" :key="building.id"
+          :simple="false" :type="'building'"
+          @click.native="onclick($event, building, dataType)">
+          <template #icon>{{building.code}}</template>
+          <template #name>{{building.name}}</template>
+          <template #location>{{itemLocation(building, 'building')}}</template>
+        </place-card>
+      </div>
 
-    <div v-else-if="dataType === 'facility'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-      <place-card class="search-section-item"
-        v-for="facility in itemList" :key="facility.id"
-        :simple="false" :type="'facility'"
-        @click.native="onclick($event, facility, dataType)">
-        <template #icon>
-          <img :src="facilityImage(facility.type)" :alt="facility.type">
-        </template>
-        <template #name>{{facility.name}}</template>
-        <template #type>{{facility.type}}</template>
-        <template #location>{{itemLocation(facility, 'facility')}}</template>
-      </place-card>
-    </div>
+      <div v-else-if="dataType === 'room'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
+        <place-card class="search-section-item"
+          v-for="room in itemList" :key="room.id"
+          :simple="false" :type="'room'"
+          @click.native="onclick($event, room, dataType)">
+          <template #icon>{{room.building_code}}</template>
+          <template #name>{{room.name}}</template>
+          <template #type>{{room.type}}</template>
+          <template #location>{{itemLocation(room, 'room')}}</template>
+        </place-card>
+      </div>
 
-    <nav class="mt-3" aria-label="Page navigation example">
-      <ul class="pagination justify-content-center page" style="margin-bottom:0">
-        <li class="page-item" @click.prevent="goToAnotherPage(1)">
-          <a class="page-link" href="javascript:void(0)" aria-label="First" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.firstPage')">
-            <span class="iconfont icon-double-arrow-left page-first" aria-hidden="true"></span>
-          </a>
-        </li>
-        <li class="page-item" @click.prevent="goToAnotherPage(pageNum-1<1 ? 1 : pageNum-1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.previousPage')">
-          <a class="page-link" href="javascript:void(0)" aria-label="Previous">
-            <span class="iconfont icon-arrow-down page-previous" aria-hidden="true"></span>
-          </a>
-        </li>
-        <li class="page-item" v-for="value in displayedPages" :key="value" :class="value === pageNum ? 'active' : ''" @click.prevent="goToAnotherPage(value)">
-          <a class="page-link" href="javascript:void(0)">{{value}}</a>
-        </li>
-        <li class="page-item" @click.prevent="goToAnotherPage(pageNum+1>totalPages ? totalPages : pageNum+1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.nextPage')">
-          <a class="page-link" href="javascript:void(0)" aria-label="Next">
-            <span class="iconfont icon-arrow-down page-next" aria-hidden="true"></span>
-          </a>
-        </li>
-        <li class="page-item" @click.prevent="goToAnotherPage(totalPages)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.lastPage')">
-          <a class="page-link" href="javascript:void(0)" aria-label="Last">
-            <span class="iconfont icon-double-arrow-left page-last" aria-hidden="true"></span>
-          </a>
-        </li>
-      </ul>
-    </nav>
+      <div v-else-if="dataType === 'facility'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
+        <place-card class="search-section-item"
+          v-for="facility in itemList" :key="facility.id"
+          :simple="false" :type="'facility'"
+          @click.native="onclick($event, facility, dataType)">
+          <template #icon>
+            <img :src="facilityImage(facility.type)" :alt="facility.type">
+          </template>
+          <template #name>{{facility.name}}</template>
+          <template #type>{{facility.type}}</template>
+          <template #location>{{itemLocation(facility, 'facility')}}</template>
+        </place-card>
+      </div>
+
+      <nav class="mt-3" aria-label="Page navigation example">
+        <ul class="pagination justify-content-center page" style="margin-bottom:0">
+          <li class="page-item" @click.prevent="goToAnotherPage(1)">
+            <a class="page-link" href="javascript:void(0)" aria-label="First" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.firstPage')">
+              <span class="iconfont icon-double-arrow-left page-first" aria-hidden="true"></span>
+            </a>
+          </li>
+          <li class="page-item" @click.prevent="goToAnotherPage(pageNum-1<1 ? 1 : pageNum-1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.previousPage')">
+            <a class="page-link" href="javascript:void(0)" aria-label="Previous">
+              <span class="iconfont icon-arrow-down page-previous" aria-hidden="true"></span>
+            </a>
+          </li>
+          <li class="page-item" v-for="value in displayedPages" :key="value" :class="value === pageNum ? 'active' : ''" @click.prevent="goToAnotherPage(value)">
+            <a class="page-link" href="javascript:void(0)">{{value}}</a>
+          </li>
+          <li class="page-item" @click.prevent="goToAnotherPage(pageNum+1>totalPages ? totalPages : pageNum+1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.nextPage')">
+            <a class="page-link" href="javascript:void(0)" aria-label="Next">
+              <span class="iconfont icon-arrow-down page-next" aria-hidden="true"></span>
+            </a>
+          </li>
+          <li class="page-item" @click.prevent="goToAnotherPage(totalPages)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.lastPage')">
+            <a class="page-link" href="javascript:void(0)" aria-label="Last">
+              <span class="iconfont icon-double-arrow-left page-last" aria-hidden="true"></span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </template>
   </div>
 </template>
 
 <script>
-import SpinnerCircle from '@/components/Spinner/SpinnerCircle'
+import LoadingPanel from '@/components/LoadingPanel'
 import PlaceCard from '@/components/PlaceCard'
 
 import floorDict from '@/assets/js/floor.json'
@@ -86,7 +95,7 @@ import { mapState } from 'vuex'
 export default {
   name: 'SearchMore',
   components: {
-    SpinnerCircle,
+    LoadingPanel,
     PlaceCard
   },
   data() {
@@ -99,8 +108,8 @@ export default {
       query: null,
       dataType: null,
       invalidRequest: false, // lacks parameters, parameter type error, pageNo out of total page number
-      // pages: 1,
-      // pageNum: 1,
+      loading: true,
+      loadingError: false
     }
   },
   computed: {
@@ -145,29 +154,41 @@ export default {
     },
   },
   methods: {
-    // async search(pageNo) {
-    //   try {
-    //     if (pageNo + 1 >= this.totalPages) throw new Error('request pageNo exceeds total pageNum')
-    //     const data = await this.$api.search.searchMore(this.dataType, {
-    //       q: this.query,
-    //       n: pageNo
-    //     })
-    //     console.log(data)
-    //     this.itemList = data.content
+    async initialSearch (pageNo) {
+      this.loading = true
+      this.loadingError = false
+      this.$nextTick(() => {
+        this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchMore' })
+      })
 
-    //   } catch (error) {
-    //     // this.$toast({
-    //     //   message: 'Fail to load data.\nPlease try again.',
-    //     //   time: 3000
-    //     // })
-    //     throw (error)
-    //   } finally {
-    //     this.$nextTick(() => {
-    //       this.$emit('updateHeight', this.$refs.container.offsetHeight)
-    //     })
-    //   }
+      try {
+        if (this.query && this.dataType) {
+          const data = await this.$api.search.searchMore(this.dataType, {
+            q: this.query,
+            n: this.currentPageNo
+          })
+          console.log(data)
 
-    // },
+          if (!data.totalPages) {
+            this.back()
+            return
+          }
+
+          this.itemList = data.content
+          this.totalPages = data.totalPages
+
+          this.loading = false
+          this.$nextTick(() => {
+            this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchMore' })
+            $('[data-toggle="tooltip"]').tooltip();
+            $('[data-tooltip="tooltip"]').tooltip();
+          })
+        }
+      } catch (error) {
+        console.log(error)
+        this.loadingError = true
+      }
+    },
 
     goToAnotherPage (value) {
       this.$router.replace({
@@ -204,54 +225,13 @@ export default {
 
   async mounted () {
     // console.log('more mounted')
-    $('[data-toggle="tooltip"]').tooltip();
-    this.$store.commit('setModalLoading', true)
     this.$store.commit('setModalScrollTop', 0)
 
     this.query = this.$route.query.q
     this.currentPageNo = parseInt(this.$route.query.pn) || 0
     this.dataType = this.$route.params.type
 
-    let empty = false
-    if (this.query && this.dataType) {
-      try {
-        const data = await this.$api.search.searchMore(this.dataType, {
-          q: this.query,
-          n: this.currentPageNo
-        })
-        console.log(data)
-
-        if (!data.totalPages) {
-          this.$router.push({
-            name: 'SearchTop',
-            query: {
-              q: this.$route.query.q
-            }
-          })
-          empty = true
-          return
-        }
-
-        this.itemList = data.content
-        this.totalPages = data.totalPages
-
-      } catch (error) {
-        this.$alert({
-          message: 'Fail to load data. Please try again.',
-          time: 3000
-        })
-        throw error
-      } finally {
-        if (empty) return
-        this.$nextTick(() => {
-          this.$store.commit('setModalLoading', false)
-          this.$store.commit('setModalHeight', { height: this.$refs.container.offsetHeight, component: 'searchMore' })
-        })
-      }
-    } else {
-      throw new Error('invalid params or query')
-    }
-
+    this.initialSearch()
   },
 
   // destroyed () {
@@ -278,6 +258,21 @@ export default {
 </script>
 
 <style lang="scss">
+.search-more-loading-panel {
+  width: 100%;
+  height: 300px;
+  position: relative;
+  background-color: #ffffff;
+
+  .refresh {
+    font-size: 1.2rem !important;
+  }
+
+  button {
+    font-size: 1rem !important;
+  }
+}
+
 .search-more-topbar {
   width: 424px;
   height: 50px;
