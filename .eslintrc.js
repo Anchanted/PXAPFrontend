@@ -1,9 +1,14 @@
 module.exports = {
   root: true,
   env: {
-    node: true
+    node: true,
+    "jquery": true
   },
-  extends: ["plugin:vue/essential", "eslint:recommended", "@vue/prettier"],
+  extends: [
+    "plugin:vue/essential", 
+    "eslint:recommended", 
+    // "@vue/prettier"
+  ],
   parserOptions: {
     parser: "babel-eslint"
   },
