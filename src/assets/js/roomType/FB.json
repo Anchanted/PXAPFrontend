@@ -1,0 +1,158 @@
+[
+  {
+    "en": "Air Lock",
+    "zh": "密闭通道"
+  },
+  {
+    "en": "Archive Room",
+    "zh": "档案室"
+  },
+  {
+    "en": "Auditorium",
+    "zh": "礼堂"
+  },
+  {
+    "en": "Board Room",
+    "zh": "主会议室"
+  },
+  {
+    "en": "Café",
+    "zh": "餐厅"
+  },
+  {
+    "en": "Classroom",
+    "zh": "教室"
+  },
+  {
+    "en": "Computer Laboratory",
+    "zh": "计算机实验室"
+  },
+  {
+    "en": "Computer Server Room",
+    "zh": "计算机服务器机房"
+  },
+  {
+    "en": "Digital Electronics and Microprocessor Laboratory",
+    "zh": "数字电子与微处理器实验室"
+  },
+  {
+    "en": "Disabled Toilet",
+    "zh": "残疾人卫生间"
+  },
+  {
+    "en": "Electrical Engineering Laboratory",
+    "zh": "电气工程实验室"
+  },
+  {
+    "en": "Electronics Laboratory",
+    "zh": "电子实验室"
+  },
+  {
+    "en": "Female Toilet",
+    "zh": "女卫生间"
+  },
+  {
+    "en": "Fire Control Room",
+    "zh": "消防监控中心"
+  },
+  {
+    "en": "Flexible Teaching Space",
+    "zh": "自由教学空间"
+  },
+  {
+    "en": "Group Study Room",
+    "zh": "小组自习室"
+  },
+  {
+    "en": "IT Switch Room",
+    "zh": "弱电间"
+  },
+  {
+    "en": "Language Lab",
+    "zh": "语音室"
+  },
+  {
+    "en": "Lecture Theatre",
+    "zh": "阶梯教室"
+  },
+  {
+    "en": "Mail Room",
+    "zh": "收发室"
+  },
+  {
+    "en": "Male Toilet",
+    "zh": "男卫生间"
+  },
+  {
+    "en": "Meeting Room",
+    "zh": "会议室"
+  },
+  {
+    "en": "Office",
+    "zh": "办公室"
+  },
+  {
+    "en": "Photocopying Room",
+    "zh": "文印室"
+  },
+  {
+    "en": "Physics Lab",
+    "zh": "物理实验室"
+  },
+  {
+    "en": "Police Office",
+    "zh": "警务室"
+  },
+  {
+    "en": "Power Distribution Room",
+    "zh": "强电间"
+  },
+  {
+    "en": "Pre-hospital Care Room",
+    "zh": "护理处置室"
+  },
+  {
+    "en": "President's Office (Transportation Shift)",
+    "zh": "校长办公室（司机班）"
+  },
+  {
+    "en": "Property Management Office",
+    "zh": "物业管理办公室"
+  },
+  {
+    "en": "Reception Room",
+    "zh": "接待室"
+  },
+  {
+    "en": "Refreshment Room",
+    "zh": "茶水间"
+  },
+  {
+    "en": "Security Room",
+    "zh": "警卫室"
+  },
+  {
+    "en": "Staff Office",
+    "zh": "员工办公室"
+  },
+  {
+    "en": "Stationery Room",
+    "zh": "办公用品领用处"
+  },
+  {
+    "en": "Storeroom",
+    "zh": "储藏室"
+  },
+  {
+    "en": "Student Self-service Printing Room",
+    "zh": "学生自助打印室"
+  },
+  {
+    "en": "VIP Room",
+    "zh": "贵宾室"
+  },
+  {
+    "en": "Water Distribution Room",
+    "zh": "管井间"
+  }
+]
