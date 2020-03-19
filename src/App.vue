@@ -77,7 +77,6 @@ export default {
 } */
 
 .tooltip .tooltip-inner{
-  font-family: "Lato", Helvetica, Arial, "Microsoft YaHei", "微软雅黑", sans-serif;
   font-size: 1rem;
 }
 </style>

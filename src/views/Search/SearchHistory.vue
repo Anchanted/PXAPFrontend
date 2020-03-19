@@ -3,7 +3,10 @@
     <template>
       <div v-for="(item, index) in itemList" :key="index">
         <place-card v-if="new RegExp(/^(building|facility|room)$/).test(item.dataType)"
-          :simple="true" :type="item.dataType"
+          :simple="true" 
+          :data-type="item.dataType"
+          :name-title="item.name"
+          :location-title="itemLocation(index, item.dataType)"
           @mousedown.native="onmousedown($event, item)">
           <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
           <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
@@ -16,7 +19,7 @@
 
         <div v-else-if="item.dataType  === 'query'" class="history-item"
           @mousedown="onmousedown($event, item)">
-          <span class="history-item-query one-line">{{item.content}}</span>
+          <span class="history-item-query one-line" :title="item.content">{{item.content}}</span>
         </div>
       </div>
     </template>
@@ -28,7 +31,6 @@
 
 <script>
 import floorDict from 'assets/json/floor.json'
-import buildingDict from 'assets/json/building.json'
 import iconPath from 'assets/js/facilityIconPath.js'
 
 import PlaceCard from 'components/PlaceCard'
@@ -50,8 +52,8 @@ export default {
     itemLocation () {
       return (index, type) => {
         const item = this.itemList[index]
-        if (type === 'building') return `${buildingDict[item.code]}`
-        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${buildingDict[item.building_code]}`
+        if (type === 'building') return item.zone
+        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${item.zone}`
       }
     },
     facilityImage () {
@@ -106,7 +108,7 @@ export default {
 }
 
 .history-item-query {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .one-line {

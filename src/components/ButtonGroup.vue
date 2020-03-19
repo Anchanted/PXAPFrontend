@@ -156,6 +156,26 @@ export default {
     hideButton () {
       this.$emit("hideButtonGroup");
     },
+    refreshZoomBtn (scale = 1) {
+      if (this.$refs.zinbtn && this.$refs.zinbtn) {
+        if (scale > 3.9) {
+          $(this.$refs.zinbtn).tooltip('dispose')
+          this.$refs.zinbtn.disabled = true;
+        }
+        if (scale < 3.9) {
+          $(this.$refs.zinbtn).tooltip()
+          this.$refs.zinbtn.disabled = false;
+        }
+        if (scale == 1) {
+          $(this.$refs.zoutbtn).tooltip('dispose')
+          this.$refs.zoutbtn.disabled = true;
+        }
+        if (scale > 1) {
+          $(this.$refs.zoutbtn).tooltip()
+          this.$refs.zoutbtn.disabled = false;
+        }
+      }
+    },
     zoomIn () {
       if (!this.$refs.zinbtn.disabled) {
         this.$emit('zoom', 200, 'button');
@@ -204,6 +224,7 @@ export default {
     this.$store.commit("button/setGateActivated", false)
     this.$store.commit("button/setOccupationActivated", false)
     this.$store.commit("button/setLocationActivated", false)
+    this.refreshZoomBtn(this.scale)
     this.$nextTick(() => {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-tooltip="tooltip"]').tooltip();
@@ -211,23 +232,8 @@ export default {
   },
 
   watch: {
-    scale() {
-      if (this.scale > 3.9) {
-        $(this.$refs.zinbtn).tooltip('dispose')
-        this.$refs.zinbtn.disabled = true;
-      }
-      if (this.scale < 3.9) {
-        $(this.$refs.zinbtn).tooltip()
-        this.$refs.zinbtn.disabled = false;
-      }
-      if (this.scale == 1) {
-        $(this.$refs.zoutbtn).tooltip('dispose')
-        this.$refs.zoutbtn.disabled = true;
-      }
-      if (this.scale > 1) {
-        $(this.$refs.zoutbtn).tooltip()
-        this.$refs.zoutbtn.disabled = false;
-      }
+    scale (val) {
+      this.refreshZoomBtn(val)
     },
     loading (val) {
       if (val === false) {
@@ -464,10 +470,9 @@ img
   height: auto;
   width: auto;
 
-  // .button {
-  //   border: none;
-  //   outline: none;
-  // }
+  .button {
+    font-size: 20px !important;
+  }
 
   .zoomin-button {
     margin-bottom: 10px !important;

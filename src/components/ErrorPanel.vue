@@ -21,12 +21,12 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-size: 1.5rem;
 
   span {
     display: block;
     color: #000000;
     padding: 1rem;
+    font-size: 1.5rem;
     text-align: justify;
     text-justify: inter-word;
     // word-break: break-all;

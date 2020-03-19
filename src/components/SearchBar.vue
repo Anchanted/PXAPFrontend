@@ -1,11 +1,11 @@
 <template>
-  <div class="py-2 pl-3 bg-white rounded d-flex justify-content-around align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
+  <div class="bg-white rounded d-flex justify-content-around align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
     <div class="modal-collapse">
       <button
         class="iconfont icon-arrow-down modal-collapse-button"
         :class="{'modal-expand-button': !modalCollapsed}"
         type="button"
-        :disabled="$route.matched.length < 2"
+        :disabled="$route.matched.length <= 1"
         data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="modalCollapsed ? $t('tooltip.expandModal') : $t('tooltip.collapseModal')"
         @click="$store.commit('setModalCollapsed', !modalCollapsed)"/>
     </div>
@@ -63,7 +63,7 @@ export default {
         if (!this.modalCollapsed) this.$store.commit('setModalCollapsed', true)
       }
     },
-    onblur (e) {
+    onblur () {
       // console.log('onblur')
       this["searchHistory/commitDisplaySearchHistory"](false)
     }
@@ -77,7 +77,7 @@ export default {
     text (val) {
       if (val === '') {
         if (this.$refs.input == document.activeElement) {
-          if (this.$route.name.indexOf("Search") !== -1)
+          if (this.$route.matched.length > 1)
             this.$router.push({
               name: "Map",
               params: this.$route.params
@@ -103,8 +103,9 @@ button:focus {
 
 .search-bar {
   position: fixed;
-	width: auto;
-	height: auto;
+	width: 468px;
+  height: 56px;
+  padding: 8px 0 8px 16px;
 	top: 10px;
 	left: 10px;
   transition: transform ease-in-out 0.5s;

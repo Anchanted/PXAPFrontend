@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import Router from 'vue-router'
 import App from './App.vue'
 // import VueLazyload from 'vue-lazyload'
 
@@ -16,6 +17,15 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.min.js'
 
 import alert from '@/plugins/AlertMessage'
+
+String.prototype.capitalize = function() {
+  return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+};
+
+// const originalPush = Router.prototype.push
+// Router.prototype.push = function push(location) {
+//   return originalPush.call(this, location).catch(err => err)
+// }
 
 Vue.config.productionTip = false;
 

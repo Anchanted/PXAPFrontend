@@ -7,7 +7,6 @@ const mixin = {
     }),
 
     selectItem (item) {
-      console.log(item)
       if (item.dataType) {
         this.saveHistoryList(item)
 
@@ -29,7 +28,8 @@ const mixin = {
               buildingId: item.building ? item.building.id : item.building_id,
               floorId: item.floor ? item.floor.id : item.floor_id,
               type: item.dataType,
-              id: item.id
+              id: item.id,
+              itemName: item.name
             }
           })
         }

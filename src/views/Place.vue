@@ -23,7 +23,7 @@
         <span class="basic-name">{{item.name}}</span>
         <!-- <h5>{{item.type}}</h5> -->
         <div class="basic-type">
-          <span class="basic-type-dataType">{{$t(`itemType.${item.dataType || ''}`)}}</span><span class="basic-type-itemType"><b>&nbsp;&nbsp;·&nbsp;&nbsp;</b>{{basicItemType}}</span>
+          <span class="basic-type-dataType">{{$t(`itemType.${item.dataType || ''}`)}}</span><span class="basic-type-itemType"><pre> · </pre>{{basicItemType}}</span>
         </div>
         <div class="basic-location">
           <div class="iconfont icon-marker basic-location-icon"></div>
@@ -66,10 +66,6 @@
 </template>
 
 <script>
-import buildingDict from 'assets/json/building.json'
-import floorDict from 'assets/json/floor.json'
-import { titleCase } from "utils/utilFunctions.js"
-
 import Timetable from 'components/Timetable'
 import LoadingPanel from "components/LoadingPanel"
 
@@ -130,12 +126,12 @@ export default {
 
     basicItemType () {
       if (this.item.dataType === 'building') return this.item.code
-      if (!!this.item.type && this.item.type instanceof Array) return this.item.type.map(e => titleCase(e || '')).join(', ')
+      if (this.item.type && this.item.type instanceof Array) return this.item.type.map(e => e && e.capitalize()).join(', ')
       return null
     },
 
     itemType () {
-      const type = this.item.dataType
+      // const type = this.item.dataType
       // return type ? type.charAt(0).toUpperCase() + type.slice(1) : ''
       return this.item.dataType ? this.$i18n.t(`itemType.${this.item.dataType}`) : ''
     },
@@ -271,6 +267,15 @@ export default {
       span {
         font-size: 1.2rem;
         line-height: 1.5;
+
+        pre {
+          display: inline;
+          margin: 0;
+          padding: 0;
+          color: inherit;
+          font-weight: bold;
+          font-size: inherit;
+        }
       }
     }
 

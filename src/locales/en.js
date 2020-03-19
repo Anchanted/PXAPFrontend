@@ -78,16 +78,16 @@ module.exports = {
         'floor': 'Choose another floor',
         'home': 'Back to campus map',
         "gate": {
-          "show": "Show building entrance",
-          "hide": "Hide building entrance"
+            "show": "Show building entrance",
+            "hide": "Hide building entrance"
         },
         "occupation": {
-          "show": "Show occupied rooms",
-          "hide": "Hide occupied rooms",
+            "show": "Show occupied rooms",
+            "hide": "Hide occupied rooms",
         },
         "location": {
-          "show": "Show real-time location",
-          "hide": "Hide real-time location",
+            "show": "Show real-time location",
+            "hide": "Hide real-time location",
         },
         'zoomIn': 'Zoom in',
         'zoomOut': 'Zoom out',
@@ -107,5 +107,5 @@ module.exports = {
             text: 'Failed to load data, please refresh the page.',
             button: 'Refresh'
         }
-  }
+    }
 }

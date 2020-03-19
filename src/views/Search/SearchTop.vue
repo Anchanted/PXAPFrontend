@@ -13,7 +13,10 @@
           <div class="search-result-section-type">{{$t('itemType.building')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="building in topBuildingList" :key="building.id"
-              :simple="false" :type="'building'"
+              :simple="false" 
+              :data-type="'building'"
+              :name-title="building.name"
+              :location-title="itemLocation(building, 'building')"
               @click.native="onclick($event, building, 'building')">
               <template #icon>{{building.code}}</template>
               <template #name>{{building.name}}</template>
@@ -30,11 +33,15 @@
           <div class="search-result-section-type">{{$t('itemType.room')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="room in topRoomList" :key="room.id"
-              :simple="false" :type="'room'"
+              :simple="false" 
+              :data-type="'room'"
+              :name-title="room.name"
+              :type-title="room.type && room.type.capitalize()"
+              :location-title="itemLocation(room, 'room')"
               @click.native="onclick($event, building, 'building')">
               <template #icon>{{room.building_code}}</template>
               <template #name>{{room.name}}</template>
-              <template #type>{{room.type}}</template>
+              <template #type>{{room.type && room.type.capitalize()}}</template>
               <template #location>{{itemLocation(room, 'room')}}</template>
             </place-card>
 
@@ -48,13 +55,17 @@
           <div class="search-result-section-type">{{$t('itemType.facility')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="facility in topFacilityList" :key="facility.id"
-              :simple="false" :type="'facility'"
+              :simple="false" 
+              :data-type="'facility'"
+              :name-title="facility.name"
+              :type-title="facility.type && facility.type.capitalize()"
+              :location-title="itemLocation(facility, 'facility')"
               @click.native="onclick($event, building, 'building')">
               <template #icon>
-                <img :src="facilityImage(facility.type)" :alt="facility.type">
+                <img :src="facilityImage(facility.icon_type)" :alt="facility.icon_type">
               </template>
               <template #name>{{facility.name}}</template>
-              <template #type>{{facility.type}}</template>
+              <template #type>{{facility.type && facility.type.capitalize()}}</template>
               <template #location>{{itemLocation(facility, 'facility')}}</template>
             </place-card>
 
@@ -80,8 +91,9 @@
 import PlaceCard from 'components/PlaceCard'
 import LoadingPanel from "components/LoadingPanel"
 
+import { unifySearchItem } from 'utils/utilFunctions.js'
+
 import floorDict from 'assets/json/floor.json'
-import buildingDict from 'assets/json/building.json'
 import iconPath from 'assets/js/facilityIconPath.js'
 
 export default {
@@ -100,7 +112,6 @@ export default {
       facilityTotal: 0,
       hasResult: false,
       query: null,
-      loading: true,
       isAlive: false,
       loading: true,
       loadingError: false
@@ -112,10 +123,10 @@ export default {
     },
     itemLocation () {
       return (item, type) => {
-        if (type === 'building') return `${buildingDict[item.code]}`
-        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${buildingDict[item.building_code]}`
+        if (type === 'building') return item.zone
+        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${item.zone}`
       }
-    },
+    }
   },
   methods: {
     async search () {
@@ -130,11 +141,11 @@ export default {
         if (this.query) {
           const data = await this.$api.search.searchTop({ q: this.query })
           console.log(data)
-          this.topBuildingList = data.building.content
+          this.topBuildingList = unifySearchItem(data.building.content || [], "building")
           this.buildingTotal = data.building.totalElements
-          this.topRoomList = data.room.content
+          this.topRoomList = unifySearchItem(data.room.content || [], "room")
           this.roomTotal = data.room.totalElements
-          this.topFacilityList = data.facility.content
+          this.topFacilityList = unifySearchItem(data.facility.content || [], "facility")
           this.facilityTotal = data.facility.totalElements
 
           this.hasResult = this.buildingTotal > 0 || this.roomTotal > 0 || this.facilityTotal > 0

@@ -78,16 +78,16 @@ module.exports = {
         'floor': '选择其他楼层',
         'home': '返回校园地图',
         "gate": {
-          "show": "显示建筑入口",
-          "hide": "隐藏建筑入口"
+            "show": "显示建筑入口",
+            "hide": "隐藏建筑入口"
         },
         "occupation": {
-          "show": "显示正在使用的房间",
-          "hide": "隐藏正在使用的房间",
+            "show": "显示正在使用的房间",
+            "hide": "隐藏正在使用的房间",
         },
         "location": {
-          "show": "启动实时定位",
-          "hide": "关闭实时定位",
+            "show": "启动实时定位",
+            "hide": "关闭实时定位",
         },
         'zoomIn': '放大',
         'zoomOut': '缩小',

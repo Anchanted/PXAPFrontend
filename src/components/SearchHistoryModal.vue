@@ -24,12 +24,13 @@ export default {
     ...mapState(['panelCollapsed', 'scrollBarWidth']),
     modalStyle () {
       const computedHeight = this.screenHeight - 66 - 50
-      let h, overflow = false
+      // let h, overflow = false
+      let h
       if (computedHeight < 300) h = 300
       else if (computedHeight > 1200) h = 1200
       else h = computedHeight
 
-      if (this.contentHeight > h) overflow = true
+      // if (this.contentHeight > h) overflow = true
       return {
         'max-height': h + 'px',
       }

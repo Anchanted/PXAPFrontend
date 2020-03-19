@@ -17,7 +17,10 @@
       <div v-if="dataType === 'building'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
         <place-card class="search-section-item"
           v-for="building in itemList" :key="building.id"
-          :simple="false" :type="'building'"
+          :simple="false" 
+          :data-type="'building'"
+          :name-title="building.name"
+          :location-title="itemLocation(building, 'building')"
           @click.native="onclick($event, building, dataType)">
           <template #icon>{{building.code}}</template>
           <template #name>{{building.name}}</template>
@@ -28,11 +31,15 @@
       <div v-else-if="dataType === 'room'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
         <place-card class="search-section-item"
           v-for="room in itemList" :key="room.id"
-          :simple="false" :type="'room'"
+          :simple="false" 
+          :data-type="'room'"
+          :name-title="room.name"
+          :type-title="room.type && room.type.capitalize()"
+          :location-title="itemLocation(room, 'room')"
           @click.native="onclick($event, room, dataType)">
           <template #icon>{{room.building_code}}</template>
           <template #name>{{room.name}}</template>
-          <template #type>{{room.type}}</template>
+          <template #type>{{room.type && room.type.capitalize()}}</template>
           <template #location>{{itemLocation(room, 'room')}}</template>
         </place-card>
       </div>
@@ -40,13 +47,17 @@
       <div v-else-if="dataType === 'facility'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
         <place-card class="search-section-item"
           v-for="facility in itemList" :key="facility.id"
-          :simple="false" :type="'facility'"
+          :simple="false" 
+          :data-type="'facility'"
+          :name-title="facility.name"
+          :type-title="facility.type && facility.type.capitalize()"
+          :location-title="itemLocation(facility, 'facility')"
           @click.native="onclick($event, facility, dataType)">
           <template #icon>
             <img :src="facilityImage(facility.type)" :alt="facility.type">
           </template>
           <template #name>{{facility.name}}</template>
-          <template #type>{{facility.type}}</template>
+          <template #type>{{facility.type && facility.type.capitalize()}}</template>
           <template #location>{{itemLocation(facility, 'facility')}}</template>
         </place-card>
       </div>
@@ -86,8 +97,9 @@
 import LoadingPanel from 'components/LoadingPanel'
 import PlaceCard from 'components/PlaceCard'
 
+import { unifySearchItem } from 'utils/utilFunctions.js'
+
 import floorDict from 'assets/json/floor.json'
-import buildingDict from 'assets/json/building.json'
 import iconPath from 'assets/js/facilityIconPath.js'
 
 import { mapState } from 'vuex'
@@ -123,8 +135,8 @@ export default {
     },
     itemLocation () {
       return (item, type) => {
-        if (type === 'building') return `${buildingDict[item.code]}`
-        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${buildingDict[item.building_code]}`
+        if (type === 'building') return item.zone
+        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${item.zone}`
       }
     },
     pageNum () {
@@ -188,7 +200,7 @@ export default {
             return
           }
 
-          this.itemList = data.content
+          this.itemList = unifySearchItem(data.content || [], this.dataType)
           this.totalPages = data.totalPages
 
           this.loading = false

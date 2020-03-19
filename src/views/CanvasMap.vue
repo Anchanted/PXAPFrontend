@@ -115,6 +115,7 @@ export default {
       mdown: false, // desktop drag
       mclick: false,
       mdowntime: null,
+      clickTimeoutId: 0,
       lastClickTime: null,
       lastDoubleClick: false,
       buildingCode: null,
@@ -578,23 +579,26 @@ export default {
           }, 100)
           return
         }
+        
+        if (!this.currentMarkerAnimation.triggered && !this.lastMarkerAnimation.triggered) {
+          if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
+            if (!this.lastDoubleClick) {  // second click
+              const { x, y } = this.getMousePoint({ x: e.clientX, y: e.clientY })
+              this.focusPointer.x = x
+              this.focusPointer.y = y
+              this.zoomMap(200)
 
-        if (this.lastClickTime && currentTime - this.lastClickTime < 500) { // double click
-          if (!this.lastDoubleClick) {  // second click
-            const { x, y } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-            this.focusPointer.x = x
-            this.focusPointer.y = y
-            this.zoomMap(200)
-
-            this.lastClickTime = currentTime
-            this.lastDoubleClick = true
-            return
+              this.lastClickTime = currentTime
+              this.lastDoubleClick = true
+              clearTimeout(this.clickTimeoutId)
+              return
+            }
           }
-        }
 
-        this.lastClickTime = currentTime
-        this.lastDoubleClick = false
-        this.chooseItem(e)
+          this.clickTimeoutId = setTimeout(() => this.chooseItem(e), 300)
+          this.lastClickTime = currentTime
+          this.lastDoubleClick = false
+        }
       }
 
       this.mdown = false;
@@ -688,16 +692,16 @@ export default {
             x: this.selectedItem.x,
             y: this.selectedItem.y
           }
-        this.selectedItem = JSON.stringify(element) !== "{}" ? {
-          type: element.itemType,
-          id: element.id,
-          areaCoords: element.areaCoords,
-          itemName: element.name,
-          ...element.location
-        } : element
+          this.selectedItem = JSON.stringify(element) !== "{}" ? {
+            type: element.itemType,
+            id: element.id,
+            areaCoords: element.areaCoords,
+            itemName: element.name,
+            ...element.location
+          } : element
       } else {
         // console.log("same item")
-        this.$refs.modal.showModal()
+        if (JSON.stringify(this.selectedItem) !== "{}") this.$refs.modal.showModal()
       }
       return sameItem
     },
@@ -736,7 +740,6 @@ export default {
 
           if (top < 0) newPosY = this.position.y - top // - (top - 0)
           if (bottom - this.canvasHeight > 0) newPosY = this.position.y - (bottom - this.canvasHeight)
-
         }
 
         // edge cases
@@ -858,12 +861,45 @@ export default {
         time: 3000
       })
       // throw new Error("errorMessage")
+    },
+
+    resizeWindow () {
+      const clientWidth = document.documentElement.clientWidth >= 300 ? document.documentElement.clientWidth : 300;
+      const clientHeight = document.documentElement.clientHeight >= 300 ? document.documentElement.clientHeight : 300;
+      this.canvas.width = clientWidth
+      this.canvas.height = clientHeight
+
+      if (this.imgWidth <= this.imgHeight) {
+        this.canvasWidth = clientWidth
+        this.canvasHeight = clientHeight
+        this.scaleAdaption = this.canvasHeight / this.imgHeight
+        if (this.imgWidth * this.scaleAdaption > this.canvasWidth) this.scaleAdaption = this.canvasWidth / this.imgWidth
+      } else { // imgWidth > imgHeight
+        if (clientWidth > clientHeight) {
+          // img: landscape  screen: landscape
+          this.canvasWidth = clientWidth
+          this.canvasHeight = clientHeight
+        } else { // clientWidth <= clientHeight
+          //img: landscape  screen: portrait
+          this.canvasWidth = clientHeight
+          this.canvasHeight = clientWidth
+          this.rotate = true;
+        }
+        this.scaleAdaption = this.canvasWidth / this.imgWidth
+        if (this.imgHeight * this.scaleAdaption > this.canvasHeight) this.scaleAdaption = this.canvasHeight / this.imgHeight
+      }
+
+      this.positionAdaption = {
+        x: (parseInt(this.canvasWidth) - parseInt(this.imgWidth * this.scaleAdaption)) / 2,
+        y: (parseInt(this.canvasHeight) - parseInt(this.imgHeight * this.scaleAdaption)) / 2
+      };
     }
 
   },
   async mounted () {
     // console.log('map mounted')
     document.body.style.overflow='hidden';
+    window.onresize = () => this.resizeWindow()
 
     try {
       this.mapType = this.$route.params.buildingId ? 'floor' : 'campus'
@@ -913,14 +949,6 @@ export default {
       this.context = this.canvas.getContext("2d");
       this.context.lineJoin = "round";
 
-      const clientWidth = document.documentElement.clientWidth >= 300 ? document.documentElement.clientWidth : 300;
-      const clientHeight = document.documentElement.clientHeight >= 300 ? document.documentElement.clientHeight : 300;
-      this.canvas.width = clientWidth
-      this.canvas.height = clientHeight
-
-      this.iconSize = Math.max(clientWidth, clientHeight) || 0
-      this.iconSize = parseInt(this.iconSize * 0.03)
-
       this.imgWidth = parseInt(this.imageMap['map'].width)
       this.imgHeight = parseInt(this.imageMap['map'].height)
       console.log(this.imgWidth, this.imgHeight)
@@ -929,30 +957,10 @@ export default {
       const pixel = this.context.getImageData(2, 2, 1, 1).data
       this.mapMarginColor = (!pixel && !pixel.length) ? null : `rgb(${pixel.join(',')})`
 
-      if (this.imgWidth <= this.imgHeight) {
-        this.canvasWidth = clientWidth
-        this.canvasHeight = clientHeight
-        this.scaleAdaption = this.canvasHeight / this.imgHeight
-        if (this.imgWidth * this.scaleAdaption > this.canvasWidth) this.scaleAdaption = this.canvasWidth / this.imgWidth
-      } else { // imgWidth > imgHeight
-        if (clientWidth > clientHeight) {
-          // img: landscape  screen: landscape
-          this.canvasWidth = clientWidth
-          this.canvasHeight = clientHeight
-        } else { // clientWidth <= clientHeight
-          //img: landscape  screen: portrait
-          this.canvasWidth = clientHeight
-          this.canvasHeight = clientWidth
-          this.rotate = true;
-        }
-        this.scaleAdaption = this.canvasWidth / this.imgWidth
-        if (this.imgHeight * this.scaleAdaption > this.canvasHeight) this.scaleAdaption = this.canvasHeight / this.imgHeight
-      }
+      this.resizeWindow()
 
-      this.positionAdaption = {
-        x: (parseInt(this.canvasWidth) - parseInt(this.imgWidth * this.scaleAdaption)) / 2,
-        y: (parseInt(this.canvasHeight) - parseInt(this.imgHeight * this.scaleAdaption)) / 2
-      };
+      this.iconSize = Math.max(this.canvasWidth, this.canvasHeight) || 0
+      this.iconSize = parseInt(this.iconSize * 0.03)
 
       this.virtualButton.size = 40
 
@@ -967,6 +975,8 @@ export default {
             this.setSelectedItem(item)
             this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'middle', 3)
             this.$store.commit('setGlobalText', item.name || "")
+          } else {
+            this.$router.push({name: 'PageNotFound'})
           }
         }
       })
@@ -994,18 +1004,19 @@ export default {
             x: val.x,
             y: val.y
           }
-          this.$router.push({
-            name: 'Place',
-            params: {
-              buildingId: this.$route.params.buildingId,
-              floorId: this.$route.params.floorId,
-              type: val.type,
-              id: val.id,
-              itemName: val.itemName
-            }
-          })
+          if (!(this.$route.name === "Place" && this.$route.params.type == val.type && this.$route.params.id == val.id))
+            this.$router.push({
+              name: 'Place',
+              params: {
+                buildingId: this.$route.params.buildingId,
+                floorId: this.$route.params.floorId,
+                type: val.type,
+                id: val.id,
+                itemName: val.itemName
+              }
+            })
         } else {
-          if (this.$route.name.indexOf("Search") === -1) {
+          if (this.$route.name.indexOf("Search") === -1 && this.$route.name !== "Map") {
             // not from place to search
             this.$store.commit('setModalCollapsed', true)
             setTimeout(() => {
@@ -1146,14 +1157,17 @@ export default {
     const toFloorId = to.params.floorId || ''
 
     if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}`) {
-      // if (to.name === 'Place') {
-      //   const item = this.itemList.find(e => e.id === parseInt(to.params.id) && e.itemType === to.params.type)
-      //   if (item) {
-      //     this.setSelectedItem(item)
-      //     this.adjustMapPosition('include')
-      //   }
-      // } else
-      if (to.name.indexOf('Search') !== -1) {
+      if (to.name === 'Place') {
+        const item = this.itemList.find(e => e.id === parseInt(to.params.id) && e.itemType === to.params.type)
+        if (item) {
+          if (this.occupationActivated) this.$store.commit("button/setOccupationActivated", false)
+          this.setSelectedItem(item)
+          this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
+        } else {
+          next({name: 'PageNotFound'})
+          return
+        }
+      } else {
         this.setSelectedItem()
       }
     }

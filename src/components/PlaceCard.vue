@@ -5,13 +5,13 @@
         <slot name="icon"></slot>
       </div>
       <div class="item-info">
-        <div class="item-info-name" :class="type === 'building' ? 'two-line' : 'one-line'">
+        <div class="item-info-name" :class="dataType === 'building' ? 'two-line' : 'one-line'" :title="nameTitle">
           <slot name="name"></slot>
         </div>
-        <div class="item-info-type one-line">
+        <div class="item-info-type one-line" :title="typeTitle">
           <slot name="type"></slot>
         </div>
-        <div class="item-info-location one-line">
+        <div class="item-info-location one-line" :title="locationTitle">
           <slot name="location"></slot>
         </div>
       </div>
@@ -23,10 +23,10 @@
       <slot name="icon"></slot>
     </div>
     <div class="simple-item-info">
-      <div class="simple-item-info-name one-line">
+      <div class="simple-item-info-name one-line" :title="nameTitle">
         <slot name="name"></slot>
       </div>
-      <div class="simple-item-info-location one-line">
+      <div class="simple-item-info-location one-line" :title="locationTitle">
         <slot name="location"></slot>
       </div>
     </div>
@@ -40,9 +40,18 @@ export default {
       type: Boolean,
       default: false,
     },
-    type: {
+    dataType: {
       type: String,
       required: true
+    },
+    nameTitle: {
+      type: String
+    },
+    typeTitle: {
+      type: String
+    },
+    locationTitle: {
+      type: String
     }
   }
 }
@@ -95,7 +104,7 @@ export default {
     justify-content: space-between;
 
     &-name {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       line-height: 1.2;
       height: 50px;
       flex-grow: 1;
@@ -161,7 +170,7 @@ export default {
     justify-content: space-between;
 
     &-name {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       line-height: 1.2;
       // height: 40px;
     }
