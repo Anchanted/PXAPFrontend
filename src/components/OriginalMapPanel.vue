@@ -1,5 +1,5 @@
 <template>
-  <div class="panel" :class="{'panel-collapsed': panelCollapsed}" :style="{ 'max-height': `${screenHeight - 20 - 50}px` }">
+  <div class="panel" :class="{'original-panel-collapsed': panelCollapsed}" :style="{ 'max-height': `${screenHeight - 20 - 50}px` }">
     <!-- <div class="panel-collapse" @click="(panelCollapsed = !panelCollapsed)"> -->
     <div class="panel-button-container">
       <button
@@ -140,7 +140,13 @@ export default {
         // location: this.getCentroid(),
       }
 
-      console.log(JSON.stringify(roomObj))
+      // console.log(JSON.stringify(roomObj))
+
+      let areaCoords = ""
+      this.points.forEach(e => areaCoords += `${e.x},${e.y},`)
+      console.log(areaCoords)
+      let { x, y } = this.getCentroid()
+      console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
 
       var tag = document.createElement('input');
       tag.setAttribute('id', 'cp_hgz_input');
@@ -234,7 +240,7 @@ export default {
   }
 }
 
-.panel-collapsed {
+.original-panel-collapsed {
   transform: translateX(-360px);
 }
 

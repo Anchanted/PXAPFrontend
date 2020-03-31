@@ -11,7 +11,7 @@
           <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
           <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
           <template #icon v-else-if="item.dataType === 'facility'">
-            <img :src="facilityImage(item.type)" :alt="item.type">
+            <span class="iconfont facility-icon" :class="`icon-${item.icon_type || item.dataType}`"></span>
           </template>
           <template #name>{{item.name}}</template>
           <template #location>{{itemLocation(index, item.dataType)}}</template>
@@ -30,9 +30,6 @@
 </template>
 
 <script>
-import floorDict from 'assets/json/floor.json'
-import iconPath from 'assets/js/facilityIconPath.js'
-
 import PlaceCard from 'components/PlaceCard'
 
 import { mapState } from 'vuex'
@@ -52,13 +49,10 @@ export default {
     itemLocation () {
       return (index, type) => {
         const item = this.itemList[index]
-        if (type === 'building') return item.zone
-        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${item.zone}`
+        if (type === 'building' || !(item.floor_name && item.building_name)) return item.zone
+        else return `${this.$t("place.floor." + item.floor_name)}, ${item.building_name}, ${item.zone}`
       }
-    },
-    facilityImage () {
-      return type => iconPath[type]
-    },
+    }
   },
   methods: {
     onmousedown (e, item) {

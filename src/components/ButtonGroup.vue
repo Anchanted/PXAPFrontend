@@ -16,19 +16,21 @@
             <!-- Help Button -->
             <div class="dropdown-divider" style="margin: 0"></div>
             <button class="dropdown-item iconfont icon-help-outline" type="button"
-              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"></button>
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"
+              @click="helpButton"></button>
             <!-- Hide Button -->
             <template v-if="!loading">
               <div class="dropdown-divider" style="margin: 0"></div>
-              <button class="dropdown-item iconfont icon-hide" type="button" @click="hideButton"
-                data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.hideButton')"></button>
+              <button class="dropdown-item iconfont icon-hide" type="button"
+                data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.hideButton')"
+                @click="hideButton"></button>
             </template>
           </div>
         </div>
 
         <!-- Home Button -->
         <div v-if="buttonList.indexOf('home') !== -1" class="home button-container">
-          <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button button iconfont icon-home" @click="$router.push({ path: '/' })"
+          <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button button iconfont icon-campus" @click="$router.push({ path: '/' })"
             data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.home')"></button>
         </div>
       </div>
@@ -153,6 +155,9 @@ export default {
     }
   },
   methods: {
+    helpButton () {
+      window.open("/static/html/guide.html", '_blank')
+    },
     hideButton () {
       this.$emit("hideButtonGroup");
     },

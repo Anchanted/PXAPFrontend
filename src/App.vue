@@ -76,6 +76,10 @@ export default {
   overflow: auto;
 } */
 
+body {
+  position: relative;
+}
+
 .tooltip .tooltip-inner{
   font-size: 1rem;
 }

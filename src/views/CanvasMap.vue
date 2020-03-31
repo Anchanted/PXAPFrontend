@@ -63,9 +63,11 @@ import Modal from 'components/Modal'
 import SearchHistoryModal from 'components/SearchHistoryModal'
 import LoadingPanel from "components/LoadingPanel"
 
-import iconPath from 'assets/js/facilityIconPath.js'
+import iconSpriteInfo from "assets/json/iconSpriteInfo.json"
+import arrowSpriteInfo from "assets/json/arrowSpriteInfo.json"
 import { easeOutBack, easeOutCirc, arrowAnimation, locationAnimation } from 'utils/utilFunctions.js'
 import weekInfo from 'assets/json/week.json'
+import campusLocationList from "assets/json/campusLocation.json"
 import { DateTime, Interval } from 'luxon'
 
 import { mapState } from 'vuex';
@@ -129,12 +131,14 @@ export default {
       lastMarkerAnimation: {
         x: 0,
         y: 0,
+        markerType: "default",
         triggered: false,
         duration: 0
       },
       currentMarkerAnimation: {
         x: 0,
         y: 0,
+        markerType: "default",
         triggered: false,
         duration: 0
       },
@@ -244,8 +248,9 @@ export default {
         const augY = arrowAnimation(this.arrowTimer, -20, arrowDuration)
         const size = 60
         this.gateList.forEach((e) => {
-          this.drawRotateImage(this.imageMap[e.arrow], e.location.x, e.location.y, size, size, size/2, 0, true, false, e.direction, 0, (this.currentHour >= e.startTime && this.currentHour < e.endTime) ? augY : 0)
-          // this.drawImage(this.imageMap["iconBackground"], e.location.x, e.location.y, 10, 10, 5, 5, false, false)
+          this.drawImage(this.imageMap["arrowSprite"], e.location.x, e.location.y, size, size, size/2, 0, true, false, 
+          (arrowSpriteInfo[e.arrow]["column"] - 1) * arrowSpriteInfo[e.arrow]["width"], (arrowSpriteInfo[e.arrow]["row"] - 1) * arrowSpriteInfo[e.arrow]["height"], arrowSpriteInfo[e.arrow]["width"], arrowSpriteInfo[e.arrow]["height"],
+          e.direction, 0, (this.currentHour >= e.startTime && this.currentHour < e.endTime) ? augY : 0)
         })
         this.arrowTimer = (this.arrowTimer + 0.016 > arrowDuration) ? 0 : this.arrowTimer + 0.016
       }
@@ -273,14 +278,14 @@ export default {
         }
 
         if (this.itemList.length) {
-          const size = parseInt(this.iconSize * 0.6)
+          const size = parseInt(this.iconSize * 1)
           this.itemList.forEach(item => {
             // selected item
             if (JSON.stringify(this.selectedItem) !== "{}" && this.selectedItem.id === item.id && this.selectedItem.type === item.itemType) return
             // item not to display
             if (!item.iconLevel || (this.scale.x < item.iconLevel || this.scale.y < item.iconLevel)) return
-            this.drawImage(this.imageMap["iconBackground"], item.location.x, item.location.y, this.iconSize, this.iconSize, this.iconSize/2, this.iconSize/2, true, true)
-            this.drawImage(this.imageMap[item.iconType], item.location.x, item.location.y, size, size, size/2, size/2, true, true)
+            this.drawImage(this.imageMap["facilitySprite"], item.location.x, item.location.y, size, size, size/2, size/2, true, true, 
+              (iconSpriteInfo[item.iconType]["column"] - 1) * iconSpriteInfo[item.iconType]["width"], (iconSpriteInfo[item.iconType]["row"] - 1) * iconSpriteInfo[item.iconType]["height"], iconSpriteInfo[item.iconType]["width"], iconSpriteInfo[item.iconType]["height"])
           })
         }
 
@@ -288,7 +293,7 @@ export default {
           const t = this.lastMarkerAnimation.duration
           let size
           if (t < 0.5) {
-            size = easeOutCirc(t, this.iconSize*3, -this.iconSize*2.5, 0.5)
+            size = easeOutCirc(t, this.iconSize*2, -this.iconSize*1.9, 0.5)
             this.lastMarkerAnimation.duration += 0.016
           } else {
             size = 0
@@ -297,7 +302,9 @@ export default {
 
           ctx.shadowBlur = 10
           ctx.shadowColor = "#ffffff"
-          this.drawImage(this.imageMap['marker'], this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, size, size/2, size, true, true)
+          const iconType = this.lastMarkerAnimation.markerType || "default"
+          this.drawImage(this.imageMap['markers'], this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, size, size/2, size, true, true,
+            (iconSpriteInfo[iconType]["column"] - 1) * iconSpriteInfo[iconType]["width"] * 2, (iconSpriteInfo[iconType]["row"] - 1) * iconSpriteInfo[iconType]["height"] * 2, iconSpriteInfo[iconType]["width"] * 2, iconSpriteInfo[iconType]["height"] * 2)
           ctx.shadowBlur = 0
         }
 
@@ -305,22 +312,24 @@ export default {
           const t = this.currentMarkerAnimation.duration
           let size
           if (t < 0.5) {
-            size = easeOutBack(t, this.iconSize*3/3, this.iconSize*3*2/3, 0.5)
+            size = easeOutBack(t, this.iconSize*2/3, this.iconSize*2*2/3, 0.5)
             this.currentMarkerAnimation.duration += 0.016
           } else {
-            size = this.iconSize*3
+            size = this.iconSize*2
             this.currentMarkerAnimation.triggered = false
           }
 
           ctx.shadowBlur = 10
           ctx.shadowColor = "#ffffff"
-          this.drawImage(this.imageMap['marker'], this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, size, size/2, size, true, true)
+          const iconType = this.currentMarkerAnimation.markerType || "default"
+          this.drawImage(this.imageMap['markers'], this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, size, size/2, size, true, true,
+            (iconSpriteInfo[iconType]["column"] - 1) * iconSpriteInfo[iconType]["width"] * 2, (iconSpriteInfo[iconType]["row"] - 1) * iconSpriteInfo[iconType]["height"] * 2, iconSpriteInfo[iconType]["width"] * 2, iconSpriteInfo[iconType]["height"] * 2)
           ctx.shadowBlur = 0
         }
       }
 
       if (this.occupationActivated && this.occupiedRoomList) {
-        const size = this.iconSize;
+        const size = parseInt(this.iconSize * 2)
         this.occupiedRoomList.forEach(room => {
           const centroid = room.location
           this.drawImage(this.imageMap['group'], centroid.x, centroid.y, size, size, size/2, size/2, false, true)
@@ -351,39 +360,84 @@ export default {
       ctx.restore()
     },
 
-    drawImage (image, x, y, sizeX, sizeY, imgOffsetX, imgOffsetY, fixSize, selfRotate) {
+    drawImage () {
+      if (!(arguments.length === 9 
+        || arguments.length === 10 
+        || arguments.length === 12 
+        || arguments.length === 13 
+        || arguments.length === 14 
+        || arguments.length === 16)) throw new Error("Invalid argument number.")
+
       const scaleX = this.scale.x * this.scaleAdaption
       const scaleY = this.scale.y * this.scaleAdaption
       const offsetX = this.position.x + this.positionAdaption.x
       const offsetY = this.position.y + this.positionAdaption.y
 
-      if (!this.rotate || !selfRotate) {
-        if (!fixSize) this.context.drawImage(image, parseInt((x - imgOffsetX) * scaleX + offsetX), parseInt((y - imgOffsetY) * scaleY + offsetY), sizeX * scaleX, sizeY * scaleY)
-        else this.context.drawImage(image, parseInt(x * scaleX + offsetX - imgOffsetX), parseInt(y * scaleY + offsetY - imgOffsetY), sizeX, sizeY)
-      } else {
-        this.context.restore()
-        if (!fixSize) this.context.drawImage(image, parseInt(this.canvasHeight - ((y + imgOffsetX) * scaleY + offsetY)), parseInt((x - imgOffsetY) * scaleX + offsetX), sizeX * scaleY, sizeY * scaleX)
-        else this.context.drawImage(image, parseInt(this.canvasHeight - (y * scaleY + offsetY + imgOffsetX)), parseInt(x * scaleX + offsetX - imgOffsetY), sizeX, sizeY)
-        this.context.save()
-        this.context.translate(this.canvasHeight, 0)
-        this.context.rotate(Math.PI / 2)
+      const image = arguments[0]
+      const x = arguments[1]
+      const y = arguments[2]
+      const sizeX = arguments[3]
+      const sizeY = arguments[4]
+      const imgOffsetX = arguments[5]
+      const imgOffsetY = arguments[6]
+      const fixSize = arguments[7]
+      const selfRotate = arguments[8]
+      let sx 
+      let sy
+      let sWidth
+      let sHeight
+      let degree
+      let translateX
+      let translateY
+
+      if (arguments.length === 10 || arguments.length === 12) {
+        degree = arguments[9]
+        translateX = arguments[10] || 0
+        translateY = arguments[11] || 0
+      } else if (arguments.length === 14 || arguments.length === 16) {
+        degree = arguments[13]
+        translateX = arguments[14] || 0
+        translateY = arguments[15] || 0
       }
-    },
 
-    drawRotateImage (image, x, y, sizeX, sizeY, imgOffsetX, imgOffsetY, fixSize, selfRotate, degree, translateX = 0, translateY = 0) {
-      const scaleX = this.scale.x * this.scaleAdaption
-      const scaleY = this.scale.y * this.scaleAdaption
-      const offsetX = this.position.x + this.positionAdaption.x
-      const offsetY = this.position.y + this.positionAdaption.y
+      if (arguments.length >= 13) {
+        sx = arguments[9]
+        sy = arguments[10]
+        sWidth = arguments[11]
+        sHeight = arguments[12]
+      }
 
       const ctx = this.context
-      ctx.save();
-      ctx.translate(x * scaleX + offsetX, y * scaleY + offsetY);
-      ctx.rotate(degree * Math.PI / 180);
-      ctx.translate(-(x * scaleX + offsetX), -(y * scaleY + offsetY));
-      ctx.translate(translateX, translateY);
-      this.drawImage(image, x, y, sizeX, sizeY, imgOffsetX, imgOffsetY, fixSize, selfRotate)
-      ctx.restore();
+      if (degree != null && typeof(degree) != undefined) {
+        ctx.save();
+        ctx.translate(x * scaleX + offsetX, y * scaleY + offsetY);
+        ctx.rotate(degree * Math.PI / 180);
+        ctx.translate(-(x * scaleX + offsetX), -(y * scaleY + offsetY));
+        ctx.translate(translateX, translateY);
+      }
+      if (!this.rotate || !selfRotate) {
+        if (!fixSize) {
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt((x - imgOffsetX) * scaleX + offsetX), parseInt((y - imgOffsetY) * scaleY + offsetY), sizeX * scaleX, sizeY * scaleY)
+          else ctx.drawImage(image, parseInt((x - imgOffsetX) * scaleX + offsetX), parseInt((y - imgOffsetY) * scaleY + offsetY), sizeX * scaleX, sizeY * scaleY)
+        } else {
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(x * scaleX + offsetX - imgOffsetX), parseInt(y * scaleY + offsetY - imgOffsetY), sizeX, sizeY)
+          else ctx.drawImage(image, parseInt(x * scaleX + offsetX - imgOffsetX), parseInt(y * scaleY + offsetY - imgOffsetY), sizeX, sizeY)
+        }
+      } else {
+        ctx.restore()
+        if (!fixSize) {
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - ((y + imgOffsetX) * scaleY + offsetY)), parseInt((x - imgOffsetY) * scaleX + offsetX), sizeX * scaleY, sizeY * scaleX)
+          else ctx.drawImage(image, parseInt(this.canvasHeight - ((y + imgOffsetX) * scaleY + offsetY)), parseInt((x - imgOffsetY) * scaleX + offsetX), sizeX * scaleY, sizeY * scaleX)
+        }
+        else {
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - (y * scaleY + offsetY + imgOffsetX)), parseInt(x * scaleX + offsetX - imgOffsetY), sizeX, sizeY)
+          else ctx.drawImage(image, parseInt(this.canvasHeight - (y * scaleY + offsetY + imgOffsetX)), parseInt(x * scaleX + offsetX - imgOffsetY), sizeX, sizeY)
+        }
+        ctx.save()
+        ctx.translate(this.canvasHeight, 0)
+        ctx.rotate(Math.PI / 2)
+      }
+      if (degree != null && typeof(degree) != undefined) ctx.restore();
     },
 
     getTransformedPoint ({ x, y }) {
@@ -625,7 +679,7 @@ export default {
           const scaleY = this.scale.y * this.scaleAdaption
           const offsetX = this.position.x + this.positionAdaption.x
           const offsetY = this.position.y + this.positionAdaption.y
-          const size = this.iconSize * 3
+          const size = this.iconSize * 2
           const selfRotate = false
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
 
@@ -685,20 +739,22 @@ export default {
       if (this.selectedItem.type !== element.itemType || this.selectedItem.id !== element.id) {
         // click on another item or no item clicked before or click on nothing
         sameItem = false
-        if (this.selectedItem.x)
+        if (this.selectedItem.x && this.selectedItem.y)
           this.lastMarkerAnimation = {
             triggered: true,
             duration: 0,
             x: this.selectedItem.x,
-            y: this.selectedItem.y
+            y: this.selectedItem.y,
+            markerType: this.selectedItem.iconType || "default"
           }
-          this.selectedItem = JSON.stringify(element) !== "{}" ? {
-            type: element.itemType,
-            id: element.id,
-            areaCoords: element.areaCoords,
-            itemName: element.name,
-            ...element.location
-          } : element
+        this.selectedItem = JSON.stringify(element) !== "{}" ? {
+          type: element.itemType,
+          id: element.id,
+          areaCoords: element.areaCoords,
+          itemName: element.name,
+          iconType: element.iconType,
+          ...element.location
+        } : element
       } else {
         // console.log("same item")
         if (JSON.stringify(this.selectedItem) !== "{}") this.$refs.modal.showModal()
@@ -832,11 +888,42 @@ export default {
       this.virtualButton.position.y = (canvasHeight - this.virtualButton.size) / 2
     },
 
-    geolocationInfo (position) {
-      // const lng = position.coords.longitude;
-      // const lat = position.coords.latitude;
+    calculateMapLocation ({ longitude, latitude }) {
+      const p1 = campusLocationList[0]
+      const p2 = campusLocationList[1]
+      const ratio = {
+        x: (p2["geo"]["latitude"] - p1["geo"]["latitude"]) / (p2["image"]["x"] - p1["image"]["x"]),
+        y: (p2["geo"]["longitude"] - p1["geo"]["longitude"]) / (p2["image"]["y"] - p1["image"]["y"])
+      }
+      const origin = {
+        latitude: p1["geo"]["latitude"] - p1["image"]["x"] * ratio.x,
+        longitude: p1["geo"]["longitude"] - p1["image"]["y"] * ratio.y
+      }
+      return {
+        x: Math.floor((latitude - origin.latitude) / ratio.x),
+        y: Math.floor((longitude - origin.longitude) / ratio.y)
+      }
+    },
 
+    geolocationInfo (position) {
+      const { longitude, latitude } = position && position.coords
       console.log(position);
+
+      if (longitude && latitude) {
+        const firstcall = !this.location.x && !this.location.y
+        const { x, y } = this.calculateMapLocation({ longitude, latitude })
+        if ((x >= 0 && x <= this.imgWidth) && (y >= 0 && y <= this.imgHeight)) {
+          this.location.x = x
+          this.location.y = y
+          if (firstcall) this.adjustMapPosition({ posX: this.location.x, posY: this.location.y }, "middle", 1)
+        } else {
+          this.$alert({
+            message: "You are not in campus right now.",
+            time: 3000,
+            type: "warning"
+          })
+        }
+      } else throw new Error("Error getting location.")
     },
 
     geolocationError (error) {
@@ -874,11 +961,13 @@ export default {
         this.canvasHeight = clientHeight
         this.scaleAdaption = this.canvasHeight / this.imgHeight
         if (this.imgWidth * this.scaleAdaption > this.canvasWidth) this.scaleAdaption = this.canvasWidth / this.imgWidth
+        this.rotate = false
       } else { // imgWidth > imgHeight
         if (clientWidth > clientHeight) {
           // img: landscape  screen: landscape
           this.canvasWidth = clientWidth
           this.canvasHeight = clientHeight
+          this.rotate = false
         } else { // clientWidth <= clientHeight
           //img: landscape  screen: portrait
           this.canvasWidth = clientHeight
@@ -916,34 +1005,25 @@ export default {
 
         this.imageMap['map'] = await this.loadImage(this.baseUrl + this.selectedFloor.imgUrl)
         this.imageMap['group'] = await this.loadImage(require('assets/images/icon/group.png'))
-        this.imageMap['arrowRed'] = await this.loadImage(require('assets/images/icon/arrow-red.png'))
-        this.imageMap['arrowYellow'] = await this.loadImage(require('assets/images/icon/arrow-yellow.png'))
-        this.imageMap['arrowGreen'] = await this.loadImage(require('assets/images/icon/arrow-green.png'))
-        this.imageMap['arrowBlack'] = await this.loadImage(require('assets/images/icon/arrow-black.png'))
+        this.imageMap['arrowSprite'] = await this.loadImage(require('assets/images/sprite/arrow-sprite.png'))
       } else {
         data = await this.$api.floor.getCampusInfo()
         console.log(data)
 
-        this.imageMap['map'] = await this.loadImage(require('assets/images/map/campus/campus-map.png'))
+        this.imageMap['map'] = await this.loadImage(require('assets/images/map/campus/map.png'))
         this.imageMap['locationMarker'] = await this.loadImage(require('assets/images/icon/location-marker.png'))
         // this.imageMap['locationProbe'] = await this.loadImage(require('assets/images/icon/location-probe.png'))
         this.imageMap['locationCircle'] = await this.loadImage(require('assets/images/icon/location-circle.png'))
       }
-      this.imageMap['marker'] = await this.loadImage(require('assets/images/icon/marker.png'))
+      this.imageMap['markers'] = await this.loadImage(require('assets/images/sprite/marker-sprite.png'))
       this.imageMap["eye"] = await this.loadImage(require('assets/images/icon/eye.png'))
-      this.imageMap["iconBackground"] = await this.loadImage(require('assets/images/icon/icon-background.png'))
+      this.imageMap["facilitySprite"] = await this.loadImage(require('assets/images/sprite/icon-sprite.png'))
 
       const areaList = (this.mapType === 'campus' ? data.buildingList : data.roomList) || []
       const facilityList = data.facilityList || []
       areaList.forEach(item => item['itemType'] = this.mapType === 'campus' ? 'building' : 'room')
       facilityList.forEach(item => item['itemType'] = 'facility')
       this.itemList = this.itemList.concat(facilityList, areaList)
-
-      const iconSet = new Set()
-      this.itemList.forEach(item => {
-        if (item.iconType && item.iconLevel) iconSet.add(item.iconType)
-      })
-      if (iconSet.size) for (let e of iconSet) this.imageMap[e] = await this.loadImage(iconPath[e])
 
       this.canvas = this.$refs.indoorMap;
       this.context = this.canvas.getContext("2d");
@@ -1002,7 +1082,8 @@ export default {
             triggered: true,
             duration: 0,
             x: val.x,
-            y: val.y
+            y: val.y,
+            markerType: val.iconType || "default"
           }
           if (!(this.$route.name === "Place" && this.$route.params.type == val.type && this.$route.params.id == val.id))
             this.$router.push({
@@ -1039,10 +1120,8 @@ export default {
         input.click()
       } else {
         this.occupiedRoomList = []
-        if (this.occupationRequesting) {
-          this.$alert.close()
-          this.occupationRequesting = false
-        }
+        if (this.occupationRequesting) this.occupationRequesting = false
+        this.$alert.close()
         this.occupationTime = null
       }
     },
@@ -1065,24 +1144,23 @@ export default {
               let color
               switch (e.endTime - e.startTime) {
                 case 24:
-                  color = "Green"
+                  color = 24
                   break;
                 case 16:
-                  color = "Yellow"
+                  color = 11
                   break;
                 case 10.5:
-                  color = "Red"
+                  color = 5
                   break;
                 default:
-                  color = "Black"
+                  color = 0
                   break;
               }
               return {
                 ...e,
-                arrow: `arrow${color}`
+                arrow: color
               }
             })
-
             console.log(this.gateList)
           } catch (err) {
             console.log(err)
@@ -1114,20 +1192,22 @@ export default {
       try {
         if (val) {
           if (navigator.geolocation) {
-            if (this.imgWidth && this.imgHeight) {
-              this.location.x = this.imgWidth / 2
-              this.location.y = this.imgHeight / 2
-              this.adjustMapPosition({ posX: this.location.x, posY: this.location.y }, "middle")
-            }
             this.location.timer = 0
 
+            this.geolocationInfo({
+              coords: {
+                longitude: 31.2712021, 
+                latitude: 120.7430878
+              }
+            })
+            
             const options = {
               enableHighAccuracy: true,
               timeout: 2000,
               maximumAge: 2000
             }
             // navigator.geolocation.getCurrentPosition(displayLocationInfo, handleLocationError, options);
-            this.geoWatchId = navigator.geolocation.watchPosition(this.geolocationInfo, this.geolocationError, options)
+            // this.geoWatchId = navigator.geolocation.watchPosition(this.geolocationInfo, this.geolocationError, options)
           } else {
             throw new Error("Geolocation is not supported in this browser.")
           }

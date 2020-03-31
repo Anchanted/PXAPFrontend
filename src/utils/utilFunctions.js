@@ -37,9 +37,9 @@ export function unifySearchItem(itemList, type) {
   currentLocale = new RegExp(/^(en|zh)$/).test(currentLocale) ? currentLocale : fallbackLocale
   return itemList.map(e => {
     const item = JSON.parse(JSON.stringify(e || {}))
-    const dataType = type ? type : item.dataType
-    if (new RegExp(/^(building|facility|room)$/).test(dataType)) {
-      const fieldList = translationFields[dataType] || []
+    if (new RegExp(/^(building|facility|room)$/).test(type)) {
+      item["dataType"] = type
+      const fieldList = translationFields[type] || []
       fieldList.forEach(field => item[field] = item[field + "_" + currentLocale] ? item[field + "_" + currentLocale] : item[field + "_" + fallbackLocale])
     }
     return item

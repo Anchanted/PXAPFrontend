@@ -54,7 +54,7 @@
           :location-title="itemLocation(facility, 'facility')"
           @click.native="onclick($event, facility, dataType)">
           <template #icon>
-            <img :src="facilityImage(facility.type)" :alt="facility.type">
+            <span class="iconfont facility-icon" :class="`icon-${facility.icon_type || dataType}`"></span>
           </template>
           <template #name>{{facility.name}}</template>
           <template #type>{{facility.type && facility.type.capitalize()}}</template>
@@ -99,9 +99,6 @@ import PlaceCard from 'components/PlaceCard'
 
 import { unifySearchItem } from 'utils/utilFunctions.js'
 
-import floorDict from 'assets/json/floor.json'
-import iconPath from 'assets/js/facilityIconPath.js'
-
 import { mapState } from 'vuex'
 
 export default {
@@ -130,13 +127,10 @@ export default {
       // return this.query && this.dataType ? `"${decodeURIComponent(this.query)}" in ${this.dataType.charAt(0).toUpperCase()}${this.dataType.slice(1)}` : ''
       return this.query && this.dataType ? this.$i18n.t('search.moreTopbar',{ query: decodeURIComponent(this.query), type: this.$i18n.t(`itemType.${this.dataType}`) }) : ''
     },
-    facilityImage () {
-      return type => iconPath[type]
-    },
     itemLocation () {
       return (item, type) => {
-        if (type === 'building') return item.zone
-        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${item.zone}`
+        if (type === 'building' || !(item.floor_name && item.building_name)) return item.zone
+        else return `${this.$t("place.floor." + item.floor_name)}, ${item.building_name}, ${item.zone}`
       }
     },
     pageNum () {

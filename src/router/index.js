@@ -4,7 +4,7 @@ import PageNotFound from 'views/404'
 import Place from 'views/Place'
 import SearchTop from 'views/Search/SearchTop'
 import SearchMore from 'views/Search/SearchMore'
-import OriginalMap from 'views/deprecated/OriginalMap'
+import OriginalMap from 'views/OriginalMap'
 import CheckMap from 'views/deprecated/CheckMap'
 import TimetableForm from 'views/deprecated/TimetableForm'
 // import TimetableCheck from 'views/deprecated/TimetableTest3'
@@ -84,12 +84,12 @@ const router = new Router({
 router.beforeEach((to, from, next) => {
   if (to.params.buildingId && !to.params.floorId) next({ name: 'PageNotFound' })
   else {
-    if (to.name !== 'OriginalMap') {
+    if (to.matched && to.matched[0] && to.matched[0].name === "Map") {
       const fromBuildingId = from.params.buildingId || ''
       const fromFloorId = from.params.floorId || ''
       const toBuildingId = to.params.buildingId || ''
       const toFloorId = to.params.floorId || ''
-      if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}` || to.name === "Map") { // go to another page
+      if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}`) { // go to another page
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', true)
       }

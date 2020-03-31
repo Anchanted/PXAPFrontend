@@ -28,7 +28,6 @@ const searchHistory = {
     refreshHistoryList ({ commit }) {
       let historyList = JSON.parse(localStorage.getItem('historyList')) || []
       if (!(historyList instanceof Array)) historyList = []
-      
       console.log(unifySearchItem(historyList))
       commit('setHistoryList', unifySearchItem(historyList))
     },

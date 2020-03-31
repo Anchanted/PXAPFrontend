@@ -5,15 +5,14 @@
 body, h1, h2, h3, h4, h5, h6, hr, p, blockquote, dl, dt, dd, ul, ol, li, pre, form, fieldset, legend, button, input, textarea, th, td {
     margin: 0;
     padding: 0;
-    overflow: hidden;
     /* position: fixed; */
 }
 
-html {
+html, body {
     color: #000;
     /* overflow-y: scroll;
     overflow: -moz-scrollbars; */
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 body, div, button, input, select, textarea, span {

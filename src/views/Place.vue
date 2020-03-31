@@ -120,6 +120,7 @@ export default {
         case 'building':
           zone = this.item.zone || "b"
           str = `${this.$t("place.zone." + zone)}`
+          break
       }
       return str
     },
@@ -161,29 +162,28 @@ export default {
           case 'room':
             data = await this.$api.room.getRoomInfo(id)
             console.log(data)
+            if (!data.room) throw new Error('Data Not Found')
             this.item = { ...data.room }
             this.lessonList = data.timetable || []
-            // this.description = data.description;
             break
           case 'facility':
             data = await this.$api.facility.getFacilityInfo(id)
+            if (!data.facility) throw new Error('Data Not Found')
             console.log(data)
             this.item = { ...data.facility }
-            // this.description = data.description;
             break
           case 'building':
             data = await this.$api.building.getBuildingInfo(id)
+            if (!data.building) throw new Error('Data Not Found')
             console.log(data)
             this.item = { ...data.building }
-            // this.description = data.description;
             break
         }
         this.item = {
           ...this.item,
           dataType: type
         }
-
-        this.loading = false
+        if (!this.loadingError) this.loading = false
         this.$nextTick(() => {
           this.$store.commit('setModalHeight', { height: this.$refs.page && this.$refs.page.offsetHeight, component: 'Place' })
           $('[data-toggle="tooltip"]').tooltip();
@@ -248,7 +248,8 @@ export default {
       height: 40px;
       border-radius: 20px;
       padding: 0;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
+      line-height: 1;
     }
   }
 

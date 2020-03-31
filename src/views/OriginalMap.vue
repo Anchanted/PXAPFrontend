@@ -172,8 +172,8 @@ export default {
       else if (this.floorIndex === 0) floorName = 'G'
       else if (this.floorIndex === -1) floorName = 'B'
 
-      this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/EMPBF.png`)
-      // this.image  = await this.loadImage(require('@/assets/images/map/campus/campus-map.png'))
+      // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/EMPBF.png`)
+      this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
     } catch (error) {
       alert(error.message)
       return

@@ -38,7 +38,7 @@
               :name-title="room.name"
               :type-title="room.type && room.type.capitalize()"
               :location-title="itemLocation(room, 'room')"
-              @click.native="onclick($event, building, 'building')">
+              @click.native="onclick($event, room, 'room')">
               <template #icon>{{room.building_code}}</template>
               <template #name>{{room.name}}</template>
               <template #type>{{room.type && room.type.capitalize()}}</template>
@@ -60,9 +60,9 @@
               :name-title="facility.name"
               :type-title="facility.type && facility.type.capitalize()"
               :location-title="itemLocation(facility, 'facility')"
-              @click.native="onclick($event, building, 'building')">
+              @click.native="onclick($event, facility, 'facility')">
               <template #icon>
-                <img :src="facilityImage(facility.icon_type)" :alt="facility.icon_type">
+                <span class="iconfont facility-icon" :class="`icon-${facility.icon_type || facility.dataType}`"></span>
               </template>
               <template #name>{{facility.name}}</template>
               <template #type>{{facility.type && facility.type.capitalize()}}</template>
@@ -93,9 +93,6 @@ import LoadingPanel from "components/LoadingPanel"
 
 import { unifySearchItem } from 'utils/utilFunctions.js'
 
-import floorDict from 'assets/json/floor.json'
-import iconPath from 'assets/js/facilityIconPath.js'
-
 export default {
   name: 'SearchTop',
   components: {
@@ -118,13 +115,10 @@ export default {
     }
   },
   computed: {
-    facilityImage () {
-      return type => iconPath[type]
-    },
     itemLocation () {
       return (item, type) => {
-        if (type === 'building') return item.zone
-        else return `${floorDict[item.floor_name]}, ${item.building_name}, ${item.zone}`
+        if (type === 'building' || !(item.floor_name && item.building_name)) return item.zone
+        else return `${this.$t("place.floor." + item.floor_name)}, ${item.building_name}, ${item.zone}`
       }
     }
   },

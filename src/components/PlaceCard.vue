@@ -89,9 +89,10 @@ export default {
     justify-content: center;
     align-items: center;
 
-    img {
-      width: 30px;
-      height: 30px;
+    span {
+      font-size: 1.5rem;
+      line-height: 50px;
+      font-weight: normal;
     }
   }
 
@@ -155,9 +156,10 @@ export default {
     justify-content: center;
     align-items: center;
 
-    img {
-      width: 30px;
-      height: 30px;
+    span {
+      font-size: 1.5rem;
+      line-height: 50px;
+      font-weight: normal;
     }
   }
 
