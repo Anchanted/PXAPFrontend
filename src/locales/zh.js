@@ -7,6 +7,11 @@ module.exports = {
         'noMore': '没有更多搜索结果了',
         'noResult': '没有找到搜索结果。',
     },
+    direction: {
+        "fromInput": "选择起点",
+        "toInput": "选择终点",
+        "clickMap": "或在地图上点击"
+    },
     itemType: {
         'building': '建筑',
         'room': '房间',

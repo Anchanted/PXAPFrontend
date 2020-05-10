@@ -353,15 +353,15 @@ img
       padding: 0;
       position: relative;
 
-      &:before,
-      &:after {
+      &::before,
+      &::after {
         content: '';
         transform: rotate(0deg);
         transition: transform 0.5s ease;
       }
       .bar,
-      &:before,
-      &:after {
+      &::before,
+      &::after {
         position: absolute;
         width: 24px;
         height: 4px;
@@ -376,33 +376,33 @@ img
         top: 50%;
         margin-top: -2px;
       }
-      &:before {
+      &::before {
         top: 8px;
       }
-      &:after {
+      &::after {
         bottom: 8px;
       }
     }
 
     &.show {
       .menu-button {
-        &:before,
-        &:after {
+        &::before,
+        &::after {
           content: '';
           // transition: top 0.5s ease 0.5s, transform 0.5s ease, background-color 0.75s ease 0.25s;
         }
         // .bar,
-        // &:before,
-        // &:after {
+        // &::before,
+        // &::after {
         //   background-color: #000000;
         // }
         .bar {
           opacity: 0;
         }
-        &:before {
+        &::before {
           transform: translateY(9px) rotate(45deg);
         }
-        &:after {
+        &::after {
           transform: translateY(-9px) rotate(-45deg);
         }
       }

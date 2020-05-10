@@ -64,11 +64,5 @@
         "column": 3,
         "width": 96,
         "height": 96
-    },
-    "default": {
-        "row": 3,
-        "column": 4,
-        "width": 96,
-        "height": 96
     }
 }

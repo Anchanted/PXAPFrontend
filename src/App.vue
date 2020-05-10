@@ -66,6 +66,10 @@ export default {
     this.$store.commit('setScrollBarWidth', scrollBarWidth)
     this.$store.dispatch('searchHistory/refreshHistoryList')
   },
+  mounted () {
+    this.$store.commit('setScreenHeight', window.innerHeight)
+    window.onresize = () => this.$store.commit('setScreenHeight', window.innerHeight)
+  }
 }
 </script>
 

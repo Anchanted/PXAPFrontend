@@ -23,11 +23,10 @@ export default {
   name: "Modal",
   data() {
     return {
-      screenHeight: 0,
     }
   },
   computed: {
-    ...mapState(['scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', 'modalLoading']),
+    ...mapState(["screenHeight", 'scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', 'modalLoading']),
     key () {
       const route = this.$route
       return route.fullPath
@@ -59,14 +58,8 @@ export default {
 
     onscroll () {
       this.$store.commit('setModalScrollTop', this.$refs.modal.scrollTop)
-    },
-  },
-  mounted () {
-    this.screenHeight = window.innerHeight
-    window.onresize = () => {
-      this.screenHeight = window.innerHeight
     }
-  },
+  }
 }
 </script>
 
@@ -155,10 +148,6 @@ export default {
 .search-item-info-location {
   font-size: 1rem;
   margin-top: 5px;
-}
-
-.panel-collapsed {
-  transform: translateX(-445px)
 }
 
 .more-enter-active {

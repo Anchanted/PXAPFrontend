@@ -65,7 +65,7 @@ export default {
     return {
       screenHeight: 0,
       panelCollapsed: false,
-      roomName: null,
+      roomName: "FB123",
       buildingCode: null,
       floorIndex: null,
       roomTypeArr: null,
@@ -148,9 +148,12 @@ export default {
       let { x, y } = this.getCentroid()
       console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
 
+      const pointArr = this.points.map(e => [e.x, e.y])
+
       var tag = document.createElement('input');
       tag.setAttribute('id', 'cp_hgz_input');
-      tag.value = JSON.stringify(roomObj)+',';
+      // tag.value = JSON.stringify(roomObj)+',';
+      tag.value = JSON.stringify(pointArr).replace(/,/g, ", ");
       document.getElementsByTagName('body')[0].appendChild(tag);
       document.getElementById('cp_hgz_input').select();
       document.execCommand('copy');
@@ -250,7 +253,7 @@ export default {
 
 .panel-button-container {
   position: absolute;
-  top: 0;
+  top: 80px;
   // right: -36px;
   left: 350px;
   // margin-left: 350px;

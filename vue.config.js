@@ -26,6 +26,15 @@ module.exports = {
       .set('plugins', resolve('src/plugins'))
   },
   configureWebpack: {
+    module: {
+      rules: [
+        {
+          test: /\.json5$/i,
+          loader: 'json5-loader',
+          type: 'javascript/auto',
+        },
+      ],
+    },
     plugins: [
       new webpack.ProvidePlugin({
         $: 'jquery',

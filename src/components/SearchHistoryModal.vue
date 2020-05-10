@@ -17,11 +17,10 @@ export default {
   },
   data() {
     return {
-      screenHeight: 0,
     }
   },
   computed: {
-    ...mapState(['panelCollapsed', 'scrollBarWidth']),
+    ...mapState(["screenHeight", 'panelCollapsed', 'scrollBarWidth']),
     modalStyle () {
       const computedHeight = this.screenHeight - 66 - 50
       // let h, overflow = false
@@ -50,13 +49,7 @@ export default {
         }
       })
     },
-  },
-  mounted () {
-    this.screenHeight = window.innerHeight
-    window.onresize = () => {
-      this.screenHeight = window.innerHeight
-    }
-  },
+  }
 }
 </script>
 

@@ -4,6 +4,7 @@ import PageNotFound from 'views/404'
 import Place from 'views/Place'
 import SearchTop from 'views/Search/SearchTop'
 import SearchMore from 'views/Search/SearchMore'
+import Direction from 'views/Direction'
 import OriginalMap from 'views/OriginalMap'
 import CheckMap from 'views/deprecated/CheckMap'
 import TimetableForm from 'views/deprecated/TimetableForm'
@@ -70,6 +71,14 @@ const routes = [
         meta: {
           keepAlive: false,
         },
+      },
+      {
+        path: "dir/:fromPlace([^/]*)?/:toPlace([^/]*)?",
+        component: Direction,
+        name: "Direction",
+        meta: {
+          keepAlive: true
+        }
       }
     ],
   }
@@ -83,12 +92,15 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   if (to.params.buildingId && !to.params.floorId) next({ name: 'PageNotFound' })
+  else if (to.name === "Direction" && (to.params.buildingId || to.params.floorId)) next({ name: "Map", params: to.params })
   else {
-    if (to.matched && to.matched[0] && to.matched[0].name === "Map") {
+    if (to.matched?.[0]?.name === "Map") {
       const fromBuildingId = from.params.buildingId || ''
       const fromFloorId = from.params.floorId || ''
       const toBuildingId = to.params.buildingId || ''
       const toFloorId = to.params.floorId || ''
+      
+      store.commit("direction/setDisplayDirection", false)
       if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}`) { // go to another page
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', true)
@@ -97,7 +109,9 @@ router.beforeEach((to, from, next) => {
       let globalText = ""
       if (to.matched.length > 1) {
         store.commit('setPanelCollapsed', false)
-        store.commit('setModalCollapsed', false)
+        store.commit('setModalCollapsed', to.name === "Direction")
+        if (to.name === "Direction") store.commit("direction/setDisplayDirection", true)
+
         if (to.name.indexOf('Search') !== -1) globalText = decodeURIComponent(to.query.q || '')
         else if (to.name === 'Place') globalText = to.params.itemName || ''
       }

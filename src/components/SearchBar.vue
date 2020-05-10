@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-white rounded d-flex justify-content-around align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
-    <div class="modal-collapse">
+  <div class="bg-white rounded d-flex justify-content-start align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
+    <div class="modal-collapse-button-container">
       <button
         class="iconfont icon-arrow-down modal-collapse-button"
         :class="{'modal-expand-button': !modalCollapsed}"
@@ -15,7 +15,7 @@
         class="search-input" type="search" :placeholder="$t('search.search')" aria-label="Search"
         @focus="onfocus"
         @blur="onblur"/>
-      <div class="search-submit">
+      <div class="search-submit-button-container">
         <button
           class="iconfont icon-search search-submit-button"
           type="submit"
@@ -23,7 +23,13 @@
           @click="submit"/>
       </div>
 		</form>
-    <div class="panel-collapse" @click="$store.commit('setPanelCollapsed', !panelCollapsed)">
+    <div class="direction-button-container">
+      <button 
+        class="iconfont icon-plane direction-button text-primary" 
+        type="button"
+        @click="displayDirBox"></button>
+    </div>
+    <div class="panel-collapse-button-container" @click="$store.commit('setPanelCollapsed', !panelCollapsed)">
       <button
         class="iconfont icon-arrow-left panel-collapse-button"
         :class="{'panel-collapsed-button': panelCollapsed}"
@@ -66,6 +72,17 @@ export default {
     onblur () {
       // console.log('onblur')
       this["searchHistory/commitDisplaySearchHistory"](false)
+    },
+    displayDirBox () {
+      this.$router.push({ 
+        name: "Direction",
+        params: {
+          fromPlace: "",
+          toPlace: "",
+          buildingId: this.$route.params.buildingId,
+          floorId: this.$route.params.floorId
+        }
+      })
     }
   },
   mounted () {
@@ -96,104 +113,106 @@ export default {
 }
 </script>
 
-<style>
-button:focus {
-  outline: none;
-}
-
+<style lang="scss">
 .search-bar {
   position: fixed;
 	width: 468px;
   height: 56px;
-  padding: 8px 0 8px 16px;
+  padding: 8px 0 8px 14px;
 	top: 10px;
 	left: 10px;
   transition: transform ease-in-out 0.5s;
   -webkit-box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
   -moz-box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
   box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
-}
 
-button, input {
-  margin: 0;
-  padding: 0;
-  background: #FFFFFF;
-	outline: none;
-	border: 0px;
-}
+  button, input {
+    background: transparent;
+  }
 
-.modal-collapse, .panel-collapse {
-  width: auto;
-  height: auto;
-}
+  .modal-collapse-button-container {
+    height: 40px;
+    width: 40px;
+    margin-right: 10px;
 
-.modal-collapse {
-  height: 40px;
-  width: 40px;
-  margin-right: 15px;
-}
+    .modal-collapse-button {
+      height: 40px;
+      width: 40px;
+      font-size: 20px !important;
+      transition: transform linear 0.2s;
+      
+      &:hover:not([disabled]) {
+        color: #0069d9;
+      }
+    }
+  }
 
-.modal-collapse-button {
-  height: 40px;
-  width: 40px;
-  font-size: 20px !important;
-  transition: transform linear 0.2s;
-}
+  .search-form {
+    margin-right: 10px;
 
-.modal-collapse-button:hover:not([disabled]) {
-  color: #0069d9;
-}
+    .search-input {
+      width: 260px !important;
+      height: 40px;
+      vertical-align: top;
+      font-size: 1.2rem;
+      /* display: inline-block; */
+    }
 
-.search-input {
-  width: 300px !important;
-  height: 40px;
-  vertical-align: top;
-  font-size: 1.2rem;
-  /* display: inline-block; */
-}
+    .search-submit-button-container {
+      width: auto;
+      height: auto;
+      display: inline-block;
+      
+      .search-submit-button {
+        height: 40px;
+        width: 40px;
+        vertical-align: top;
+        font-weight: bold;
+        font-size: 25px;
 
-.search-submit {
-  width: auto;
-  height: auto;
-  display: inline-block;
-  margin-right: 15px;
-}
+        &:hover {
+          color: #0069d9;
+        }
+      }
+    }
+  }
 
-.search-submit-button {
-  height: 40px;
-  width: 40px;
-  vertical-align: top;
-  font-weight: bold;
-  font-size: 25px;
-}
+  .direction-button-container {
+    display: flex;
+    align-items: center;
+    
+    .direction-button { 
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      margin-right: 10px;
+    }
 
-.search-submit-button:hover {
-  color: #0069d9;
-}
+    &::after {
+      content: '';
+      display: inline-block;
+      /* left: 0; */
+      border-right: 2px solid #ddd;
+      height: 30px;
+    }
+  }
 
-.search-form:after {
-  content: '';
-  position: relative;
-  /* left: 0; */
-  border-right: 2px solid #ddd;
-  height: 40px;
-}
+  .panel-collapse-button-container {
+    // margin-left: 10px;
 
-.panel-collapse {
-  margin: 0 10px;
-}
+    .panel-collapse-button {
+      width: 40px;
+      height: 40px;
 
-.panel-collapse-button {
-  width: 20px;
-  height: 40px;
-}
-
-.panel-collapse-button:hover {
-  color: #0069d9;
+      &:hover {
+        color: #0069d9;
+      }
+    }
+  }
 }
 
 .panel-collapsed {
-  transform: translateX(-445px)
+  transform: translateX(-436px)
 }
 
 .panel-collapsed-button {

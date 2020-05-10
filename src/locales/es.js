@@ -7,6 +7,11 @@ module.exports = {
         'noMore': 'No Hay Más Resultados',
         'noResult': 'No Hay Resultados.',
     },
+    direction: {
+        "fromInput": "Elige un punto de partida",
+        "toInput": "Elige un destino",
+        "clickMap": " o haz clic en el mapa"
+    },
     itemType: {
         'building': 'Edificio',
         'room': 'Habitación',

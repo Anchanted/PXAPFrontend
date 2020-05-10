@@ -127,7 +127,7 @@ export default {
 
     basicItemType () {
       if (this.item.dataType === 'building') return this.item.code
-      if (this.item.type && this.item.type instanceof Array) return this.item.type.map(e => e && e.capitalize()).join(', ')
+      if (this.item.type && this.item.type instanceof Array) return this.item.type.map(e => e?.capitalize()).join(', ')
       return null
     },
 
@@ -151,7 +151,7 @@ export default {
       this.loading = true
       this.loadingError = false
       this.$nextTick(() => {
-        this.$store.commit('setModalHeight', { height: this.$refs.page && this.$refs.page.offsetHeight, component: 'Place' })
+        this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
       })
 
       const { type, id } = this.$route.params
@@ -185,7 +185,7 @@ export default {
         }
         if (!this.loadingError) this.loading = false
         this.$nextTick(() => {
-          this.$store.commit('setModalHeight', { height: this.$refs.page && this.$refs.page.offsetHeight, component: 'Place' })
+          this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
           $('[data-toggle="tooltip"]').tooltip();
           $('[data-tooltip="tooltip"]').tooltip();
         })

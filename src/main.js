@@ -19,7 +19,7 @@ import 'bootstrap/dist/js/bootstrap.min.js'
 import alert from '@/plugins/AlertMessage'
 
 String.prototype.capitalize = function() {
-  return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+  return this.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
 };
 
 // const originalPush = Router.prototype.push

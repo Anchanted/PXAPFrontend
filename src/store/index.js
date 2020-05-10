@@ -2,12 +2,14 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 
 import searchHistory from './module/searchHistory.js'
+import direction from './module/direction.js'
 import button from './module/button.js'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    screenHeight: 0,
     scrollBarWidth: 0,
     modalCollapsed: true,
     panelCollapsed: false,
@@ -17,6 +19,9 @@ export default new Vuex.Store({
     globalText: '',
   },
   mutations: {
+    setScreenHeight (state, payload) {
+      state.screenHeight = payload
+    },
     setScrollBarWidth (state, payload) {
       state.scrollBarWidth = payload
     },
@@ -31,7 +36,7 @@ export default new Vuex.Store({
     },
     setModalHeight (state, payload) {
       console.log(payload)
-      state.modalHeight = (payload && payload.height || 0) + 1
+      state.modalHeight = (payload?.height || 0) + 1
     },
     setModalLoading (state, payload) {
       state.modalLoading = payload
@@ -44,6 +49,7 @@ export default new Vuex.Store({
   },
   modules: {
     searchHistory,
+    direction,
     button
   }
 })

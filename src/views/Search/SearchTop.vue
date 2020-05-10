@@ -127,7 +127,7 @@ export default {
       this.loading = true
       this.loadingError = false
       this.$nextTick(() => {
-        this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'Place' })
+        this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'Place' })
       })
 
       try {
@@ -147,7 +147,7 @@ export default {
 
         this.loading = false
         this.$nextTick(() => {
-          this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchTop' })
+          this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'SearchTop' })
         })
       } catch (error) {
         console.log(error)
@@ -160,8 +160,8 @@ export default {
     },
 
     deleteCache () {
-      if (this.$vnode && this.$vnode.data.keepAlive) {
-        if (this.$vnode.parent && this.$vnode.parent.componentInstance && this.$vnode.parent.componentInstance.cache) {
+      if (this.$vnode?.data?.keepAlive) {
+        if (this.$vnode?.parent?.componentInstance?.cache) {
           if (this.$vnode.componentOptions) {
             var key = this.$vnode.key == null
                         ? this.$vnode.componentOptions.Ctor.cid + (this.$vnode.componentOptions.tag ? `::${this.$vnode.componentOptions.tag}` : '')
@@ -195,7 +195,7 @@ export default {
   activated () {
     // console.log('top activated')
     if (this.isAlive) {
-      this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchTop' })
+      this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'SearchTop' })
       // this.$store.commit('setPanelCollapsed', false)
       // this.$store.commit('setModalCollapsed', false)
     } else this.isAlive = true

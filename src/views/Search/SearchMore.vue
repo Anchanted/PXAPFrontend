@@ -178,7 +178,7 @@ export default {
       this.loading = true
       this.loadingError = false
       this.$nextTick(() => {
-        this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchMore' })
+        this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'SearchMore' })
       })
 
       try {
@@ -199,7 +199,7 @@ export default {
 
           this.loading = false
           this.$nextTick(() => {
-            this.$store.commit('setModalHeight', { height: this.$refs.container && this.$refs.container.offsetHeight, component: 'SearchMore' })
+            this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'SearchMore' })
             $('[data-toggle="tooltip"]').tooltip();
             $('[data-tooltip="tooltip"]').tooltip();
           })
