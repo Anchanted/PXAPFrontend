@@ -150,18 +150,8 @@ export default {
         times: 0,
         totalZoom: 0,
       },
-      fromDirectionMarker: {
-        x: null,
-        y: null,
-        type: null,
-        id: null
-      },
-      toDirectionMarker: {
-        x: null,
-        y: null,
-        type: null,
-        id: null
-      },
+      fromDirectionMarker: {},
+      toDirectionMarker: {},
       location: {
         x: null,
         y: null,
@@ -191,8 +181,11 @@ export default {
     ...mapState({
       displaySearchHistory: state => state.searchHistory.displaySearchHistory,
       displayDirection: state => state.direction.displayDirection,
-      fromPlaceId: state => state.direction.fromPlaceId,
-      toPlaceId: state => state.direction.toPlaceId,
+      globalFromText: state => state.direction.globalFromText,
+      globalToText: state => state.direction.globalToText,
+      globalFromId: state => state.direction.globalFromId,
+      globalToId: state => state.direction.globalToId,
+      globalPathList: state => state.direction.globalPathList,
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
       locationActivated: state => state.button.locationActivated
@@ -277,33 +270,47 @@ export default {
 
       if (!this.occupationActivated) {
         if (this.$route.name !== "Direction") {
-          if (JSON.stringify(this.selectedItem) !== "{}") {
-            if (this.selectedItem.areaCoords && this.selectedItem.areaCoords !== '') {
-              const areaCoordsArr = this.selectedItem.areaCoords.split(',')
-              ctx.globalAlpha = 0.2
-              ctx.fillStyle = 'red'
-              ctx.strokeStyle = 'rgb(255, 0, 0)'
-              ctx.lineWidth = 3
-              ctx.beginPath()
-              for (let i = 0; i < areaCoordsArr.length; i += 2) {
-                const { x, y } = this.getTransformedPoint({ x: areaCoordsArr[i], y: areaCoordsArr[i+1] })
-                if (i == 0) ctx.moveTo(x, y)
-                else ctx.lineTo(x, y)
-              }
-              ctx.closePath()
-              ctx.fill()
-              ctx.globalAlpha = 1
-              ctx.stroke()
-              ctx.lineWidth = 1
-            }
-          }
+          if (JSON.stringify(this.selectedItem) !== "{}")  this.drawPolygon(this.selectedItem.areaPointList)
+        } else {
+          if (JSON.stringify(this.fromDirectionMarker) !== "{}") this.drawPolygon(this.fromDirectionMarker.areaPointList)
+          if (JSON.stringify(this.toDirectionMarker) !== "{}") this.drawPolygon(this.toDirectionMarker.areaPointList)
+        }
+
+        if (this.globalPathList?.length) {
+          ctx.lineWidth = 8
+          this.globalPathList.forEach(path => {
+            const pointList = path.pointList || []
+            ctx.strokeStyle = (!path.type) ? "brown" : "#5298FF"
+            ctx.lineCap = 'round'
+            ctx.lineJoin = 'round'
+            ctx.beginPath()
+            pointList.forEach((point, j) => {
+              const { x, y } = this.getTransformedPoint(point)
+              if (j === 0) ctx.moveTo(x, y)
+              else ctx.lineTo(x, y)
+            })
+            ctx.stroke()
+          })
+          ctx.lineWidth = 1
+
+          // ctx.fillStyle = "white"
+          // this.globalPathList.forEach((path, i) => {
+          //   if (i > 0) {
+          //     const pointList = path.pointList || []
+          //     const point = pointList.length ? pointList[0] : null
+          //     const { x, y } = this.getTransformedPoint(point)
+          //     ctx.beginPath()
+          //     ctx.arc(x, y, 2, 0, 2*Math.PI)
+          //     ctx.fill()
+          //   }
+          // })
         }
 
         if (this.itemList.length) {
           const size = parseInt(this.iconSize * 1)
           this.itemList.forEach(item => {
             // selected item
-            if (JSON.stringify(this.selectedItem) !== "{}" && this.selectedItem.id === item.id && this.selectedItem.type === item.itemType) return
+            if (JSON.stringify(this.selectedItem) !== "{}" && this.selectedItem.id === item.id && this.selectedItem.placeType === item.placeType) return
             // item not to display
             if (!item.iconLevel || (this.scale.x < item.iconLevel || this.scale.y < item.iconLevel)) return
             this.drawImage(this.imageMap["facilitySprite"], item.location.x, item.location.y, size, size, size/2, size/2, true, true, 
@@ -323,12 +330,7 @@ export default {
               this.lastMarkerAnimation.triggered = false
             }
 
-            ctx.shadowBlur = 10
-            ctx.shadowColor = "#ffffff"
-            const iconType = this.lastMarkerAnimation.markerType || "default"
-            this.drawImage(this.imageMap['markers'], this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, size, size/2, size, true, true,
-              (markerSpriteInfo[iconType]["column"] - 1) * markerSpriteInfo[iconType]["width"], (markerSpriteInfo[iconType]["row"] - 1) * markerSpriteInfo[iconType]["height"], markerSpriteInfo[iconType]["width"], markerSpriteInfo[iconType]["height"])
-            ctx.shadowBlur = 0
+            this.drawMarker(this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, this.lastMarkerAnimation.markerType)
           }
 
           if (JSON.stringify(this.selectedItem) !== "{}") {
@@ -342,15 +344,11 @@ export default {
               this.currentMarkerAnimation.triggered = false
             }
 
-            ctx.shadowBlur = 10
-            ctx.shadowColor = "#ffffff"
-            const iconType = this.currentMarkerAnimation.markerType || "default"
-            this.drawImage(this.imageMap['markers'], this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, size, size/2, size, true, true,
-              (markerSpriteInfo[iconType]["column"] - 1) * markerSpriteInfo[iconType]["width"], (markerSpriteInfo[iconType]["row"] - 1) * markerSpriteInfo[iconType]["height"], markerSpriteInfo[iconType]["width"], markerSpriteInfo[iconType]["height"])
-            ctx.shadowBlur = 0
+            this.drawMarker(this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, this.currentMarkerAnimation.markerType)
           }
         } else {
-
+          if (JSON.stringify(this.fromDirectionMarker) !== "{}") this.drawMarker(this.fromDirectionMarker.x, this.fromDirectionMarker.y, this.iconSize * 2, "fromDir")
+          if (JSON.stringify(this.toDirectionMarker) !== "{}") this.drawMarker(this.toDirectionMarker.x, this.toDirectionMarker.y, this.iconSize * 2, "toDir")
         }
       }
 
@@ -466,7 +464,39 @@ export default {
       if (degree != null && typeof(degree) != undefined) ctx.restore();
     },
 
-    getTransformedPoint ({ x, y }) {
+    drawPolygon (pointList) {
+      if (pointList) {
+        const ctx = this.context
+        ctx.globalAlpha = 0.2
+        ctx.fillStyle = 'red'
+        ctx.strokeStyle = 'rgb(255, 0, 0)'
+        ctx.lineWidth = 3
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        ctx.beginPath()
+        pointList.forEach((e, index) => {
+          const { x, y } = this.getTransformedPoint(e)
+          if (index == 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        })
+        ctx.closePath()
+        ctx.fill()
+        ctx.globalAlpha = 1
+        ctx.stroke()
+        ctx.lineWidth = 1
+      }
+    },
+
+    drawMarker (x, y, size, iconType = "default") {
+      const ctx = this.context
+      ctx.shadowBlur = 10
+      ctx.shadowColor = "#ffffff"
+      this.drawImage(this.imageMap['markers'], x, y, size, size, size/2, size, true, true,
+        (markerSpriteInfo[iconType]["column"] - 1) * markerSpriteInfo[iconType]["width"], (markerSpriteInfo[iconType]["row"] - 1) * markerSpriteInfo[iconType]["height"], markerSpriteInfo[iconType]["width"], markerSpriteInfo[iconType]["height"])
+      ctx.shadowBlur = 0
+    },
+
+    getTransformedPoint ({ x = 0, y = 0 }) {
       return {
         x: x * this.scale.x * this.scaleAdaption + this.position.x + this.positionAdaption.x,
         y: y * this.scale.y * this.scaleAdaption + this.position.y + this.positionAdaption.y
@@ -659,7 +689,7 @@ export default {
           }, 100)
           return
         }
-        
+
         if (!this.currentMarkerAnimation.triggered && !this.lastMarkerAnimation.triggered) {
           if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
             if (!this.lastDoubleClick) {  // second click
@@ -722,46 +752,61 @@ export default {
 
         // click on item
         const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-
         let sameItem = false
         let found = this.itemList.some(element => {
-          if (this.$route.name !== "Direction") {
-            if (!element.areaCoords) {
-              if (!element.iconLevel || (this.scale.x < element.iconLevel || this.scale.y < element.iconLevel)) return
-              const { x, y } = this.getTransformedPoint(element.location)
-              ctx.beginPath()
-              ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
-            } else {
-              ctx.beginPath()
-              const areaCoordsArr = element.areaCoords.split(',')
-              for (let i = 0; i < areaCoordsArr.length; i += 2) {
-                const { x, y } = this.getTransformedPoint({ x: areaCoordsArr[i], y: areaCoordsArr[i+1] })
-                if (i == 0) ctx.moveTo(x, y)
-                else ctx.lineTo(x, y)
-              }
-            }
-            if(ctx.isPointInPath(px, py)){
+          if (!element.areaPointList) {
+            if (!element.iconLevel || (this.scale.x < element.iconLevel || this.scale.y < element.iconLevel)) return
+            const { x, y } = this.getTransformedPoint(element.location)
+            ctx.beginPath()
+            ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
+          } else {
+            ctx.beginPath()
+            const pointList = element.areaPointList || []
+            pointList.forEach((e, index) => {
+              const { x, y } = this.getTransformedPoint(e)
+              if (index == 0) ctx.moveTo(x, y)
+              else ctx.lineTo(x, y)
+            })
+          }
+          if(ctx.isPointInPath(px, py)){
+            if (this.$route.name !== "Direction") {
               sameItem = this.setSelectedItem(element)
               this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
-              return true
-            }
-          } else {
-            if (element.areaCoords && element.itemType === "building") {
-              ctx.beginPath()
-              const areaCoordsArr = element.areaCoords.split(',')
-              for (let i = 0; i < areaCoordsArr.length; i += 2) {
-                const { x, y } = this.getTransformedPoint({ x: areaCoordsArr[i], y: areaCoordsArr[i+1] })
-                if (i == 0) ctx.moveTo(x, y)
-                else ctx.lineTo(x, y)
+            } else {
+              if (JSON.stringify(this.fromDirectionMarker) !== "{}" && JSON.stringify(this.toDirectionMarker) !== "{}") {
+                // Exit Direction
+                console.log("third point")
+                sameItem = this.setSelectedItem(element)
+                this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
+              } else {
+                if (element.areaPointList && element.placeType === "building") {
+                  const marker = {
+                    x: element.location?.x,
+                    y: element.location?.y,
+                    areaPointList: element.areaPointList,
+                    type: element.placeType,
+                    id: element.id,
+                    name: element.name
+                  }
+                  if (JSON.stringify(this.fromDirectionMarker) === "{}" && !this.globalFromText) {
+                    // same item
+                    if (this.globalToText || JSON.stringify(this.toDirectionMarker) !== "{}") 
+                      if (this.toDirectionMarker.x === element.location?.x
+                        && this.toDirectionMarker.y === element.location?.y) return true
+                    this.fromDirectionMarker = { ...marker }
+                    this.$refs.directionModal?.setDirectionText(false, element.name)
+                  } else if (JSON.stringify(this.toDirectionMarker) === "{}" && !this.globalToText) {
+                    // same item
+                    if (this.globalFromText || JSON.stringify(this.fromDirectionMarker) !== "{}") 
+                      if (this.fromDirectionMarker.x === element.location?.x
+                        && this.fromDirectionMarker.y === element.location?.y) return true
+                    this.toDirectionMarker = { ...marker }
+                    this.$refs.directionModal?.setDirectionText(true, element.name)
+                  }
+                }
               }
-
-              if(ctx.isPointInPath(px, py)){
-                sameItem = false
-                console.log("here")
-                this.$refs.directionModal?.setDirectionText(element.name, element.itemType, element.id)
-                return true
-              }
             }
+            return true
           }
         })
 
@@ -781,22 +826,14 @@ export default {
       // a => b    cV lV rV
       // a => null cX lV rV
       let sameItem = true
-      if (this.selectedItem.type !== element.itemType || this.selectedItem.id !== element.id) {
+      if (this.selectedItem.placeType !== element.placeType || this.selectedItem.id !== element.id) {
         // click on another item or no item clicked before or click on nothing
         sameItem = false
-        if (this.selectedItem.x && this.selectedItem.y)
-          this.lastMarkerAnimation = {
-            triggered: true,
-            duration: 0,
-            x: this.selectedItem.x,
-            y: this.selectedItem.y,
-            markerType: this.selectedItem.iconType || "default"
-          }
         this.selectedItem = JSON.stringify(element) !== "{}" ? {
-          type: element.itemType,
           id: element.id,
-          areaCoords: element.areaCoords,
-          itemName: element.name,
+          placeType: element.placeType,
+          areaPointList: element.areaPointList,
+          name: element.name,
           iconType: element.iconType,
           ...element.location
         } : element
@@ -1070,15 +1107,10 @@ export default {
       this.imageMap["eye"] = await this.loadImage(require('assets/images/icon/eye.png'))
       this.imageMap["facilitySprite"] = await this.loadImage(require('assets/images/sprite/icon-sprite.png'))
 
-      const areaList = (this.mapType === 'campus' ? data.buildingList : data.roomList) || []
-      const facilityList = data.facilityList || []
-      areaList.forEach(item => item['itemType'] = this.mapType === 'campus' ? 'building' : 'room')
-      facilityList.forEach(item => item['itemType'] = 'facility')
-      this.itemList = this.itemList.concat(facilityList, areaList)
+      this.itemList = this.itemList.concat(data.facilityList || [], data.buildingList || [], data.roomList || [])
 
       this.canvas = this.$refs.indoorMap;
       this.context = this.canvas.getContext("2d");
-      this.context.lineJoin = "round";
 
       this.imgWidth = parseInt(this.imageMap['map'].width)
       this.imgHeight = parseInt(this.imageMap['map'].height)
@@ -1101,13 +1133,40 @@ export default {
       this.$nextTick(() => {
         this.loading = false
         if (this.$route.name === 'Place') {
-          const item = this.itemList.find(e => e.id === parseInt(this.$route.params.id) && e.itemType === this.$route.params.type)
+          const item = this.itemList.find(e => e.id === parseInt(this.$route.params.id) && e.placeType === this.$route.params.type)
           if (item) {
             this.setSelectedItem(item)
             this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'middle', 3)
             this.$store.commit('setGlobalText', item.name || "")
           } else {
             this.$router.push({name: 'PageNotFound'})
+          }
+        } else if (this.$route.name === "Direction") {
+          if (this.globalFromId && JSON.stringify(this.fromDirectionMarker) === "{}") {
+            const [id, placeType] = this.globalFromId.split("|")
+            const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+            if (place && JSON.stringify(place) !== "{}")
+              this.fromDirectionMarker = {
+                x: place.location?.x,
+                y: place.location?.y,
+                areaPointList: place.areaPointList,
+                type: place.placeType,
+                id: place.id,
+                name: place.name
+              }
+          }
+          if (this.globalToId && JSON.stringify(this.toDirectionMarker) === "{}") {
+            const [id, placeType] = this.globalToId.split("|")
+            const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+            if (place && JSON.stringify(place) !== "{}")
+              this.toDirectionMarker = {
+                x: place.location?.x,
+                y: place.location?.y,
+                areaPointList: place.areaPointList,
+                type: place.placeType,
+                id: place.id,
+                name: place.name
+              }
           }
         }
       })
@@ -1122,11 +1181,20 @@ export default {
   },
 
   watch: {
-    selectedItem (val) {
+    selectedItem (val, oldVal) {
       // null => a cV lX rV
       // a => a    cX lX rX
       // a => b    cV lV rV
       // a => null cX lV rV
+      if (oldVal && oldVal.x && oldVal.y && this.$route.name !== "Direction") {
+        this.lastMarkerAnimation = {
+          triggered: true,
+          duration: 0,
+          x: oldVal.x,
+          y: oldVal.y,
+          markerType: oldVal.iconType || "default"
+        }
+      }        
       if (val) {
         if (JSON.stringify(val) !== "{}") {
           this.currentMarkerAnimation = {
@@ -1136,15 +1204,15 @@ export default {
             y: val.y,
             markerType: val.iconType || "default"
           }
-          if (!(this.$route.name === "Place" && this.$route.params.type == val.type && this.$route.params.id == val.id))
+          if (!(this.$route.name === "Place" && this.$route.params.type == val.placeType && this.$route.params.id == val.id))
             this.$router.push({
               name: 'Place',
               params: {
                 buildingId: this.$route.params.buildingId,
                 floorId: this.$route.params.floorId,
-                type: val.type,
+                type: val.placeType,
                 id: val.id,
-                itemName: val.itemName
+                name: val.name
               }
             })
         } else {
@@ -1152,6 +1220,7 @@ export default {
             // not from place to search or to direction
             this.$store.commit('setModalCollapsed', true)
             setTimeout(() => {
+              console.log("here")
               this.$router.push({
                 name: "Map",
                 params: {
@@ -1284,11 +1353,43 @@ export default {
         this.$store.commit("button/setLocationActivated", false)
       }
     },
-    fromPlaceId (val) {
-
+    globalFromId: {
+      immediate: true,
+      handler: function(val) {
+        if (val) {
+          const [id, placeType] = val.split("|")
+          const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+          if (place && JSON.stringify(place) !== "{}")
+            this.fromDirectionMarker = {
+              x: place.location?.x,
+              y: place.location?.y,
+              areaPointList: place.areaPointList,
+              type: place.placeType,
+              id: place.id,
+              name: place.name
+            }
+        } else 
+          this.fromDirectionMarker = {}
+      }
     },
-    toPlaceId (val) {
-
+    globalToId: {
+      immediate: true,
+      handler: function(val) {
+        if (val) {
+          const [id, placeType] = val.split("|")
+          const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+          if (place && JSON.stringify(place) !== "{}")
+            this.toDirectionMarker = {
+              x: place.location?.x,
+              y: place.location?.y,
+              areaPointList: place.areaPointList,
+              type: place.placeType,
+              id: place.id,
+              name: place.name
+            }
+        } else 
+          this.toDirectionMarker = {}
+      }
     }
   },
 
@@ -1301,7 +1402,7 @@ export default {
 
     if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}`) {
       if (to.name === 'Place') {
-        const item = this.itemList.find(e => e.id === parseInt(to.params.id) && e.itemType === to.params.type)
+        const item = this.itemList.find(e => e.id === parseInt(to.params.id) && e.placeType === to.params.type)
         if (item) {
           if (this.occupationActivated) this.$store.commit("button/setOccupationActivated", false)
           this.setSelectedItem(item)
@@ -1312,6 +1413,14 @@ export default {
         }
       } else {
         this.setSelectedItem()
+      }
+
+      if (from.name === "Direction" && to.name !== "Direction") {
+        this.$store.commit("direction/setGlobalFromText", "")
+        this.$store.commit("direction/setGlobalToText", "")
+        this.$store.commit("direction/setGlobalFromId", "")
+        this.$store.commit("direction/setGlobalToId", "")
+        this.$store.commit("direction/setGlobalPathList", [])
       }
     }
 

@@ -10,9 +10,10 @@ module.exports = {
     direction: {
         "fromInput": "Choose starting point",
         "toInput": "Choose destination",
-        "clickMap": " or click on the map"
+        "clickMap": " or click on the map",
+        "go": "Go"
     },
-    itemType: {
+    placeType: {
         'building': 'Building',
         'room': 'Room',
         'facility': 'Facility'

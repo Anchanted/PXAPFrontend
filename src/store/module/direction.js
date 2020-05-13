@@ -5,8 +5,11 @@ const searchHistory = {
 
   state: {
     displayDirection: false,
-    fromPlaceId: "",
-    toPlaceId: ""
+    globalFromText: "",
+    globalToText: "",
+    globalFromId: "",
+    globalToId: "",
+    globalPathList: []
   },
 
   getters: {
@@ -14,14 +17,23 @@ const searchHistory = {
   },
 
   mutations: {
-    setDisplayDirection (state, payload) {
+    setDisplayDirection(state, payload) {
       state.displayDirection = payload
     },
-    setFromPlaceId (state, payload) {
-      state.fromPlaceId = payload
+    setGlobalFromText(state, payload) {
+      state.globalFromText = payload
     },
-    setToPlaceId (state, payload) {
-      state.toPlaceId = payload
+    setGlobalToText(state, payload) {
+      state.globalToText = payload
+    },
+    setGlobalFromId(state, payload) {
+      state.globalFromId = payload && /^[0-9]+|[a-z]+$/.test(payload) ? payload : ""
+    },
+    setGlobalToId(state, payload) {
+      state.globalToId = payload && /^[0-9]+|[a-z]+$/.test(payload) ? payload : ""
+    },
+    setGlobalPathList(state, payload) {
+      state.globalPathList = payload instanceof Array ? payload : []
     }
   },
 

@@ -173,8 +173,8 @@ export default {
     //       if (i == 0) this.context.moveTo(this.pointArr[i].x, this.pointArr[i].y)
     //       else this.context.lineTo(this.pointArr[i].x, this.pointArr[i].y)
     //     }
-    //     // this.context.closePath()
-    //     // this.context.fill()
+    //     this.context.closePath()
+    //     this.context.fill()
     //     this.context.globalAlpha = 1
     //     this.context.stroke()
     //     this.context.lineWidth = 1
@@ -465,7 +465,7 @@ export default {
     // console.log(data)
     // this.ftdPathArr = data.map(e => e.pointList.map(point => [point.x, point.y]))
 
-    const data = await this.$api.direction.getPath(12, 10)
+    const data = await this.$api.direction.getPath(2, 18)
     this.apiPathList = data.pathList
     console.log(this.apiPathList)
 

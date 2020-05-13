@@ -10,9 +10,10 @@ module.exports = {
     direction: {
         "fromInput": "选择起点",
         "toInput": "选择终点",
-        "clickMap": "或在地图上点击"
+        "clickMap": "或在地图上点击",
+        "go": "前往"
     },
-    itemType: {
+    placeType: {
         'building': '建筑',
         'room': '房间',
         'facility': '设施'

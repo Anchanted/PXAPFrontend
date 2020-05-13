@@ -1,3 +1,4 @@
+import place from './place'
 import building from './building'
 import floor from './floor'
 import room from './room'
@@ -7,6 +8,7 @@ import search from './search'
 import direction from "./direction"
 
 export default {
+    place,
     building,
     floor,
     room,

@@ -45,7 +45,7 @@ export default {
           floorId: this.$route.params.floorId,
           type,
           id,
-          itemName: name
+          name
         }
       })
     },

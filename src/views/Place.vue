@@ -4,62 +4,69 @@
       v-if="loading"
       :has-error="loadingError"
       class="place-loading-panel"
-      @refresh="getItemInfo">
+      @refresh="getPlaceInfo">
     </loading-panel>
 
     <template v-else>
       <div class="picture-area">
-        <div class="picture-container" :style="{'background-image': `url(${item.imgUrl ? baseUrl + item.imgUrl : defaultPic})`}">
+        <div class="picture-container" :style="{'background-image': `url(${place.imgUrl ? baseUrl + place.imgUrl : defaultPic})`}">
         </div>
       </div>
 
-      <div v-show="item.dataType === 'building' && item.baseFloorId" class="indoor">
-        <button type="button" class="iconfont icon-indoor btn btn-primary indoor-button"
-          data-toggle="tooltip" data-placement="left" :title="$t('tooltip.indoor')"
-          @click="$router.push({ name: 'Map', params: { buildingId: item.id, floorId: item.baseFloorId } })"></button>
+      <div class="additional-button-container">
+        <div v-show="place.placeType === 'building' && place.baseFloorId" class="additional indoor">
+          <button type="button" class="iconfont icon-indoor btn btn-primary additional-button indoor-button"
+            data-toggle="tooltip" data-placement="left" :title="$t('tooltip.indoor')"
+            @click="$router.push({ name: 'Map', params: { buildingId: place.id, floorId: place.baseFloorId } })"></button>
+        </div>
+        <div v-show="place.placeType === 'building'" class="additional direction">
+          <button type="button" class="iconfont icon-plane btn btn-primary additional-button direction-button"
+            data-toggle="tooltip" data-placement="bottom" :title="$t('tooltip.indoor')"
+            @click="$router.push({ name: 'Direction', params: { buildingId: null, floorId: null, fromPlace: place.name, toPlace: '' } })"></button>
+        </div>
       </div>
 
       <div class="section basic p-3" style="border: none">
-        <span class="basic-name">{{item.name}}</span>
-        <!-- <h5>{{item.type}}</h5> -->
+        <span class="basic-name">{{place.name}}</span>
+        <!-- <h5>{{place.type}}</h5> -->
         <div class="basic-type">
-          <span class="basic-type-dataType">{{$t(`itemType.${item.dataType || ''}`)}}</span><span class="basic-type-itemType"><pre> · </pre>{{basicItemType}}</span>
+          <span class="basic-type-placeType">{{$t(`placeType.${place.placeType || ''}`)}}</span><span class="basic-type-itemType"><pre> · </pre>{{itemType}}</span>
         </div>
         <div class="basic-location">
           <div class="iconfont icon-marker basic-location-icon"></div>
-          <div class="basic-location-text">{{itemLocation}}</div>
+          <div class="basic-location-text">{{placeLocation}}</div>
         </div>
       </div>
 
-      <div v-if="item.phone || item.email" class="section contact px-3 py-2">
+      <div v-if="place.phone || place.email" class="section contact px-3 py-2">
         <span class="title">{{$t('place.contact')}}</span>
-        <div v-if="item.phone" class="contact-section contact-phone">
+        <div v-if="place.phone" class="contact-section contact-phone">
           <div class="iconfont icon-phone contact-section-icon"></div>
           <div class="contact-section-text">
-            <span v-for="(e, index) in item.phone" :key="index" style="display: block;">+86&nbsp;<a :href="`tel:${e}`">{{e}}</a></span>
+            <span v-for="(e, index) in place.phone" :key="index" style="display: block;">+86&nbsp;<a :href="`tel:${e}`">{{e}}</a></span>
           </div>
         </div>
-        <div v-if="item.email" class="contact-section contact-email">
+        <div v-if="place.email" class="contact-section contact-email">
           <div class="iconfont icon-mail contact-section-icon"></div>
           <div class="contact-section-text">
-            <a v-for="(e, index) in item.email" :key="index" :href="`mailto:${e}`" style="display: block;">{{e}}</a>
+            <a v-for="(e, index) in place.email" :key="index" :href="`mailto:${e}`" style="display: block;">{{e}}</a>
           </div>
         </div>
       </div>
 
-      <div v-if="item.dataType === 'room' && lessonList.length > 0" class="section px-3 py-2">
+      <div v-if="place.placeType === 'room' && lessonList.length > 0" class="section px-3 py-2">
         <span class="title">{{$t('place.timetable')}}</span>
         <timetable ref="timetable" :lessons="lessonList"></timetable>
       </div>
 
-      <div v-if="item.dataType === 'building'" class="section allocation px-3 py-2">
+      <div v-if="place.placeType === 'building'" class="section allocation px-3 py-2">
         <span class="title">{{$t('place.department')}}</span>
         <div class="allocation-detail" style="white-space: pre-line">{{departmentAllocation}}</div>
       </div>
 
-      <div v-if="item.description" class="section description  px-3 py-2">
+      <div v-if="place.description" class="section description  px-3 py-2">
         <div class="title">{{$t('place.description')}}</div>
-        <div class="description-text" v-html="itemDescription"></div>
+        <div class="description-text" v-html="placeDescription"></div>
       </div>
     </template>
   </div>
@@ -79,14 +86,14 @@ export default {
     return {
       baseUrl: process.env.VUE_APP_BASE_API + '/static',
       lessonList: [],
-      item: {},
+      place: {},
       loading: true,
       loadingError: false,
       defaultPic: require("assets/images/default.png")
     }
   },
   computed: {
-    itemLocation () {
+    placeLocation () {
       let str
       let building
       let floor
@@ -99,17 +106,17 @@ export default {
       //   }
       //   return null
       // }
-      switch (this.item.dataType) {
+      switch (this.place.placeType) {
         case 'room':
-          building = this.item.building || {}
-          floor = this.item.floorInfo || []
-          zone = this.item.zone || "b"
+          building = this.place.building || {}
+          floor = this.place.floorInfo || []
+          zone = this.place.zone || "b"
           str = `${floor.map(e => this.$t("place.floor." + e.floorName || "GF")).join(this.$t("place.floor.conj"))}, ${building.name}, ${this.$t("place.zone." + zone)}`
           break
         case 'facility': {
-          building = this.item.building || {}
-          floor = this.item.floor || {}
-          zone = this.item.zone || "b"
+          building = this.place.building || {}
+          floor = this.place.floor || {}
+          zone = this.place.zone || "b"
           const locationArr = []
           if (floor.name) locationArr.push(this.$t("place.floor." + floor.name))
           if (building.name) locationArr.push(building.name)
@@ -118,71 +125,45 @@ export default {
           break
         }
         case 'building':
-          zone = this.item.zone || "b"
+          zone = this.place.zone || "b"
           str = `${this.$t("place.zone." + zone)}`
           break
       }
       return str
     },
 
-    basicItemType () {
-      if (this.item.dataType === 'building') return this.item.code
-      if (this.item.type && this.item.type instanceof Array) return this.item.type.map(e => e?.capitalize()).join(', ')
+    itemType () {
+      if (this.place.placeType === 'building') return this.place.code
+      if (this.place.type && this.place.type instanceof Array) return this.place.type.map(e => e?.capitalize()).join(', ')
       return null
     },
 
-    itemType () {
-      // const type = this.item.dataType
-      // return type ? type.charAt(0).toUpperCase() + type.slice(1) : ''
-      return this.item.dataType ? this.$i18n.t(`itemType.${this.item.dataType}`) : ''
-    },
-
     departmentAllocation () {
-      const str = this.item.department
+      const str = this.place.department
       return str ? str.replace(/,/g, '\n') : 'None'
     },
 
-    itemDescription () {
-      return this.item.description.replace(/\\n/g, "<br />")
+    placeDescription () {
+      return this.place.description.replace(/\\n/g, "<br />")
     }
   },
   methods: {
-    async getItemInfo () {
+    async getPlaceInfo () {
       this.loading = true
       this.loadingError = false
       this.$nextTick(() => {
         this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
       })
 
-      const { type, id } = this.$route.params
+      const { id, type } = this.$route.params
 
       try {
-        let data
-        switch (type) {
-          case 'room':
-            data = await this.$api.room.getRoomInfo(id)
-            console.log(data)
-            if (!data.room) throw new Error('Data Not Found')
-            this.item = { ...data.room }
-            this.lessonList = data.timetable || []
-            break
-          case 'facility':
-            data = await this.$api.facility.getFacilityInfo(id)
-            if (!data.facility) throw new Error('Data Not Found')
-            console.log(data)
-            this.item = { ...data.facility }
-            break
-          case 'building':
-            data = await this.$api.building.getBuildingInfo(id)
-            if (!data.building) throw new Error('Data Not Found')
-            console.log(data)
-            this.item = { ...data.building }
-            break
-        }
-        this.item = {
-          ...this.item,
-          dataType: type
-        }
+        const data = await this.$api.place.getPlaceInfo(id, type)
+        console.log(data)
+        if (!data[type]) throw new Error('Data Not Found')
+        this.place = { ...data[type] }
+        this.lessonList = data.timetable || []
+
         if (!this.loadingError) this.loading = false
         this.$nextTick(() => {
           this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
@@ -196,7 +177,7 @@ export default {
     }
   },
   mounted () {
-    this.getItemInfo()
+    this.getPlaceInfo()
   }
 }
 </script>
@@ -236,20 +217,41 @@ export default {
     }
   }
 
-  .indoor {
+  .additional-button-container {
     position: absolute;
-    width: auto;
-    height: auto;
     top: 215px;
     right: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
 
-    &-button {
-      width: 40px;
-      height: 40px;
-      border-radius: 20px;
-      padding: 0;
-      font-size: 1.5rem;
-      line-height: 1;
+    .additional {
+      width: auto;
+      height: auto;
+
+      &-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        padding: 0;
+        font-size: 1.5rem;
+        line-height: 1;
+      }
+    }
+
+    .indoor {
+      &-button {
+        font-size: 1.4rem;
+      }
+    }
+
+    .direction {
+      margin-left: 20px;
+
+      &-button {
+        font-size: 1.3rem;
+      }
     }
   }
 

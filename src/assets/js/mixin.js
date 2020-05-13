@@ -29,7 +29,7 @@ const mixin = {
               floorId: item.floor ? item.floor.id : item.floor_id,
               type: item.dataType,
               id: item.id,
-              itemName: item.name
+              name: item.name
             }
           })
         }

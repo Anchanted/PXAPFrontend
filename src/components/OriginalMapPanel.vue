@@ -143,7 +143,7 @@ export default {
       // console.log(JSON.stringify(roomObj))
 
       let areaCoords = ""
-      this.points.forEach(e => areaCoords += `${e.x},${e.y},`)
+      this.points.forEach(e => areaCoords += `${e.x},${e.y};`)
       console.log(areaCoords)
       let { x, y } = this.getCentroid()
       console.log(`(${Math.floor(x)} ${Math.floor(y)})`)

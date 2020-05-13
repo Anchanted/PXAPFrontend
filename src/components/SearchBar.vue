@@ -23,11 +23,17 @@
           @click="submit"/>
       </div>
 		</form>
-    <div class="direction-button-container">
+    <div class="second-button-container">
       <button 
-        class="iconfont icon-plane direction-button text-primary" 
+        v-if="displayDirectionButton"
+        class="iconfont icon-plane text-primary second-button direction-button" 
         type="button"
         @click="displayDirBox"></button>
+      <button 
+        v-else
+        class="iconfont icon-close second-button close-button" 
+        type="button"
+        @click="clearText"></button>
     </div>
     <div class="panel-collapse-button-container" @click="$store.commit('setPanelCollapsed', !panelCollapsed)">
       <button
@@ -49,31 +55,31 @@ export default {
     }
   },
   computed: {
-    ...mapState(['panelCollapsed', 'modalCollapsed', 'globalText'])
+    ...mapState(['panelCollapsed', 'modalCollapsed', 'globalText', "displayDirectionButton"])
   },
   methods: {
     ...mapActions([
       "searchHistory/commitDisplaySearchHistory",
     ]),
-    submit () {
+    submit() {
       if (this.text) {
         // console.log(this.text)
         this.selectItem({ content: this.text, dataType: 'query' })
         this["searchHistory/commitDisplaySearchHistory"](false)
       } else console.log('invalid')
     },
-    onfocus () {
+    onfocus() {
       // console.log('onfocus')
       if (this.text === '') {
         this["searchHistory/commitDisplaySearchHistory"](true)
         if (!this.modalCollapsed) this.$store.commit('setModalCollapsed', true)
       }
     },
-    onblur () {
+    onblur() {
       // console.log('onblur')
       this["searchHistory/commitDisplaySearchHistory"](false)
     },
-    displayDirBox () {
+    displayDirBox() {
       this.$router.push({ 
         name: "Direction",
         params: {
@@ -83,6 +89,10 @@ export default {
           floorId: this.$route.params.floorId
         }
       })
+    },
+    clearText() {
+      this.text = ""
+      this.$refs.input.focus()
     }
   },
   mounted () {
@@ -133,7 +143,7 @@ export default {
   .modal-collapse-button-container {
     height: 40px;
     width: 40px;
-    margin-right: 10px;
+    margin-right: 8px;
 
     .modal-collapse-button {
       height: 40px;
@@ -148,11 +158,12 @@ export default {
   }
 
   .search-form {
-    margin-right: 10px;
+    margin-right: 5px;
 
     .search-input {
-      width: 260px !important;
+      width: 262px !important;
       height: 40px;
+      margin-right: 8px;
       vertical-align: top;
       font-size: 1.2rem;
       /* display: inline-block; */
@@ -177,15 +188,23 @@ export default {
     }
   }
 
-  .direction-button-container {
+  .second-button-container {
     display: flex;
     align-items: center;
     
-    .direction-button { 
+    .second-button { 
       width: 40px;
       height: 40px;
       font-size: 20px;
-      margin-right: 10px;
+      margin-right: 8px;
+
+      &:hover {
+        color: #0069d9;
+      }
+    }
+
+    .close-button {
+      font-weight: bold;
     }
 
     &::after {

@@ -10,7 +10,7 @@
     <template v-else>
       <div v-if="hasResult" class="search-result-top">
         <div v-if="buildingTotal > 0" class="search-result-section">
-          <div class="search-result-section-type">{{$t('itemType.building')}}</div>
+          <div class="search-result-section-type">{{$t('placeType.building')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="building in topBuildingList" :key="building.id"
               :simple="false" 
@@ -30,7 +30,7 @@
         </div>
 
         <div v-if="roomTotal > 0" class="search-result-section">
-          <div class="search-result-section-type">{{$t('itemType.room')}}</div>
+          <div class="search-result-section-type">{{$t('placeType.room')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="room in topRoomList" :key="room.id"
               :simple="false" 
@@ -52,7 +52,7 @@
         </div>
 
         <div v-if="facilityTotal > 0" class="search-result-section">
-          <div class="search-result-section-type">{{$t('itemType.facility')}}</div>
+          <div class="search-result-section-type">{{$t('placeType.facility')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="facility in topFacilityList" :key="facility.id"
               :simple="false" 

@@ -74,7 +74,9 @@ const routes = [
       },
       {
         path: "dir/:fromPlace([^/]*)?/:toPlace([^/]*)?",
-        component: Direction,
+        components: {
+          direction: Direction
+        },
         name: "Direction",
         meta: {
           keepAlive: true
@@ -108,20 +110,20 @@ router.beforeEach((to, from, next) => {
 
       let globalText = ""
       if (to.matched.length > 1) {
+        store.commit("setDisplayDirectionButton", false)
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', to.name === "Direction")
         if (to.name === "Direction") store.commit("direction/setDisplayDirection", true)
 
         if (to.name.indexOf('Search') !== -1) globalText = decodeURIComponent(to.query.q || '')
-        else if (to.name === 'Place') globalText = to.params.itemName || ''
-      }
+        else if (to.name === 'Place') globalText = to.params.name || ''
+      } else store.commit("setDisplayDirectionButton", true)
 
       store.commit('setGlobalText', globalText)
     }
     next()
   }
 })
-
 export default router
 
 
