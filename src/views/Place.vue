@@ -21,8 +21,8 @@
         </div>
         <div v-show="place.placeType === 'building'" class="additional direction">
           <button type="button" class="iconfont icon-plane btn btn-primary additional-button direction-button"
-            data-toggle="tooltip" data-placement="bottom" :title="$t('tooltip.indoor')"
-            @click="$router.push({ name: 'Direction', params: { buildingId: null, floorId: null, fromPlace: place.name, toPlace: '' } })"></button>
+            data-toggle="tooltip" data-placement="top" :title="$t('tooltip.direction.entrance')"
+            @click="onclickDirection"></button>
         </div>
       </div>
 
@@ -98,14 +98,6 @@ export default {
       let building
       let floor
       let zone
-      // const zoneStr = (zone) => {
-      //   if (zone && typeof zone === 'string') {
-      //     zone = zone.toLowerCase()
-      //     if (zone.startsWith('n')) return 'North Campus'
-      //     else if (zone.startsWith('s')) return 'South Campus'
-      //   }
-      //   return null
-      // }
       switch (this.place.placeType) {
         case 'room':
           building = this.place.building || {}
@@ -162,7 +154,7 @@ export default {
         console.log(data)
         if (!data[type]) throw new Error('Data Not Found')
         this.place = { ...data[type] }
-        this.lessonList = data.timetable || []
+        this.lessonList = data.room?.timetable || []
 
         if (!this.loadingError) this.loading = false
         this.$nextTick(() => {
@@ -174,6 +166,18 @@ export default {
         console.log(error)
         this.loadingError = true
       }
+    },
+    onclickDirection() {
+      this.$router.push({ 
+        name: 'Direction', 
+        params: { 
+          buildingId: null, 
+          floorId: null, 
+          fromPlace: this.place.name, 
+          toPlace: '' 
+        } 
+      })
+      this.$store.commit("direction/setGlobalFromId", `${this.place.id}|${this.place.placeType}`)
     }
   },
   mounted () {

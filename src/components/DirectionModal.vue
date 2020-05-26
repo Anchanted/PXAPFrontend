@@ -4,6 +4,7 @@
       <div class="direction-box-header">
         <button 
           class="iconfont icon-close direction-box-header-close" 
+          data-toggle="tooltip" data-placement="right" data-trigger="hover" :data-original-title="$t('tooltip.direction.close')"
           @click="closeModal"></button>
       </div>
       <div class="direction-box-location-container">
@@ -29,6 +30,7 @@
         </div>
         <button 
           class="iconfont icon-reverse reverse-button"
+          data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.direction.reverse')"
           @click="reverseLocation"></button>
       </div>
     </div>

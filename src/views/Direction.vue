@@ -35,25 +35,42 @@ export default {
       if (!route) route = this.$route
       const fromText = route.params.fromPlace?.trim() || ""
       const toText = route.params.toPlace?.trim() || ""
+      this.$store.commit("direction/setGlobalFromText", fromText)
+      this.$store.commit("direction/setGlobalToText", toText)
       if (fromText || toText) {
         this.loading = true
         this.loadingError = false
       }
-      this.$store.commit("direction/setGlobalFromText", fromText)
-      this.$store.commit("direction/setGlobalToText", toText)
 
       try {
-        const data = await this.$api.direction.getPath(fromText, toText)
+        const data = (fromText || toText) ? await this.$api.direction.getPath(fromText, toText) : {}
         console.log(data)
         const start = data.start
         const end = data.end
         const pathList = data.pathList
-        this.$store.commit("direction/setGlobalFromId", start instanceof Object ? `${start.id}|${start.placeType}` : "")
-        this.$store.commit("direction/setGlobalToId", end instanceof Object ? `${end.id}|${end.placeType}` : "")
-        this.$store.commit("direction/setGlobalPathList", pathList instanceof Array ? pathList : [])
+
         if (typeof(start) === "string") this.errorInfo = start || ""
         else if (typeof(end) === "string") this.errorInfo = end || ""
         else if (typeof(pathList) === "string") this.errorInfo = pathList || ""
+
+        if ((start?.name && start.name !== fromText) || (end?.name && end.name !== toText)) {
+          this.$store.commit("direction/setGlobalFromText", start?.name || fromText)
+          this.$store.commit("direction/setGlobalToText", end?.name || toText)
+          this.$router.push({ 
+            name: "Direction",
+            params: {
+              fromPlace: start?.name || fromText,
+              toPlace: end?.name || toText,
+              buildingId: this.$route.params.buildingId,
+              floorId: this.$route.params.floorId,
+              noRequest: true
+            }
+          })
+        }
+
+        this.$store.commit("direction/setGlobalFromId", start instanceof Object ? `${start.id}|${start.placeType}` : "")
+        this.$store.commit("direction/setGlobalToId", end instanceof Object ? `${end.id}|${end.placeType}` : "")
+        this.$store.commit("direction/setGlobalPathList", pathList instanceof Array ? pathList : [])
 
         if (!this.loadingError) this.loading = false
       } catch (error) {
@@ -63,15 +80,13 @@ export default {
     }
   },
   async mounted() {
-    if (this.$route.params.fromPlace || this.$route.params.toPlace) {
+    // if (this.$route.params.fromPlace || this.$route.params.toPlace) 
       this.searchDirection()
-    }
   },
   async beforeRouteUpdate(to, from, next) {
     next()
-    if (to.params.fromPlace || to.params.toPlace) {
-      this.searchDirection(to)
-    }
+    // if (to.params.fromPlace || to.params.toPlace)
+    if (!to.params.noRequest) this.searchDirection(to)
   },
 }
 </script>

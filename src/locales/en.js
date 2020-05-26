@@ -76,7 +76,13 @@ module.exports = {
         'collapsePanel': 'Collapse side panel',
         'expandPanel': 'Expand side panel',
         'search': 'Search',
+        "clear": "Clear Search",
         'indoor': 'View indoor maps',
+        "direction": {
+            "entrance": "Directions",
+            "close": "Close directions",
+            "reverse": "Reverse starting point and destination"
+        },
         "menu": "Menu",
         "language": "Change to another language",
         "help": "Help",

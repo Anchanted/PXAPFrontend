@@ -5,8 +5,8 @@
             "y": 83
         },
         "geo": {
-            "longitude": 31.277321, 
-            "latitude": 120.731426
+            "latitude": 31.277321, 
+            "longitude": 120.731426
         }
     },
     {
@@ -15,8 +15,8 @@
             "y": 1337
         },
         "geo": {
-            "longitude": 31.269948, 
-            "latitude": 120.734870
+            "latitude": 31.269948, 
+            "longitude": 120.734870
         }
     }
 ]

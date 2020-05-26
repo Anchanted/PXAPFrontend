@@ -84,7 +84,7 @@ export default {
 .history-container {
   width: 100%;
   height: auto;
-  padding: 20px 0;
+  padding: 0 0 20px;
   position: relative;
 }
 

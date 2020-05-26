@@ -278,7 +278,7 @@
         {"type": "Feature", "properties": {"id": 270, "direction": 2, "distance": 106.44, "type": 1}, "geometry": {"type": "LineString", "coordinates": [[662, 988], [669, 1023], [690, 1053], [719, 1071]]}}, 
         {"type": "Feature", "properties": {"id": 271, "direction": 2, "distance": 25.63, "type": 1, "buildingCode": "BS", "buildingSide": 1}, "geometry": {"type": "LineString", "coordinates": [[719, 1071], [710, 1095]]}}, 
         {"type": "Feature", "properties": {"id": 272, "direction": 2, "distance": 22.14, "type": 1, "buildingCode": "BS", "buildingSide": 1}, "geometry": {"type": "LineString", "coordinates": [[790, 1100], [769, 1107]]}}, 
-        {"type": "Feature", "properties": {"id": 273, "direction": 2, "distance": 23.09, "type": 1, "buildingCode": "DB", "buildingSide": 0}, "geometry": {"type": "LineString", "coordinates": [[880, 1118], [882, 1141]]}}, 
+        {"type": "Feature", "properties": {"id": 273, "direction": 2, "distance": 23.09, "type": 1, "buildingCode": "DB", "buildingSide": 1}, "geometry": {"type": "LineString", "coordinates": [[880, 1118], [882, 1141]]}}, 
         {"type": "Feature", "properties": {"id": 274, "direction": 2, "distance": 13.6, "type": 1, "buildingCode": "HS", "buildingSide": 1}, "geometry": {"type": "LineString", "coordinates": [[908, 1087], [897, 1079]]}}, 
         {"type": "Feature", "properties": {"id": 275, "direction": 2, "distance": 70.53, "type": 1}, "geometry": {"type": "LineString", "coordinates": [[1208, 1077], [1198, 1045], [1233, 1033]]}}, 
         {"type": "Feature", "properties": {"id": 276, "direction": 2, "distance": 18.87, "type": 1, "buildingCode": "BS", "buildingSide": 1}, "geometry": {"type": "LineString", "coordinates": [[665, 926], [655, 942]]}}, 

@@ -197,8 +197,8 @@ export default {
     clickOccupation () {
       this.$store.commit("button/reverseOccupationActivated")
     },
-    chooseOtherFloor: function (e, floor) {
-      const buildingId = this.$route.params.buildingId || 0
+    chooseOtherFloor(e, floor) {
+      const buildingId = parseInt(this.$route.params.buildingId || 0)
       const buildingIdList = floor.buildingId || []
       if (buildingIdList.find(e => e === buildingId) && floor.id !== this.currentFloor.id){
         this.$router.push({

@@ -64,7 +64,7 @@ export default {
     const scrollBarWidth = this.getScrollbarWidth()
     console.log('scrollBarWidth', scrollBarWidth)
     this.$store.commit('setScrollBarWidth', scrollBarWidth)
-    this.$store.dispatch('searchHistory/refreshHistoryList')
+    this.$store.dispatch('searchHistory/refreshHistoryList', this.unifySearchItem)
   },
   mounted () {
     this.$store.commit('setScreenHeight', window.innerHeight)

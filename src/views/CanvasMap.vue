@@ -125,9 +125,9 @@ export default {
       lastDoubleClick: false,
       buildingCode: null,
       selectedFloor: {},
-      selectedItem: {},
+      selectedPlace: {},
       occupiedRoomList: [],
-      itemList: [],
+      placeList: [],
       floorList: [],
       gateList: null,
       currentHour: 0,
@@ -270,7 +270,7 @@ export default {
 
       if (!this.occupationActivated) {
         if (this.$route.name !== "Direction") {
-          if (JSON.stringify(this.selectedItem) !== "{}")  this.drawPolygon(this.selectedItem.areaPointList)
+          if (JSON.stringify(this.selectedPlace) !== "{}")  this.drawPolygon(this.selectedPlace.areaPointList)
         } else {
           if (JSON.stringify(this.fromDirectionMarker) !== "{}") this.drawPolygon(this.fromDirectionMarker.areaPointList)
           if (JSON.stringify(this.toDirectionMarker) !== "{}") this.drawPolygon(this.toDirectionMarker.areaPointList)
@@ -306,11 +306,11 @@ export default {
           // })
         }
 
-        if (this.itemList.length) {
+        if (this.placeList.length) {
           const size = parseInt(this.iconSize * 1)
-          this.itemList.forEach(item => {
+          this.placeList.forEach(item => {
             // selected item
-            if (JSON.stringify(this.selectedItem) !== "{}" && this.selectedItem.id === item.id && this.selectedItem.placeType === item.placeType) return
+            if (JSON.stringify(this.selectedPlace) !== "{}" && this.selectedPlace.id === item.id && this.selectedPlace.placeType === item.placeType) return
             // item not to display
             if (!item.iconLevel || (this.scale.x < item.iconLevel || this.scale.y < item.iconLevel)) return
             this.drawImage(this.imageMap["facilitySprite"], item.location.x, item.location.y, size, size, size/2, size/2, true, true, 
@@ -333,7 +333,7 @@ export default {
             this.drawMarker(this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, this.lastMarkerAnimation.markerType)
           }
 
-          if (JSON.stringify(this.selectedItem) !== "{}") {
+          if (JSON.stringify(this.selectedPlace) !== "{}") {
             const t = this.currentMarkerAnimation.duration
             let size
             if (t < 0.5) {
@@ -626,11 +626,67 @@ export default {
       });
     },
 
+    isPointinItem(pointX, pointY) {
+      const ctx = this.context;
+
+      // click on markers
+      const scaleX = this.scale.x * this.scaleAdaption
+      const scaleY = this.scale.y * this.scaleAdaption
+      const offsetX = this.position.x + this.positionAdaption.x
+      const offsetY = this.position.y + this.positionAdaption.y
+      const size = this.iconSize * 2
+      const selfRotate = false
+      let { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }, false)
+      if (this.$route.name !== "Direction") {
+        if (JSON.stringify(this.selectedPlace) !== "{}") {
+          ctx.beginPath()
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.currentMarkerAnimation.y * scaleY + offsetY - size), size * 0.8, size)
+          else ctx.rect(parseInt(this.canvasHeight - (this.currentMarkerAnimation.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size), size * 0.8, size)
+
+          if (ctx.isPointInPath(px, py)) return 1
+        }
+      } else {
+        if (JSON.stringify(this.fromDirectionMarker) !== "{}") {
+          ctx.beginPath()
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.fromDirectionMarker.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.fromDirectionMarker.y * scaleY + offsetY - size), size * 0.8, size)
+          else ctx.rect(parseInt(this.canvasHeight - (this.fromDirectionMarker.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.fromDirectionMarker.x * scaleX + offsetX - size), size * 0.8, size)
+
+          if (ctx.isPointInPath(px, py)) return 2
+        }
+        if (JSON.stringify(this.toDirectionMarker) !== "{}") {
+          ctx.beginPath()
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.toDirectionMarker.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.toDirectionMarker.y * scaleY + offsetY - size), size * 0.8, size)
+          else ctx.rect(parseInt(this.canvasHeight - (this.toDirectionMarker.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.toDirectionMarker.x * scaleX + offsetX - size), size * 0.8, size)
+
+          if (ctx.isPointInPath(px, py)) return 3
+        }
+      }
+
+      // click on item
+      ({ x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }))
+      return this.placeList.find(element => {
+        if (!element.areaPointList) {
+          if (!element.iconLevel || (this.scale.x < element.iconLevel || this.scale.y < element.iconLevel)) return
+          const { x, y } = this.getTransformedPoint(element.location)
+          ctx.beginPath()
+          ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
+        } else {
+          ctx.beginPath()
+          const pointList = element.areaPointList || []
+          pointList.forEach((e, index) => {
+            const { x, y } = this.getTransformedPoint(e)
+            if (index == 0) ctx.moveTo(x, y)
+            else ctx.lineTo(x, y)
+          })
+        }
+        if (ctx.isPointInPath(px, py)) return true
+      })
+    },
+
     onmousewheel (e) {
-      const { x, y } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-      this.focusPointer.x = x
-      this.focusPointer.y = y
+      this.focusPointer = {...this.getMousePoint({ x: e.clientX, y: e.clientY })}
       this.zoomMap(-e.deltaY / 5)
+      this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
     },
 
     onmousedown (e) {
@@ -655,8 +711,9 @@ export default {
 
     onmousemove (e) {
       // console.log('mousemove')
-      if (this.canvas) {
+      if (this.canvas && e.target == this.canvas) {
         if (this.virtualButton.display && this.virtualButton.mselected) {
+          this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
           const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
           const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
@@ -665,10 +722,13 @@ export default {
           this.virtualButton.position.y = (py + offset > canvasHeight) ? canvasHeight - offset * 2 : py - offset
           if (this.virtualButton.position.x < 0) this.virtualButton.position.x = 0
           if (this.virtualButton.position.y < 0) this.virtualButton.position.y = 0
-          return
+        } else if (e.buttons === 1 && this.mdown) {
+          this.canvas.style.cursor = "move"
+          const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
+          this.moveMap(px, py)
+        } else {
+          this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
         }
-        const { x, y } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-        if (e.target == this.canvas && e.buttons === 1 && this.mdown) this.moveMap(x, y);
         // if (relativeX <= 0 || relativeX >= this.canvas.width || relativeY <= 0 || relativeY >= this.canvas.height) this.mdown = false;
       }
     },
@@ -727,109 +787,59 @@ export default {
           return
         }
 
-        const ctx = this.context;
-
-        // click on marker
-        if (JSON.stringify(this.selectedItem) !== "{}") {
-          const scaleX = this.scale.x * this.scaleAdaption
-          const scaleY = this.scale.y * this.scaleAdaption
-          const offsetX = this.position.x + this.positionAdaption.x
-          const offsetY = this.position.y + this.positionAdaption.y
-          const size = this.iconSize * 2
-          const selfRotate = false
-          const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
-
-          ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.currentMarkerAnimation.y * scaleY + offsetY - size), size * 0.8, size)
-          else ctx.rect(parseInt(this.canvasHeight - (this.currentMarkerAnimation.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size), size * 0.8, size)
-
-          if (ctx.isPointInPath(px, py)) {
-            this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
-            this.lastDoubleClick = true
-            return
-          }
-        }
-
-        // click on item
-        const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-        let sameItem = false
-        let found = this.itemList.some(element => {
-          if (!element.areaPointList) {
-            if (!element.iconLevel || (this.scale.x < element.iconLevel || this.scale.y < element.iconLevel)) return
-            const { x, y } = this.getTransformedPoint(element.location)
-            ctx.beginPath()
-            ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
-          } else {
-            ctx.beginPath()
-            const pointList = element.areaPointList || []
-            pointList.forEach((e, index) => {
-              const { x, y } = this.getTransformedPoint(e)
-              if (index == 0) ctx.moveTo(x, y)
-              else ctx.lineTo(x, y)
-            })
-          }
-          if(ctx.isPointInPath(px, py)){
+        const element = this.isPointinItem(e.clientX, e.clientY)
+        if (element) {
+          this.lastDoubleClick = true
+          if (typeof element === "number" && element === 1) {
+            this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
+          } else if (typeof element === "object") {
             if (this.$route.name !== "Direction") {
-              sameItem = this.setSelectedItem(element)
-              this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
+              this.setSelectedPlace(element)
+              this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
             } else {
               if (JSON.stringify(this.fromDirectionMarker) !== "{}" && JSON.stringify(this.toDirectionMarker) !== "{}") {
                 // Exit Direction
                 console.log("third point")
-                sameItem = this.setSelectedItem(element)
-                this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
+                this.setSelectedPlace(element)
+                this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
               } else {
                 if (element.areaPointList && element.placeType === "building") {
-                  const marker = {
-                    x: element.location?.x,
-                    y: element.location?.y,
-                    areaPointList: element.areaPointList,
-                    type: element.placeType,
-                    id: element.id,
-                    name: element.name
-                  }
                   if (JSON.stringify(this.fromDirectionMarker) === "{}" && !this.globalFromText) {
                     // same item
                     if (this.globalToText || JSON.stringify(this.toDirectionMarker) !== "{}") 
-                      if (this.toDirectionMarker.x === element.location?.x
-                        && this.toDirectionMarker.y === element.location?.y) return true
-                    this.fromDirectionMarker = { ...marker }
+                      if (`${this.toDirectionMarker.id}|${this.toDirectionMarker.type}` === `${element.id}|${element.placeType}`) return true
+                    this.$store.commit("direction/setGlobalFromId", `${element.id}|${element.placeType}`)
                     this.$refs.directionModal?.setDirectionText(false, element.name)
                   } else if (JSON.stringify(this.toDirectionMarker) === "{}" && !this.globalToText) {
                     // same item
                     if (this.globalFromText || JSON.stringify(this.fromDirectionMarker) !== "{}") 
-                      if (this.fromDirectionMarker.x === element.location?.x
-                        && this.fromDirectionMarker.y === element.location?.y) return true
-                    this.toDirectionMarker = { ...marker }
+                      if (`${this.fromDirectionMarker.id}|${this.fromDirectionMarker.type}` === `${element.id}|${element.placeType}`) return true
+                    this.$store.commit("direction/setGlobalToId", `${element.id}|${element.placeType}`)
                     this.$refs.directionModal?.setDirectionText(true, element.name)
                   }
                 }
               }
             }
-            return true
           }
-        })
-
-        if (found) this.lastDoubleClick = true
+          return
+        }
 
         // click on nothing, modal hides
-        if (!found && !sameItem && JSON.stringify(this.selectedItem) !== "{}") {
-          this.setSelectedItem()
+        if (JSON.stringify(this.selectedPlace) !== "{}") {
+          this.setSelectedPlace()
           this.$store.commit('setGlobalText', "")
         }
       }
     },
 
-    setSelectedItem (element = {}) {
+    setSelectedPlace (element = {}) {
       // null => a cV lX rV
       // a => a    cX lX rX
       // a => b    cV lV rV
       // a => null cX lV rV
-      let sameItem = true
-      if (this.selectedItem.placeType !== element.placeType || this.selectedItem.id !== element.id) {
+      if (this.selectedPlace.placeType !== element.placeType || this.selectedPlace.id !== element.id) {
         // click on another item or no item clicked before or click on nothing
-        sameItem = false
-        this.selectedItem = JSON.stringify(element) !== "{}" ? {
+        this.selectedPlace = JSON.stringify(element) !== "{}" ? {
           id: element.id,
           placeType: element.placeType,
           areaPointList: element.areaPointList,
@@ -837,11 +847,12 @@ export default {
           iconType: element.iconType,
           ...element.location
         } : element
+        return false
       } else {
         // console.log("same item")
-        if (JSON.stringify(this.selectedItem) !== "{}") this.$refs.modal.showModal()
+        if (JSON.stringify(this.selectedPlace) !== "{}") this.$refs.modal.showModal()
+        return true
       }
-      return sameItem
     },
 
     adjustMapPosition ({ posX, posY }, type, scale) {
@@ -974,22 +985,22 @@ export default {
       const p1 = campusLocationList[0]
       const p2 = campusLocationList[1]
       const ratio = {
-        x: (p2["geo"]["latitude"] - p1["geo"]["latitude"]) / (p2["image"]["x"] - p1["image"]["x"]),
-        y: (p2["geo"]["longitude"] - p1["geo"]["longitude"]) / (p2["image"]["y"] - p1["image"]["y"])
+        x: (p2["geo"]["longitude"] - p1["geo"]["longitude"]) / (p2["image"]["x"] - p1["image"]["x"]),
+        y: (p2["geo"]["latitude"] - p1["geo"]["latitude"]) / (p2["image"]["y"] - p1["image"]["y"])
       }
       const origin = {
-        latitude: p1["geo"]["latitude"] - p1["image"]["x"] * ratio.x,
-        longitude: p1["geo"]["longitude"] - p1["image"]["y"] * ratio.y
+        latitude: p1["geo"]["longitude"] - p1["image"]["x"] * ratio.x,
+        longitude: p1["geo"]["latitude"] - p1["image"]["y"] * ratio.y
       }
       return {
-        x: Math.floor((latitude - origin.latitude) / ratio.x),
-        y: Math.floor((longitude - origin.longitude) / ratio.y)
+        x: Math.floor((longitude - origin.longitude) / ratio.x),
+        y: Math.floor((latitude - origin.latitude) / ratio.y)
       }
     },
 
     geolocationInfo (position) {
       const { longitude, latitude } = position?.coords
-      console.log(position);
+      // console.log(position);
 
       if (longitude && latitude) {
         const firstcall = !this.location.x && !this.location.y
@@ -1107,7 +1118,7 @@ export default {
       this.imageMap["eye"] = await this.loadImage(require('assets/images/icon/eye.png'))
       this.imageMap["facilitySprite"] = await this.loadImage(require('assets/images/sprite/icon-sprite.png'))
 
-      this.itemList = this.itemList.concat(data.facilityList || [], data.buildingList || [], data.roomList || [])
+      this.placeList = this.placeList.concat(data.facilityList || [], data.roomList || [], data.buildingList || [])
 
       this.canvas = this.$refs.indoorMap;
       this.context = this.canvas.getContext("2d");
@@ -1130,13 +1141,13 @@ export default {
       this.checkRequestAnimationFrame();
       requestAnimationFrame(this.animate);
 
+      if (!this.loadingError) this.loading = false
       this.$nextTick(() => {
-        this.loading = false
         if (this.$route.name === 'Place') {
-          const item = this.itemList.find(e => e.id === parseInt(this.$route.params.id) && e.placeType === this.$route.params.type)
+          const item = this.placeList.find(e => e.id === parseInt(this.$route.params.id) && e.placeType === this.$route.params.type)
           if (item) {
-            this.setSelectedItem(item)
-            this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'middle', 3)
+            this.setSelectedPlace(item)
+            this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'middle', 3)
             this.$store.commit('setGlobalText', item.name || "")
           } else {
             this.$router.push({name: 'PageNotFound'})
@@ -1144,8 +1155,8 @@ export default {
         } else if (this.$route.name === "Direction") {
           if (this.globalFromId && JSON.stringify(this.fromDirectionMarker) === "{}") {
             const [id, placeType] = this.globalFromId.split("|")
-            const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
-            if (place && JSON.stringify(place) !== "{}")
+            const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+            if (place && JSON.stringify(place) !== "{}") {
               this.fromDirectionMarker = {
                 x: place.location?.x,
                 y: place.location?.y,
@@ -1154,10 +1165,11 @@ export default {
                 id: place.id,
                 name: place.name
               }
+            }
           }
           if (this.globalToId && JSON.stringify(this.toDirectionMarker) === "{}") {
             const [id, placeType] = this.globalToId.split("|")
-            const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+            const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
             if (place && JSON.stringify(place) !== "{}")
               this.toDirectionMarker = {
                 x: place.location?.x,
@@ -1181,7 +1193,7 @@ export default {
   },
 
   watch: {
-    selectedItem (val, oldVal) {
+    selectedPlace (val, oldVal) {
       // null => a cV lX rV
       // a => a    cX lX rX
       // a => b    cV lV rV
@@ -1220,7 +1232,6 @@ export default {
             // not from place to search or to direction
             this.$store.commit('setModalCollapsed', true)
             setTimeout(() => {
-              console.log("here")
               this.$router.push({
                 name: "Map",
                 params: {
@@ -1320,12 +1331,12 @@ export default {
             //     latitude: 120.734979
             //   }
             // })
-            this.geolocationInfo({
-              coords: {
-                longitude: 31.275657,
-                latitude: 120.736146
-              }
-            })
+            // this.geolocationInfo({
+            //   coords: {
+            //     longitude: 31.275657,
+            //     latitude: 120.736146
+            //   }
+            // })
             
             const options = {
               enableHighAccuracy: true,
@@ -1333,7 +1344,7 @@ export default {
               maximumAge: 2000
             }
             // navigator.geolocation.getCurrentPosition(displayLocationInfo, handleLocationError, options);
-            // this.geoWatchId = navigator.geolocation.watchPosition(this.geolocationInfo, this.geolocationError, options)
+            this.geoWatchId = navigator.geolocation.watchPosition(this.geolocationInfo, this.geolocationError, options)
           } else {
             throw new Error("Geolocation is not supported in this browser.")
           }
@@ -1358,7 +1369,7 @@ export default {
       handler: function(val) {
         if (val) {
           const [id, placeType] = val.split("|")
-          const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+          const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
           if (place && JSON.stringify(place) !== "{}")
             this.fromDirectionMarker = {
               x: place.location?.x,
@@ -1377,7 +1388,7 @@ export default {
       handler: function(val) {
         if (val) {
           const [id, placeType] = val.split("|")
-          const place = this.itemList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+          const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
           if (place && JSON.stringify(place) !== "{}")
             this.toDirectionMarker = {
               x: place.location?.x,
@@ -1402,17 +1413,23 @@ export default {
 
     if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}`) {
       if (to.name === 'Place') {
-        const item = this.itemList.find(e => e.id === parseInt(to.params.id) && e.placeType === to.params.type)
+        const item = this.placeList.find(e => e.id === parseInt(to.params.id) && e.placeType === to.params.type)
         if (item) {
           if (this.occupationActivated) this.$store.commit("button/setOccupationActivated", false)
-          this.setSelectedItem(item)
-          this.adjustMapPosition({ posX: this.selectedItem.x, posY: this.selectedItem.y }, 'include')
+          this.setSelectedPlace(item)
+          this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
         } else {
           next({name: 'PageNotFound'})
           return
         }
       } else {
-        this.setSelectedItem()
+        this.setSelectedPlace()
+        if (to.name === "Direction")
+          this.lastMarkerAnimation = {
+            ...this.lastMarkerAnimation,
+            triggered: false,
+            duration: 0.5
+          }
       }
 
       if (from.name === "Direction" && to.name !== "Direction") {

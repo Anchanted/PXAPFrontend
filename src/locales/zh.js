@@ -76,7 +76,13 @@ module.exports = {
         'collapsePanel': '收起侧边面板',
         'expandPanel': '展示侧边面板',
         'search': '搜索',
+        "clear": "清空搜索",
         'indoor': '查看室内地图',
+        "direction": {
+            "entrance": "路线",
+            "close": "关闭路线",
+            "reverse": "对调出发地与目的地"
+        },
         "menu": "菜单",
         "language": "变更成另一种语言",
         "help": "帮助",

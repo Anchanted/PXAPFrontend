@@ -105,7 +105,7 @@ export default {
                   const type = lessonType.find(type => lessonList[0]["name"].toLowerCase().indexOf(type["name"]) === 0)
                   if (type) color = type["color"]
                 }
-              } else if (lessonList.length > 1) color = "yellow"
+              } else if (lessonList.length > 1) color = "#ff8040"
               return {
                 "background-color": color,
                 "cursor": "pointer"

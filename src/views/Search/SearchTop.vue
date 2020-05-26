@@ -62,7 +62,7 @@
               :location-title="itemLocation(facility, 'facility')"
               @click.native="onclick($event, facility, 'facility')">
               <template #icon>
-                <span class="iconfont facility-icon" :class="`icon-${facility.icon_type || facility.dataType}`"></span>
+                <span class="iconfont facility-icon" :class="`icon-${facility.icon_type || facility.place_type}`"></span>
               </template>
               <template #name>{{facility.name}}</template>
               <template #type>{{facility.type && facility.type.capitalize()}}</template>
@@ -90,8 +90,6 @@
 <script>
 import PlaceCard from 'components/PlaceCard'
 import LoadingPanel from "components/LoadingPanel"
-
-import { unifySearchItem } from 'utils/utilFunctions.js'
 
 export default {
   name: 'SearchTop',
@@ -135,11 +133,11 @@ export default {
         if (this.query) {
           const data = await this.$api.search.searchTop({ q: this.query })
           console.log(data)
-          this.topBuildingList = unifySearchItem(data.building.content || [], "building")
+          this.topBuildingList = this.unifySearchItem(data.building.content || [])
           this.buildingTotal = data.building.totalElements
-          this.topRoomList = unifySearchItem(data.room.content || [], "room")
+          this.topRoomList = this.unifySearchItem(data.room.content || [])
           this.roomTotal = data.room.totalElements
-          this.topFacilityList = unifySearchItem(data.facility.content || [], "facility")
+          this.topFacilityList = this.unifySearchItem(data.facility.content || [])
           this.facilityTotal = data.facility.totalElements
 
           this.hasResult = this.buildingTotal > 0 || this.roomTotal > 0 || this.facilityTotal > 0

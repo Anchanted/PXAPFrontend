@@ -97,8 +97,6 @@
 import LoadingPanel from 'components/LoadingPanel'
 import PlaceCard from 'components/PlaceCard'
 
-import { unifySearchItem } from 'utils/utilFunctions.js'
-
 import { mapState } from 'vuex'
 
 export default {
@@ -194,7 +192,7 @@ export default {
             return
           }
 
-          this.itemList = unifySearchItem(data.content || [], this.dataType)
+          this.itemList = this.unifySearchItem(data.content || [])
           this.totalPages = data.totalPages
 
           this.loading = false

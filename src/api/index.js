@@ -1,4 +1,4 @@
-import place from './place'
+import place from "./place"
 import building from './building'
 import floor from './floor'
 import room from './room'

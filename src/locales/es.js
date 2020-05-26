@@ -76,7 +76,13 @@ module.exports = {
         'collapsePanel': 'Ocultar el panel lateral',
         'expandPanel': 'Monstrar el panel lateral',
         'search': 'Buscar',
+        "clear": "Borrar la búsqueda",
         'indoor': 'Ver Mapas Interiores',
+        "direction": {
+            "entrance": "Indicaciones",
+            "close": "Cerrar directions",
+            "reverse": "Invertir punto de partida y de destino"
+        },
         "menu": "Menú",
         "language": "Cambiar a otra idioma",
         "help": "Ayuda",
@@ -84,16 +90,16 @@ module.exports = {
         'floor': 'Elegir otro piso',
         'home': 'Regresar a la mapa de campus',
         "gate": {
-          "show": "Monstrar las entradas del edificio",
-          "hide": "Ocultar las entradas del edificio"
+            "show": "Monstrar las entradas del edificio",
+            "hide": "Ocultar las entradas del edificio"
         },
         "occupation": {
-          "show": "Monstrar las habitaciones ocupadas",
-          "hide": "Ocultar las habitaciones ocupadas",
+            "show": "Monstrar las habitaciones ocupadas",
+            "hide": "Ocultar las habitaciones ocupadas",
         },
         "location": {
-          "show": "Monstrar la ubicación en tiempo real",
-          "hide": "Ocultar la ubicación en tiempo real",
+            "show": "Monstrar la ubicación en tiempo real",
+            "hide": "Ocultar la ubicación en tiempo real",
         },
         'zoomIn': 'Acercar',
         'zoomOut': 'Alejar',

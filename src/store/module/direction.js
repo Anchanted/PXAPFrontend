@@ -1,6 +1,4 @@
-import { unifySearchItem } from 'utils/utilFunctions.js'
-
-const searchHistory = {
+const direction = {
   namespaced: true,
 
   state: {
@@ -42,4 +40,4 @@ const searchHistory = {
   }
 }
 
-export default searchHistory
+export default direction

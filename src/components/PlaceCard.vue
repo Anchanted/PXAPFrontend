@@ -5,7 +5,7 @@
         <slot name="icon"></slot>
       </div>
       <div class="item-info">
-        <div class="item-info-name" :class="placeType === 'building' ? 'two-line' : 'one-line'" :title="nameTitle">
+        <div class="item-info-name" :class="dataType === 'building' ? 'two-line' : 'one-line'" :title="nameTitle">
           <slot name="name"></slot>
         </div>
         <div class="item-info-type one-line" :title="typeTitle">
@@ -40,7 +40,7 @@ export default {
       type: Boolean,
       default: false,
     },
-    placeType: {
+    dataType: {
       type: String,
       required: true
     },

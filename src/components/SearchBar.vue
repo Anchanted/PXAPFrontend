@@ -19,7 +19,7 @@
         <button
           class="iconfont icon-search search-submit-button"
           type="submit"
-          data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :title="$t('tooltip.search')"
+          data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.search')"
           @click="submit"/>
       </div>
 		</form>
@@ -28,11 +28,14 @@
         v-if="displayDirectionButton"
         class="iconfont icon-plane text-primary second-button direction-button" 
         type="button"
+        :disabled="$route.params.buildingId || $route.params.floorId"
+        data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.direction.entrance')"
         @click="displayDirBox"></button>
       <button 
         v-else
         class="iconfont icon-close second-button close-button" 
         type="button"
+        data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.clear')"
         @click="clearText"></button>
     </div>
     <div class="panel-collapse-button-container" @click="$store.commit('setPanelCollapsed', !panelCollapsed)">
@@ -201,6 +204,10 @@ export default {
       &:hover {
         color: #0069d9;
       }
+    }
+    
+    .direction-button:disabled {
+      opacity: 0.65;
     }
 
     .close-button {
