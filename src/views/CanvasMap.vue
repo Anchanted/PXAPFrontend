@@ -981,30 +981,13 @@ export default {
       this.virtualButton.position.y = parseInt((canvasHeight - this.virtualButton.size) / 2)
     },
 
-    calculateMapLocation ({ longitude, latitude }) {
-      const p1 = campusLocationList[0]
-      const p2 = campusLocationList[1]
-      const ratio = {
-        x: (p2["geo"]["longitude"] - p1["geo"]["longitude"]) / (p2["image"]["x"] - p1["image"]["x"]),
-        y: (p2["geo"]["latitude"] - p1["geo"]["latitude"]) / (p2["image"]["y"] - p1["image"]["y"])
-      }
-      const origin = {
-        latitude: p1["geo"]["longitude"] - p1["image"]["x"] * ratio.x,
-        longitude: p1["geo"]["latitude"] - p1["image"]["y"] * ratio.y
-      }
-      return {
-        x: Math.floor((longitude - origin.longitude) / ratio.x),
-        y: Math.floor((latitude - origin.latitude) / ratio.y)
-      }
-    },
-
     geolocationInfo (position) {
       const { longitude, latitude } = position?.coords
       // console.log(position);
 
       if (longitude && latitude) {
         const firstcall = !this.location.x && !this.location.y
-        const { x, y } = this.calculateMapLocation({ longitude, latitude })
+        const { x, y } = this.geoToImage({ lon: longitude, lat: latitude })
         if ((x >= 0 && x <= this.imgWidth) && (y >= 0 && y <= this.imgHeight)) {
           this.location.x = x
           this.location.y = y
@@ -1327,14 +1310,8 @@ export default {
 
             // this.geolocationInfo({
             //   coords: {
-            //     longitude: 31.275891,
-            //     latitude: 120.734979
-            //   }
-            // })
-            // this.geolocationInfo({
-            //   coords: {
-            //     longitude: 31.275657,
-            //     latitude: 120.736146
+            //     longitude: 120.739362,
+            //     latitude: 31.273855
             //   }
             // })
             

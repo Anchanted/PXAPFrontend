@@ -106,9 +106,10 @@ router.beforeEach((to, from, next) => {
       if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}`) { // go to another page
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', true)
+        store.commit('setDisplayVirtualButton', false)
       }
 
-      let globalText = ""
+      let globalText = to.params.name || ""
       if (to.matched.length > 1) {
         store.commit("setDisplayDirectionButton", false)
         store.commit('setPanelCollapsed', false)

@@ -25,10 +25,10 @@ const direction = {
       state.globalToText = payload
     },
     setGlobalFromId(state, payload) {
-      state.globalFromId = payload && /^[0-9]+|[a-z]+$/.test(payload) ? payload : ""
+      state.globalFromId = (payload && /^[0-9]+\|[a-z]+$/.test(payload)) ? payload : ""
     },
     setGlobalToId(state, payload) {
-      state.globalToId = payload && /^[0-9]+|[a-z]+$/.test(payload) ? payload : ""
+      state.globalToId = (payload && /^[0-9]+\|[a-z]+$/.test(payload)) ? payload : ""
     },
     setGlobalPathList(state, payload) {
       state.globalPathList = payload instanceof Array ? payload : []

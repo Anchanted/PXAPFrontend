@@ -156,6 +156,7 @@ export default {
         this.place = { ...data[type] }
         this.lessonList = data.room?.timetable || []
 
+        this.$store.commit('setGlobalText', this.place.name || "")
         if (!this.loadingError) this.loading = false
         this.$nextTick(() => {
           this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })

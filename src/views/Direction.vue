@@ -88,6 +88,16 @@ export default {
     // if (to.params.fromPlace || to.params.toPlace)
     if (!to.params.noRequest) this.searchDirection(to)
   },
+  beforeRouteLeave(to, from, next) {
+    if (to.name !== "Direction") {
+      this.$store.commit("direction/setGlobalFromText", "")
+      this.$store.commit("direction/setGlobalToText", "")
+      this.$store.commit("direction/setGlobalFromId", "")
+      this.$store.commit("direction/setGlobalToId", "")
+      this.$store.commit("direction/setGlobalPathList", [])
+    }
+    next()
+  }
 }
 </script>
 
