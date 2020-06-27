@@ -63,6 +63,7 @@ export default {
               toPlace: end?.name || toText,
               buildingId: this.$route.params.buildingId,
               floorId: this.$route.params.floorId,
+              locationInfo: this.$route.params.locationInfo,
               noRequest: true
             }
           })
@@ -79,11 +80,11 @@ export default {
       }
     }
   },
-  async mounted() {
+  mounted() {
     // if (this.$route.params.fromPlace || this.$route.params.toPlace) 
       this.searchDirection()
   },
-  async beforeRouteUpdate(to, from, next) {
+  beforeRouteUpdate(to, from, next) {
     next()
     // if (to.params.fromPlace || to.params.toPlace)
     if (!to.params.noRequest) this.searchDirection(to)

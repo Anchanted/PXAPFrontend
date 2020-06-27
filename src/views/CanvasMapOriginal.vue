@@ -1,6 +1,6 @@
 <template>
   <div style="overflow: hidden;">
-    <canvas ref="canvas"
+    <canvas id="indoormap" ref="indoorMap"
       @mousedown="onmousedown"
       @mouseup="onmouseup"
       @mousemove="onmousemove"
@@ -12,7 +12,7 @@
     <direction-modal v-show="displayDirection" ref="directionModal"></direction-modal>
 
     <button-group
-      v-show="!displayVirtualButton"
+      v-show="!virtualButton.display"
       :scale="scale.x"
       :button-list="buttonList"
       :current-floor="selectedFloor"
@@ -22,7 +22,8 @@
       :occupation-requesting="occupationRequesting"
       :gate-requesting="gateRequesting"
       :loading="loading"
-      @zoom="zoomMap(arguments)"></button-group>
+      @zoom="zoomMap(arguments)"
+      @hideButtonGroup="displayVirtualButton"></button-group>
 
     <datetime
       type="datetime"
@@ -69,6 +70,7 @@ import markerSpriteInfo from "assets/json/markerSpriteInfo.json"
 import arrowSpriteInfo from "assets/json/arrowSpriteInfo.json"
 import { easeOutBack, easeOutCirc, arrowAnimation, locationAnimation } from 'utils/utilFunctions.js'
 import weekInfo from 'assets/json/week.json'
+import campusLocationList from "assets/json/campusLocation.json"
 import { DateTime, Interval } from 'luxon'
 
 import { mapState } from 'vuex';
@@ -85,11 +87,11 @@ export default {
   },
   data() {
     return {
-      campusImage: require("assets/images/map/campus/map.png"),
       mapType: null,
       rotate: false,
       canvas: null,
       context: null,
+      desktop: true,
       canvasWidth: null,
       canvasHeight: null,
       imgWidth: null,  // original width of map image
@@ -116,6 +118,7 @@ export default {
       lastY: null,
       init: false,
       mdown: false, // desktop drag
+      mclick: false,
       mdowntime: null,
       clickTimeoutId: 0,
       lastClickTime: null,
@@ -127,17 +130,20 @@ export default {
       placeList: [],
       floorList: [],
       gateList: null,
+      currentHour: 0,
       lastMarkerAnimation: {
         x: 0,
         y: 0,
         markerType: "default",
-        duration: -1
+        triggered: false,
+        duration: 0
       },
       currentMarkerAnimation: {
         x: 0,
         y: 0,
         markerType: "default",
-        duration: -1,
+        triggered: false,
+        duration: 0
       },
       zoomAnimation: {
         triggered: false,
@@ -160,15 +166,14 @@ export default {
       occupationRequesting: false,
       gateRequesting: false,
       virtualButton: {
+        display: false,
         position: {
           x: 100,
           y: 100
         },
-        size: 40,
+        size: 0,
         mselected: false
       },
-      currentHour: 0,
-      gateIntervalId: null,
       arrowTimer: 0,
     }
   },
@@ -181,7 +186,6 @@ export default {
       globalFromId: state => state.direction.globalFromId,
       globalToId: state => state.direction.globalToId,
       globalPathList: state => state.direction.globalPathList,
-      displayVirtualButton: state => state.button.displayVirtualButton,
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
       locationActivated: state => state.button.locationActivated
@@ -213,6 +217,7 @@ export default {
         this.init = true;
       }
 
+      // if (!this.currentMarkerAnimation.triggered && !this.lastMarkerAnimation.triggered && this.zoomAnimation.triggered) {
       if (this.zoomAnimation.triggered) {
         const totalZoom = this.zoomAnimation.totalZoom
         const zoom = totalZoom / Math.abs(totalZoom) * 20
@@ -229,8 +234,8 @@ export default {
 
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
       // indoor map drawing function
-      this.drawMapInfo();
-      window.requestAnimationFrame(this.animate)
+      this.drawMapInfo(this.scale.x * this.scaleAdaption, this.scale.y * this.scaleAdaption, this.position.x + this.positionAdaption.x, this.position.y + this.positionAdaption.y, this.scaleAdaption);
+      requestAnimationFrame(this.animate);
     },
 
     drawMapInfo () {
@@ -243,7 +248,6 @@ export default {
         ctx.rotate(Math.PI / 2)
       }
 
-      // console.log("drawing", this.mapMarginColor)
       if (this.mapMarginColor) {
         ctx.fillStyle = this.mapMarginColor
         ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
@@ -315,17 +319,31 @@ export default {
         }
 
         if (this.$route.name !== "Direction") {
-          if (this.lastMarkerAnimation.duration >= 0 && this.lastMarkerAnimation.duration <= 0.5) {
+          if (this.lastMarkerAnimation.triggered) {
             const t = this.lastMarkerAnimation.duration
-            const size = t < 0.5 ? easeOutCirc(t, this.iconSize*2, -this.iconSize*1.9, 0.5) : 0
-            if (t < 0.5) this.lastMarkerAnimation.duration += 0.016
+            let size
+            if (t < 0.5) {
+              size = easeOutCirc(t, this.iconSize*2, -this.iconSize*1.9, 0.5)
+              this.lastMarkerAnimation.duration += 0.016
+            } else {
+              size = 0
+              this.lastMarkerAnimation.triggered = false
+            }
+
             this.drawMarker(this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, this.lastMarkerAnimation.markerType)
           }
 
           if (JSON.stringify(this.selectedPlace) !== "{}") {
             const t = this.currentMarkerAnimation.duration
-            const size = t < 0.5 ? easeOutBack(t, this.iconSize*2/3, this.iconSize*2*2/3, 0.5) : this.iconSize*2
-            if (t < 0.5) this.currentMarkerAnimation.duration += 0.016
+            let size
+            if (t < 0.5) {
+              size = easeOutBack(t, this.iconSize*2/3, this.iconSize*2*2/3, 0.5)
+              this.currentMarkerAnimation.duration += 0.016
+            } else {
+              size = this.iconSize*2
+              this.currentMarkerAnimation.triggered = false
+            }
+
             this.drawMarker(this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, this.currentMarkerAnimation.markerType)
           }
         } else {
@@ -351,7 +369,7 @@ export default {
         this.location.timer = (this.location.timer + 0.016 > locationDuration) ? 0 : this.location.timer + 0.016
       }
 
-      if (this.displayVirtualButton) {
+      if (this.virtualButton.display) {
         ctx.save()
         const size = this.virtualButton.size
         ctx.shadowBlur = 10
@@ -374,7 +392,10 @@ export default {
         || arguments.length === 14 
         || arguments.length === 16)) throw new Error("Invalid argument number.")
 
-      if (!arguments[0]) return
+      const scaleX = this.scale.x * this.scaleAdaption
+      const scaleY = this.scale.y * this.scaleAdaption
+      const offsetX = this.position.x + this.positionAdaption.x
+      const offsetY = this.position.y + this.positionAdaption.y
 
       const image = arguments[0]
       const x = arguments[1]
@@ -392,11 +413,6 @@ export default {
       let degree
       let translateX
       let translateY
-
-      const scaleX = this.scale.x * this.scaleAdaption
-      const scaleY = this.scale.y * this.scaleAdaption
-      const offsetX = this.position.x + this.positionAdaption.x
-      const offsetY = this.position.y + this.positionAdaption.y
 
       if (arguments.length === 10 || arguments.length === 12) {
         degree = arguments[9]
@@ -613,14 +629,6 @@ export default {
     isPointinItem(pointX, pointY) {
       const ctx = this.context;
 
-      // click on virtual button
-      if (this.displayVirtualButton) {
-        const { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }, false)
-        ctx.beginPath()
-        ctx.rect(this.virtualButton.position.x, this.virtualButton.position.y, this.virtualButton.size, this.virtualButton.size)
-        if (ctx.isPointInPath(px, py)) return 4
-      }
-
       // click on markers
       const scaleX = this.scale.x * this.scaleAdaption
       const scaleY = this.scale.y * this.scaleAdaption
@@ -654,7 +662,7 @@ export default {
         }
       }
 
-      // click on places
+      // click on item
       ({ x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }))
       return this.placeList.find(element => {
         if (!element.areaPointList) {
@@ -687,8 +695,9 @@ export default {
       this.lastY = null;
       this.mdowntime = new Date().getTime();
       this.mdown = true;
+      this.mclick = false;
 
-      if (this.displayVirtualButton) {
+      if (this.virtualButton.display) {
         this.virtualButton.mselected = false
         const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
         this.context.beginPath();
@@ -703,7 +712,7 @@ export default {
     onmousemove (e) {
       // console.log('mousemove')
       if (this.canvas && e.target == this.canvas) {
-        if (this.displayVirtualButton && this.virtualButton.mselected) {
+        if (this.virtualButton.display && this.virtualButton.mselected) {
           this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
           const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
@@ -726,28 +735,22 @@ export default {
 
     onmouseup (e) {
       // console.log('mouseup')
-      this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
       const currentTime = Date.now()
+      if (this.mdown && currentTime - this.mdowntime < 200) { // simple click event
+        this.mclick = true
 
-      const mdown = this.mdown
-      const mselected = this.virtualButton.mselected
-
-      this.mdown = false
-      if (this.displayVirtualButton && this.virtualButton.mselected) this.virtualButton.mselected = false
-
-      if (mdown && currentTime - this.mdowntime < 200) { // simple click event
-        if (this.displayVirtualButton && mselected) {
+        if (this.virtualButton.display && this.virtualButton.mselected) {
           // button group hidden mode
+          this.virtualButton.mselected = false
           setTimeout(() => {
-            this.$store.commit("button/setDisplayVirtualButton", false)
+            this.virtualButton.display = false
             $('[data-toggle="tooltip"]').tooltip();
             $('[data-tooltip="tooltip"]').tooltip();
           }, 100)
           return
         }
 
-        if (!(this.currentMarkerAnimation.duration >= 0 && this.currentMarkerAnimation.duration <= 0.5) 
-          && !(this.lastMarkerAnimation.duration >= 0 && this.lastMarkerAnimation.duration <= 0.5)) {
+        if (!this.currentMarkerAnimation.triggered && !this.lastMarkerAnimation.triggered) {
           if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
             if (!this.lastDoubleClick) {  // second click
               const { x, y } = this.getMousePoint({ x: e.clientX, y: e.clientY })
@@ -767,11 +770,13 @@ export default {
           this.lastDoubleClick = false
         }
       }
+
+      this.mdown = false;
+      if (this.virtualButton.display && this.virtualButton.mselected) this.virtualButton.mselected = false
     },
 
     chooseItem (e) {
-      if (!(this.currentMarkerAnimation.duration >= 0 && this.currentMarkerAnimation.duration <= 0.5) 
-        && !(this.lastMarkerAnimation.duration >= 0 && this.lastMarkerAnimation.duration <= 0.5)) {
+      if (!this.currentMarkerAnimation.triggered && !this.lastMarkerAnimation.triggered) {
         // occupation mode
         if (this.occupationActivated) {
           this.$alert({
@@ -968,13 +973,38 @@ export default {
       if (!this.$refs.dt.datetime) this.$store.commit("button/setOccupationActivated", false)
     },
 
+    displayVirtualButton () {
+      this.virtualButton.display = true
+      const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
+      const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
+      this.virtualButton.position.x = parseInt(canvasWidth * 0.98 - this.virtualButton.size)
+      this.virtualButton.position.y = parseInt((canvasHeight - this.virtualButton.size) / 2)
+    },
+
+    calculateMapLocation ({ longitude, latitude }) {
+      const p1 = campusLocationList[0]
+      const p2 = campusLocationList[1]
+      const ratio = {
+        x: (p2["geo"]["longitude"] - p1["geo"]["longitude"]) / (p2["image"]["x"] - p1["image"]["x"]),
+        y: (p2["geo"]["latitude"] - p1["geo"]["latitude"]) / (p2["image"]["y"] - p1["image"]["y"])
+      }
+      const origin = {
+        latitude: p1["geo"]["longitude"] - p1["image"]["x"] * ratio.x,
+        longitude: p1["geo"]["latitude"] - p1["image"]["y"] * ratio.y
+      }
+      return {
+        x: Math.floor((longitude - origin.longitude) / ratio.x),
+        y: Math.floor((latitude - origin.latitude) / ratio.y)
+      }
+    },
+
     geolocationInfo (position) {
       const { longitude, latitude } = position?.coords
       // console.log(position);
 
       if (longitude && latitude) {
         const firstcall = !this.location.x && !this.location.y
-        const { x, y } = this.geoToImage({ longitude, latitude })
+        const { x, y } = this.calculateMapLocation({ longitude, latitude })
         if ((x >= 0 && x <= this.imgWidth) && (y >= 0 && y <= this.imgHeight)) {
           this.location.x = x
           this.location.y = y
@@ -1023,34 +1053,32 @@ export default {
         this.canvas.height = clientHeight * 2
       }
 
-      if (this.imgWidth && this.imgHeight) {
-        if (this.imgWidth <= this.imgHeight) {
+      if (this.imgWidth <= this.imgHeight) {
+        this.canvasWidth = clientWidth
+        this.canvasHeight = clientHeight
+        this.scaleAdaption = this.canvasHeight / this.imgHeight
+        if (this.imgWidth * this.scaleAdaption > this.canvasWidth) this.scaleAdaption = this.canvasWidth / this.imgWidth
+        this.rotate = false
+      } else { // imgWidth > imgHeight
+        if (clientWidth > clientHeight) {
+          // img: landscape  screen: landscape
           this.canvasWidth = clientWidth
           this.canvasHeight = clientHeight
-          this.scaleAdaption = this.canvasHeight / this.imgHeight
-          if (this.imgWidth * this.scaleAdaption > this.canvasWidth) this.scaleAdaption = this.canvasWidth / this.imgWidth
           this.rotate = false
-        } else { // imgWidth > imgHeight
-          if (clientWidth > clientHeight) {
-            // img: landscape  screen: landscape
-            this.canvasWidth = clientWidth
-            this.canvasHeight = clientHeight
-            this.rotate = false
-          } else { // clientWidth <= clientHeight
-            //img: landscape  screen: portrait
-            this.canvasWidth = clientHeight
-            this.canvasHeight = clientWidth
-            this.rotate = true;
-          }
-          this.scaleAdaption = this.canvasWidth / this.imgWidth
-          if (this.imgHeight * this.scaleAdaption > this.canvasHeight) this.scaleAdaption = this.canvasHeight / this.imgHeight
+        } else { // clientWidth <= clientHeight
+          //img: landscape  screen: portrait
+          this.canvasWidth = clientHeight
+          this.canvasHeight = clientWidth
+          this.rotate = true;
         }
-  
-        this.positionAdaption = {
-          x: (parseInt(this.canvasWidth) - parseInt(this.imgWidth * this.scaleAdaption)) / 2,
-          y: (parseInt(this.canvasHeight) - parseInt(this.imgHeight * this.scaleAdaption)) / 2
-        }
+        this.scaleAdaption = this.canvasWidth / this.imgWidth
+        if (this.imgHeight * this.scaleAdaption > this.canvasHeight) this.scaleAdaption = this.canvasHeight / this.imgHeight
       }
+
+      this.positionAdaption = {
+        x: (parseInt(this.canvasWidth) - parseInt(this.imgWidth * this.scaleAdaption)) / 2,
+        y: (parseInt(this.canvasHeight) - parseInt(this.imgHeight * this.scaleAdaption)) / 2
+      };
     }
 
   },
@@ -1062,37 +1090,38 @@ export default {
     try {
       this.mapType = this.$route.params.buildingId ? 'floor' : 'campus'
 
-      this.canvas = this.$refs.canvas;
-      this.context = this.canvas.getContext("2d");
-
-      this.loadImage(require("assets/images/sprite/marker-sprite.png")).then(image => this.imageMap["markers"] = image)
-      this.loadImage(require("assets/images/icon/eye.png")).then(image => this.imageMap["eye"] = image)
-      this.loadImage(require("assets/images/sprite/icon-sprite.png")).then(image => this.imageMap["facilitySprite"] = image)
-
       let data
       if (this.mapType === 'floor') {
-        this.loadImage(require("assets/images/icon/group.png")).then(image => this.imageMap["group"] = image)
-        this.loadImage(require("assets/images/sprite/arrow-sprite.png")).then(image => this.imageMap["arrowSprite"] = image)
-
         const buildingId = parseInt(this.$route.params.buildingId)
         const floorId = parseInt(this.$route.params.floorId)
-        data = await this.$api.floor.getFloorInfo(buildingId, floorId)
+        data = await this.$api.floor.getFloorInfo(buildingId, floorId);
         console.log(data)
         this.selectedFloor = data.selectedFloor || {}
         this.floorList = data.floorList || []
-        this.buildingCode = data.building?.code || ""
-      } else {
-        this.loadImage(require("assets/images/icon/location-marker.png")).then(image => this.imageMap["locationMarker"] = image)
-        // this.imageMap["locationProbe"] = await this.loadImage(require("assets/images/icon/location-probe.png"))
-        this.loadImage(require("assets/images/icon/location-circle.png")).then(image => this.imageMap["locationCircle"] = image)
+        this.buildingCode = data.building?.code
 
+        this.imageMap['map'] = await this.loadImage(process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl)
+        this.imageMap['group'] = await this.loadImage(require('assets/images/icon/group.png'))
+        this.imageMap['arrowSprite'] = await this.loadImage(require('assets/images/sprite/arrow-sprite.png'))
+      } else {
         data = await this.$api.floor.getCampusInfo()
         console.log(data)
+
+        this.imageMap['map'] = await this.loadImage(require('assets/images/map/campus/map.png'))
+        this.imageMap['locationMarker'] = await this.loadImage(require('assets/images/icon/location-marker.png'))
+        // this.imageMap['locationProbe'] = await this.loadImage(require('assets/images/icon/location-probe.png'))
+        this.imageMap['locationCircle'] = await this.loadImage(require('assets/images/icon/location-circle.png'))
+        this.imageMap["fromDirectionMarker"] = await this.loadImage(require('assets/images/icon/location-marker.png'))
+        this.imageMap["toDirectionMarker"] = await this.loadImage(require('assets/images/icon/location-circle.png'))
       }
+      this.imageMap['markers'] = await this.loadImage(require('assets/images/sprite/marker-sprite.png'))
+      this.imageMap["eye"] = await this.loadImage(require('assets/images/icon/eye.png'))
+      this.imageMap["facilitySprite"] = await this.loadImage(require('assets/images/sprite/icon-sprite.png'))
 
       this.placeList = this.placeList.concat(data.facilityList || [], data.roomList || [], data.buildingList || [])
 
-      this.imageMap["map"] = await this.loadImage(this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage)
+      this.canvas = this.$refs.indoorMap;
+      this.context = this.canvas.getContext("2d");
 
       this.imgWidth = parseInt(this.imageMap['map'].width)
       this.imgHeight = parseInt(this.imageMap['map'].height)
@@ -1104,10 +1133,55 @@ export default {
 
       this.resizeWindow()
 
+      // this.iconSize = Math.max(this.canvasWidth, this.canvasHeight) || 0
+      // this.iconSize = parseInt(this.iconSize * 0.03)
+
+      this.virtualButton.size = 40
+
       this.checkRequestAnimationFrame();
-      window.requestAnimationFrame(this.animate);
+      requestAnimationFrame(this.animate);
 
       if (!this.loadingError) this.loading = false
+      this.$nextTick(() => {
+        if (this.$route.name === 'Place') {
+          const item = this.placeList.find(e => e.id === parseInt(this.$route.params.id) && e.placeType === this.$route.params.type)
+          if (item) {
+            this.setSelectedPlace(item)
+            this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'middle', 3)
+            this.$store.commit('setGlobalText', item.name || "")
+          } else {
+            this.$router.push({name: 'PageNotFound'})
+          }
+        } else if (this.$route.name === "Direction") {
+          if (this.globalFromId && JSON.stringify(this.fromDirectionMarker) === "{}") {
+            const [id, placeType] = this.globalFromId.split("|")
+            const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+            if (place && JSON.stringify(place) !== "{}") {
+              this.fromDirectionMarker = {
+                x: place.location?.x,
+                y: place.location?.y,
+                areaPointList: place.areaPointList,
+                type: place.placeType,
+                id: place.id,
+                name: place.name
+              }
+            }
+          }
+          if (this.globalToId && JSON.stringify(this.toDirectionMarker) === "{}") {
+            const [id, placeType] = this.globalToId.split("|")
+            const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
+            if (place && JSON.stringify(place) !== "{}")
+              this.toDirectionMarker = {
+                x: place.location?.x,
+                y: place.location?.y,
+                areaPointList: place.areaPointList,
+                type: place.placeType,
+                id: place.id,
+                name: place.name
+              }
+          }
+        }
+      })
     } catch (error) {
       console.log(error)
       this.loadingError = true
@@ -1126,6 +1200,7 @@ export default {
       // a => null cX lV rV
       if (oldVal && oldVal.x && oldVal.y && this.$route.name !== "Direction") {
         this.lastMarkerAnimation = {
+          triggered: true,
           duration: 0,
           x: oldVal.x,
           y: oldVal.y,
@@ -1135,10 +1210,11 @@ export default {
       if (val) {
         if (JSON.stringify(val) !== "{}") {
           this.currentMarkerAnimation = {
+            triggered: true,
             duration: 0,
             x: val.x,
             y: val.y,
-            markerType: val.iconType || "default",
+            markerType: val.iconType || "default"
           }
           if (!(this.$route.name === "Place" && this.$route.params.type == val.placeType && this.$route.params.id == val.id))
             this.$router.push({
@@ -1166,60 +1242,6 @@ export default {
             }, 500)
           }
         }
-      }
-    },
-    placeList: {
-      immediate: true,
-      handler: function(val) {
-        if (val?.length) {
-          if (this.$route.name === 'Place') {
-            const item = this.placeList.find(e => e.id === parseInt(this.$route.params.id) && e.placeType === this.$route.params.type)
-            if (item) {
-              this.setSelectedPlace(item)
-              this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'middle', 3)
-              this.$store.commit('setGlobalText', item.name || "")
-            } else {
-              this.$router.push({name: 'PageNotFound'})
-            }
-          } else if (this.$route.name === "Direction") {
-            if (this.globalFromId && JSON.stringify(this.fromDirectionMarker) === "{}") {
-              const [id, placeType] = this.globalFromId.split("|")
-              const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
-              if (place && JSON.stringify(place) !== "{}") {
-                this.fromDirectionMarker = {
-                  x: place.location?.x,
-                  y: place.location?.y,
-                  areaPointList: place.areaPointList,
-                  type: place.placeType,
-                  id: place.id,
-                  name: place.name
-                }
-              }
-            }
-            if (this.globalToId && JSON.stringify(this.toDirectionMarker) === "{}") {
-              const [id, placeType] = this.globalToId.split("|")
-              const place = this.placeList.find(e => e.id === parseInt(id) && e.placeType === placeType)
-              if (place && JSON.stringify(place) !== "{}")
-                this.toDirectionMarker = {
-                  x: place.location?.x,
-                  y: place.location?.y,
-                  areaPointList: place.areaPointList,
-                  type: place.placeType,
-                  id: place.id,
-                  name: place.name
-                }
-            }
-          }
-        }
-      }
-    },
-    displayVirtualButton(val) {
-      if (val) {
-        this.virtualButton.mselected = false
-        const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
-        const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
-        this.virtualButton.position.x = parseInt(canvasWidth * 0.98 - this.virtualButton.size)
-        this.virtualButton.position.y = parseInt((canvasHeight - this.virtualButton.size) / 2)
       }
     },
     occupationActivated (val) {
@@ -1283,20 +1305,17 @@ export default {
           }
         }
 
-        this.gateIntervalId = setInterval(() => {
-          const targetTimezone = -8
-          let currentTime = new Date()
-          const east8time = currentTime.getTime() + currentTime.getTimezoneOffset() * 60 * 1000 - (targetTimezone * 60 * 60 * 1000)
-          currentTime = new Date(east8time)
-          console.log(currentTime)
-          this.currentHour = currentTime.getHours() + currentTime.getMinutes() / 60
-        }, 1000 * 60)
+        const targetTimezone = -8
+        let currentTime = new Date()
+        const east8time = currentTime.getTime() + currentTime.getTimezoneOffset() * 60 * 1000 - (targetTimezone * 60 * 60 * 1000)
+        currentTime = new Date(east8time)
+        console.log(currentTime)
+        this.currentHour = currentTime.getHours() + currentTime.getMinutes() / 60
       } else {
         if (this.gateRequesting) {
           this.$alert.close()
           this.gateRequesting = false
         }
-        if (this.gateIntervalId) clearInterval(this.gateIntervalId)
       }
     },
 
@@ -1408,10 +1427,24 @@ export default {
         if (to.name === "Direction")
           this.lastMarkerAnimation = {
             ...this.lastMarkerAnimation,
-            duration: 0.51
+            triggered: false,
+            duration: 0.5
           }
       }
+
+      if (from.name === "Direction" && to.name !== "Direction") {
+        this.$store.commit("direction/setGlobalFromText", "")
+        this.$store.commit("direction/setGlobalToText", "")
+        this.$store.commit("direction/setGlobalFromId", "")
+        this.$store.commit("direction/setGlobalToId", "")
+        this.$store.commit("direction/setGlobalPathList", [])
+      }
     }
+
+    $('[data-toggle="tooltip"]').tooltip("dispose");
+    $('[data-tooltip="tooltip"]').tooltip("dispose");
+    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-tooltip="tooltip"]').tooltip();
     next()
   },
 

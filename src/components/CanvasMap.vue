@@ -1,92 +1,42 @@
 <template>
-  <div style="overflow: hidden;">
-    <canvas ref="canvas"
-      @mousedown="onmousedown"
-      @mouseup="onmouseup"
-      @mousemove="onmousemove"
-      @mousewheel="onmousewheel">[Your browser is too old!]</canvas>
-
-    <search-bar ref="searchBar"></search-bar>
-    <modal ref="modal"></modal>
-    <search-history-modal v-show="displaySearchHistory"></search-history-modal>
-    <direction-modal v-show="displayDirection" ref="directionModal"></direction-modal>
-
-    <button-group
-      v-show="!displayVirtualButton"
-      :scale="scale.x"
-      :button-list="buttonList"
-      :current-floor="selectedFloor"
-      :floor-list="floorList"
-      :building-code="buildingCode"
-      :occupation-time="occupationTime"
-      :occupation-requesting="occupationRequesting"
-      :gate-requesting="gateRequesting"
-      :loading="loading"
-      @zoom="zoomMap(arguments)"></button-group>
-
-    <datetime
-      type="datetime"
-      v-model="occupationTime"
-      format="yyyy-MM-dd HH:mm"
-      value-zone="Asia/Shanghai"
-      zone="Asia/Shanghai"
-      min-datetime="2019-08-26T00:00:00.000+08:00"
-      max-datetime="2020-02-16T23:59:59.000+08:00"
-      ref="dt"
-      class="theme-mobile"
-      input-id="datetime"
-      :input-style="datetimeStyle"
-      @input="datetimeInput"
-      @close="datetimeClose">
-      <template slot="button-cancel">
-        {{$t('datePicker.cancel')}}
-      </template>
-      <template slot="button-confirm" slot-scope="scope">
-        <span v-if='scope.step !== "time"'>{{$t('datePicker.next')}}</span>
-        <span v-else>{{$t('datePicker.ok')}}</span>
-      </template>
-    </datetime>
-
-    <loading-panel
-      v-if="loading"
-      :has-error="loadingError"
-      class="canvas-map-loading-panel"
-      @refresh="$router.go(0)">
-    </loading-panel>
-  </div>
+  <canvas ref="canvas"
+    @mousedown="onmousedown"
+    @mousewheel="onmousewheel">[Your browser is too old!]</canvas>
 </template>
 
 <script>
-import SearchBar from 'components/SearchBar'
-import ButtonGroup from 'components/ButtonGroup'
-import Modal from 'components/Modal'
-import SearchHistoryModal from 'components/SearchHistoryModal'
-import DirectionModal from "components/DirectionModal"
-import LoadingPanel from "components/LoadingPanel"
-
 import iconSpriteInfo from "assets/json/iconSpriteInfo.json"
 import markerSpriteInfo from "assets/json/markerSpriteInfo.json"
 import arrowSpriteInfo from "assets/json/arrowSpriteInfo.json"
 import { easeOutBack, easeOutCirc, arrowAnimation, locationAnimation } from 'utils/utilFunctions.js'
-import weekInfo from 'assets/json/week.json'
-import { DateTime, Interval } from 'luxon'
 
 import { mapState } from 'vuex';
 
 export default {
   name: "CanvasMap",
-  components: {
-    SearchBar,
-    ButtonGroup,
-    Modal,
-    SearchHistoryModal,
-    DirectionModal,
-    LoadingPanel
+  props: {
+    placeList: {
+      type: Array,
+      default: () => []
+    },
+    mapUrl: {
+      type: String,
+    },
+    occupiedRoomList: {
+      type: Array,
+      default: () => []
+    },
+    gateList: {
+      type: Array,
+      default: () => []
+    },
+    geolocation: {
+      type: Object,
+      default: () => {}
+    }
   },
   data() {
     return {
-      campusImage: require("assets/images/map/campus/map.png"),
-      mapType: null,
       rotate: false,
       canvas: null,
       context: null,
@@ -108,57 +58,41 @@ export default {
         x: 1,
         y: 1
       },
-      focusPointer: {
+      focusedPoint: {
         x: 0,
         y: 0
       },
-      lastX: null,
-      lastY: null,
+      lastMouseX: null,
+      lastMouseY: null,
       init: false,
       mdown: false, // desktop drag
+      mclick: false,
       mdowntime: null,
       clickTimeoutId: 0,
       lastClickTime: null,
       lastDoubleClick: false,
-      buildingCode: null,
-      selectedFloor: {},
       selectedPlace: {},
-      occupiedRoomList: [],
-      placeList: [],
-      floorList: [],
-      gateList: null,
+      markerAnimationDuration: 0.5,
       lastMarkerAnimation: {
         x: 0,
         y: 0,
         markerType: "default",
-        duration: -1
+        timer: -1
       },
       currentMarkerAnimation: {
         x: 0,
         y: 0,
         markerType: "default",
-        duration: -1,
-      },
-      zoomAnimation: {
-        triggered: false,
-        times: 0,
-        totalZoom: 0,
+        timer: -1
       },
       fromDirectionMarker: {},
       toDirectionMarker: {},
       location: {
         x: null,
         y: null,
-        timer: 0
       },
-      geoWatchId: null,
-      occupationTime: null,
       iconSize: 32,
       mapMarginColor: null,
-      loading: true,
-      loadingError: false,
-      occupationRequesting: false,
-      gateRequesting: false,
       virtualButton: {
         position: {
           x: 100,
@@ -169,13 +103,30 @@ export default {
       },
       currentHour: 0,
       gateIntervalId: null,
-      arrowTimer: 0,
+      arrowAnimation: {
+        duration: 0.5,
+        timer: 0
+      },
+      locationAnimation: {
+        duration: 2,
+        timer: 0
+      },
+      locationUrlTimeout: null,
+      mousedownActivated: false,
+      mapAnimation: {
+        x: null,
+        y: null,
+        initialScale: 1,
+        deltaX: 0,
+        deltaY: 0,
+        deltaScale: 0,
+        timer: -1,
+        duration: 0
+      }
     }
   },
   computed: {
     ...mapState({
-      displaySearchHistory: state => state.searchHistory.displaySearchHistory,
-      displayDirection: state => state.direction.displayDirection,
       globalFromText: state => state.direction.globalFromText,
       globalToText: state => state.direction.globalToText,
       globalFromId: state => state.direction.globalFromId,
@@ -185,18 +136,7 @@ export default {
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
       locationActivated: state => state.button.locationActivated
-    }),
-    buttonList () {
-      const buttonList = this.mapType === "floor" ? ["floor","home"] : ["location"]
-      if (this.mapType === "floor") {
-        if (this.selectedFloor.hasGate) buttonList.push("gate")
-        if (this.selectedFloor.hasOccupation) buttonList.push("occupation")
-      }
-      return buttonList
-    },
-    datetimeStyle () {
-      return null
-    }
+    })
   },
   methods: {
     animate () {
@@ -213,23 +153,26 @@ export default {
         this.init = true;
       }
 
-      if (this.zoomAnimation.triggered) {
-        const totalZoom = this.zoomAnimation.totalZoom
-        const zoom = totalZoom / Math.abs(totalZoom) * 20
-        this.zoomMap(zoom)
-        this.zoomAnimation.times++
-        if (this.zoomAnimation.times * Math.abs(zoom) >= Math.abs(totalZoom)) this.zoomAnimation.triggered = false
+      if (this.mapAnimation.timer >= 0 && this.mapAnimation.timer <= this.mapAnimation.duration) {
+        const t = this.mapAnimation.timer
+        const nt = (t + 0.016) > this.mapAnimation.duration ? this.mapAnimation.duration : t + 0.016
+        const deltaX = easeOutCirc(nt, 0, this.mapAnimation.deltaX, this.mapAnimation.duration) - easeOutCirc(t, 0, this.mapAnimation.deltaX, this.mapAnimation.duration)
+        const deltaY = easeOutCirc(nt, 0, this.mapAnimation.deltaY, this.mapAnimation.duration) - easeOutCirc(t, 0, this.mapAnimation.deltaY, this.mapAnimation.duration)
+        const deltaScale = easeOutCirc(nt, 0, this.mapAnimation.deltaScale, this.mapAnimation.duration) - easeOutCirc(t, 0, this.mapAnimation.deltaScale, this.mapAnimation.duration)
+        // const deltaX = (nt - t) / this.mapAnimation.duration * this.mapAnimation.deltaX
+        // const deltaY = (nt - t) / this.mapAnimation.duration * this.mapAnimation.deltaY 
+        // const deltaScale = (nt - t) / this.mapAnimation.duration * this.mapAnimation.deltaScale 
+        if (this.mapAnimation.x != null && this.mapAnimation.y != null) this.focusedPoint = { ...this.getImageToCanvasPoint({ x: this.mapAnimation.x, y: this.mapAnimation.y }) }
+        this.manipulateMap(deltaX, deltaY, deltaScale)
+        this.mapAnimation.timer += 0.016
       }
 
-      if (this.scale.x <= 1 && (this.position.x !== 0 || this.position.y !== 0)) this.position.x = this.position.y = 0
-      const currentWidth = this.imgWidth * this.scaleAdaption * this.scale.x
-      const currentHeight = this.imgHeight * this.scaleAdaption * this.scale.y
-      if (this.position.x + currentWidth + this.positionAdaption.x < this.canvasWidth - this.positionAdaption.x) this.position.x = this.canvasWidth - 2 * this.positionAdaption.x - currentWidth
-      if (this.position.y + currentHeight + this.positionAdaption.y < this.canvasHeight - this.positionAdaption.y) this.position.y = this.canvasHeight - 2 * this.positionAdaption.y - currentHeight
+      // this.validateScale()
+      // this.validatePosition()
 
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
       // indoor map drawing function
-      this.drawMapInfo();
+      this.drawMapInfo()
       window.requestAnimationFrame(this.animate)
     },
 
@@ -243,25 +186,37 @@ export default {
         ctx.rotate(Math.PI / 2)
       }
 
-      // console.log("drawing", this.mapMarginColor)
       if (this.mapMarginColor) {
         ctx.fillStyle = this.mapMarginColor
         ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
       }
 
-      this.drawImage(this.imageMap['map'], 0, 0, this.imgWidth, this.imgHeight, 0, 0, false, false)
+      this.drawImage(this.imageMap["map"], 0, 0, this.imgWidth, this.imgHeight, 0, 0, false, false)
+
+      // const { x: px, y: py } = this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 }, false)
+      // this.context.moveTo(px - 10, py)
+      // this.context.lineTo(px + 10, py)
+      // this.context.stroke()
+      // this.context.moveTo(px, py - 10)
+      // this.context.lineTo(px, py + 10)
+      // this.context.stroke()
+      // if (this.mapAnimation.x != null && this.mapAnimation.y != null) {
+      //   const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.mapAnimation.x, y: this.mapAnimation.y })
+      //   this.context.moveTo(px, py)
+      //   this.context.lineTo(canvasX, canvasY)
+      //   this.context.stroke()
+      // }
 
       // Gate arrow
       if (this.gateActivated && this.gateList) {
-        const arrowDuration = 0.5
-        const augY = arrowAnimation(this.arrowTimer, -20, arrowDuration)
+        const augY = arrowAnimation(this.arrowAnimation.timer, -20, this.arrowAnimation.duration)
         const size = 60
         this.gateList.forEach((e) => {
           this.drawImage(this.imageMap["arrowSprite"], e.location.x, e.location.y, size, size, size/2, 0, true, false, 
           (arrowSpriteInfo[e.arrow]["column"] - 1) * arrowSpriteInfo[e.arrow]["width"], (arrowSpriteInfo[e.arrow]["row"] - 1) * arrowSpriteInfo[e.arrow]["height"], arrowSpriteInfo[e.arrow]["width"], arrowSpriteInfo[e.arrow]["height"],
           e.direction, 0, (this.currentHour >= e.startTime && this.currentHour < e.endTime) ? augY : 0)
         })
-        this.arrowTimer = (this.arrowTimer + 0.016 > arrowDuration) ? 0 : this.arrowTimer + 0.016
+        this.arrowAnimation.timer = (this.arrowAnimation.timer + 0.016 > this.arrowAnimation.duration) ? 0 : this.arrowAnimation.timer + 0.016
       }
 
       if (!this.occupationActivated) {
@@ -281,7 +236,7 @@ export default {
             ctx.lineJoin = 'round'
             ctx.beginPath()
             pointList.forEach((point, j) => {
-              const { x, y } = this.getTransformedPoint(point)
+              const { x, y } = this.getImageToCanvasPoint(point)
               if (j === 0) ctx.moveTo(x, y)
               else ctx.lineTo(x, y)
             })
@@ -294,7 +249,7 @@ export default {
           //   if (i > 0) {
           //     const pointList = path.pointList || []
           //     const point = pointList.length ? pointList[0] : null
-          //     const { x, y } = this.getTransformedPoint(point)
+          //     const { x, y } = this.getImageToCanvasPoint(point)
           //     ctx.beginPath()
           //     ctx.arc(x, y, 2, 0, 2*Math.PI)
           //     ctx.fill()
@@ -315,18 +270,18 @@ export default {
         }
 
         if (this.$route.name !== "Direction") {
-          if (this.lastMarkerAnimation.duration >= 0 && this.lastMarkerAnimation.duration <= 0.5) {
-            const t = this.lastMarkerAnimation.duration
-            const size = t < 0.5 ? easeOutCirc(t, this.iconSize*2, -this.iconSize*1.9, 0.5) : 0
-            if (t < 0.5) this.lastMarkerAnimation.duration += 0.016
+          if (this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration) {
+            const t = this.lastMarkerAnimation.timer
+            const size = t < this.markerAnimationDuration ? easeOutCirc(t, this.iconSize*2, -this.iconSize*1.9, this.markerAnimationDuration) : 0
             this.drawMarker(this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, this.lastMarkerAnimation.markerType)
+            this.lastMarkerAnimation.timer += 0.016
           }
 
           if (JSON.stringify(this.selectedPlace) !== "{}") {
-            const t = this.currentMarkerAnimation.duration
-            const size = t < 0.5 ? easeOutBack(t, this.iconSize*2/3, this.iconSize*2*2/3, 0.5) : this.iconSize*2
-            if (t < 0.5) this.currentMarkerAnimation.duration += 0.016
+            const t = this.currentMarkerAnimation.timer
+            const size = t < this.markerAnimationDuration ? easeOutBack(t, this.iconSize*2/3, this.iconSize*2*2/3, this.markerAnimationDuration) : this.iconSize*2
             this.drawMarker(this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, this.currentMarkerAnimation.markerType)
+            if (t < this.markerAnimationDuration) this.currentMarkerAnimation.timer += 0.016
           }
         } else {
           if (JSON.stringify(this.fromDirectionMarker) !== "{}") this.drawMarker(this.fromDirectionMarker.x, this.fromDirectionMarker.y, this.iconSize * 2, "fromDir")
@@ -345,10 +300,9 @@ export default {
       if (this.locationActivated && this.location.x && this.location.y) {
         const size = parseInt(this.iconSize * 1.5)
         this.drawImage(this.imageMap["locationMarker"], this.location.x, this.location.y, size, size, size/2, size/2, true, false)
-        const locationDuration = 2
-        const aniSize = parseInt(size * 0.3 + locationAnimation(this.location.timer, size * 0.15, locationDuration))
+        const aniSize = parseInt(size * 0.3 + locationAnimation(this.locationAnimation.timer, size * 0.15, this.locationAnimation.duration))
         this.drawImage(this.imageMap["locationCircle"], this.location.x, this.location.y, aniSize, aniSize, aniSize/2, aniSize/2, true, false)
-        this.location.timer = (this.location.timer + 0.016 > locationDuration) ? 0 : this.location.timer + 0.016
+        this.locationAnimation.timer = (this.locationAnimation.timer + 0.016 > this.locationAnimation.duration) ? 0 : this.locationAnimation.timer + 0.016
       }
 
       if (this.displayVirtualButton) {
@@ -366,7 +320,7 @@ export default {
       ctx.restore()
     },
 
-    drawImage () {
+    drawImage() {
       if (!(arguments.length === 9 
         || arguments.length === 10 
         || arguments.length === 12 
@@ -416,7 +370,7 @@ export default {
       }
 
       const ctx = this.context
-      if (degree != null && typeof(degree) != undefined) {
+      if (degree != null) {
         ctx.save();
         ctx.translate(x * scaleX + offsetX, y * scaleY + offsetY);
         ctx.rotate(degree * Math.PI / 180);
@@ -445,7 +399,7 @@ export default {
         ctx.translate(this.canvasHeight, 0)
         ctx.rotate(Math.PI / 2)
       }
-      if (degree != null && typeof(degree) != undefined) ctx.restore();
+      if (degree != null) ctx.restore();
     },
 
     drawPolygon (pointList) {
@@ -459,7 +413,7 @@ export default {
         ctx.lineJoin = 'round'
         ctx.beginPath()
         pointList.forEach((e, index) => {
-          const { x, y } = this.getTransformedPoint(e)
+          const { x, y } = this.getImageToCanvasPoint(e)
           if (index == 0) ctx.moveTo(x, y)
           else ctx.lineTo(x, y)
         })
@@ -480,10 +434,17 @@ export default {
       ctx.shadowBlur = 0
     },
 
-    getTransformedPoint ({ x = 0, y = 0 }) {
+    getImageToCanvasPoint({ x = 0, y = 0 }) {
       return {
         x: x * this.scale.x * this.scaleAdaption + this.position.x + this.positionAdaption.x,
         y: y * this.scale.y * this.scaleAdaption + this.position.y + this.positionAdaption.y
+      }
+    },
+
+    getCanvasToImagePoint({ x = 0, y = 0 }) {
+      return {
+        x: (x - this.positionAdaption.x - this.position.x) / (this.scale.x * this.scaleAdaption),
+        y: (y - this.positionAdaption.y - this.position.y) / (this.scale.y * this.scaleAdaption)
       }
     },
 
@@ -494,81 +455,80 @@ export default {
       }
     },
 
-    zoomMap (args) {
-      const zoom = args[0] || args
-      if (!zoom) return
+    validateScale(newScale = this.scale.x) {
+      newScale = Math.ceil(newScale * 10000) / 10000
 
-      if (args[1] === 'button') {
-        this.focusPointer = {
-          x: this.canvasWidth / 2,
-          y: this.canvasHeight / 2,
-        }
+      if (newScale > 4) newScale = 4
+      else if (newScale < 1) newScale = 1
+      
+      if (this.scale.x !== newScale && this.scale.x === this.scale.y) {
+        this.scale.x = newScale
+        this.scale.y = newScale
       }
-
-      if (Math.abs(zoom) >= 200) {
-        this.zoomAnimation.triggered = true
-        this.zoomAnimation.totalZoom = zoom
-        this.zoomAnimation.times = 0
-        return
-      }
-
-      // new scale
-      let newScale = this.scale.x + zoom / 400;
-
-      if (newScale > 1) {
-        if (newScale > 4) {
-          newScale = 4
-          this.zoomAnimation.triggered = false
-        } else {
-          newScale = this.scale.x + zoom / 400;
-        }
-      } else {
-        newScale = 1
-        this.zoomAnimation.triggered = false
-      }
-
-      let newPosX = this.focusPointer.x - this.positionAdaption.x - (this.focusPointer.x - this.positionAdaption.x - this.position.x) * newScale / this.scale.x;
-      let newPosY = this.focusPointer.y - this.positionAdaption.y - (this.focusPointer.y - this.positionAdaption.y - this.position.y) * newScale / this.scale.y;
-      // edges cases
-      const newWidth = this.canvasWidth * newScale;
-      const newHeight = this.canvasHeight * newScale;
-      if (newWidth < this.canvasWidth) return
-      if (newPosX > 0) newPosX = 0
-      if (newPosX + newWidth < this.canvasWidth) newPosX = this.canvasWidth - newWidth
-
-      if (newHeight < this.canvasHeight) return
-      if (newPosY > 0) newPosY = 0
-      if (newPosY + newHeight < this.canvasHeight) newPosY = this.canvasHeight - newHeight
-
-      // finally affectations
-      this.scale.x = newScale;
-      this.scale.y = newScale;
-      this.position.x = newPosX;
-      this.position.y = newPosY;
     },
 
-    moveMap (relativeX, relativeY) {
-      if (this.lastX && this.lastY) {
-        const deltaX = relativeX - this.lastX;
-        const deltaY = relativeY - this.lastY;
+    validatePosition(newPosX = this.position.x, newPosY = this.position.y) {
+      // edges cases
+      const currentWidth = this.imgWidth * this.scaleAdaption * this.scale.x
+      const currentHeight = this.imgHeight * this.scaleAdaption * this.scale.y
 
-        const currentWidth = (this.imgWidth * this.scaleAdaption * this.scale.x);
-				const currentHeight = (this.imgHeight * this.scaleAdaption * this.scale.y);
+      if (newPosX + currentWidth + this.positionAdaption.x < this.canvasWidth - this.positionAdaption.x) 
+        newPosX = this.canvasWidth - 2 * this.positionAdaption.x - currentWidth
+      if (newPosX > 0) newPosX = 0
 
-        this.position.x += deltaX;
-        this.position.y += deltaY;
+      if (newPosY + currentHeight + this.positionAdaption.y < this.canvasHeight - this.positionAdaption.y) 
+        newPosY = this.canvasHeight - 2 * this.positionAdaption.y - currentHeight
+      if (newPosY > 0) newPosY = 0
 
-        // edge cases
-        if (this.position.x > 0) this.position.x = 0;
-        else if (this.position.x + currentWidth + this.positionAdaption.x < this.canvasWidth - this.positionAdaption.x)
-          this.position.x = this.canvasWidth - 2 * this.positionAdaption.x - currentWidth
+      if (this.position.x !== newPosX) this.position.x = newPosX
+      if (this.position.y !== newPosY) this.position.y = newPosY
+    },
 
-        if (this.position.y > 0) this.position.y = 0;
-        else if (this.position.y + currentHeight + this.positionAdaption.y < this.canvasHeight - this.positionAdaption.y)
-					this.position.y = this.canvasHeight - 2 * this.positionAdaption.y - currentHeight
+    zoomMap(mZoom) {
+      if (!mZoom) return
+
+      // new scale
+      const newScale = this.scale.x + mZoom / 400;
+      const oldScale = this.scale.x
+      this.validateScale(newScale)
+
+      const newPosX = this.focusedPoint.x - this.positionAdaption.x - (this.focusedPoint.x - this.positionAdaption.x - this.position.x) * this.scale.x / oldScale
+      const newPosY = this.focusedPoint.y - this.positionAdaption.y - (this.focusedPoint.y - this.positionAdaption.y - this.position.y) * this.scale.y / oldScale
+      this.validatePosition(newPosX, newPosY)
+    },
+
+    moveMap(deltaCanvasX, deltaCanvasY) {
+      if (deltaCanvasX == null || deltaCanvasY == null) return
+
+      const newPosX = this.position.x + deltaCanvasX
+      const newPosY = this.position.y + deltaCanvasY
+      this.validatePosition(newPosX, newPosY)
+    },
+
+    manipulateMap() {
+      if (!(arguments.length >= 1 && arguments.length <= 3)) throw new Error("Invalid argument number.")
+      
+      let deltaX = 0, deltaY = 0, deltaScale = 0
+      if (arguments.length === 3) {
+        deltaX = arguments[0] || 0
+        deltaY = arguments[1] || 0
+        deltaScale = arguments[2] || 0
+      } else if (arguments.length === 2) {
+        deltaX = arguments[0] || 0
+        deltaY = arguments[1] || 0
+      } else {
+        deltaScale = arguments[0] || 0
       }
-      this.lastX = relativeX;
-      this.lastY = relativeY;
+
+      const oldScale = this.scale.x
+      const newScale = this.scale.x + deltaScale
+      this.validateScale(newScale)
+
+      let newPosX = oldScale === this.scale.x ? this.position.x : (this.focusedPoint.x - this.positionAdaption.x - (this.focusedPoint.x - this.positionAdaption.x - this.position.x) * this.scale.x / oldScale)
+      let newPosY = oldScale === this.scale.y ? this.position.y : (this.focusedPoint.y - this.positionAdaption.y - (this.focusedPoint.y - this.positionAdaption.y - this.position.y) * this.scale.y / oldScale)
+      newPosX += deltaX
+      newPosY += deltaY
+      this.validatePosition(newPosX, newPosY)
     },
 
     checkRequestAnimationFrame () {
@@ -659,14 +619,14 @@ export default {
       return this.placeList.find(element => {
         if (!element.areaPointList) {
           if (!element.iconLevel || (this.scale.x < element.iconLevel || this.scale.y < element.iconLevel)) return
-          const { x, y } = this.getTransformedPoint(element.location)
+          const { x, y } = this.getImageToCanvasPoint(element.location)
           ctx.beginPath()
           ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
         } else {
           ctx.beginPath()
           const pointList = element.areaPointList || []
           pointList.forEach((e, index) => {
-            const { x, y } = this.getTransformedPoint(e)
+            const { x, y } = this.getImageToCanvasPoint(e)
             if (index == 0) ctx.moveTo(x, y)
             else ctx.lineTo(x, y)
           })
@@ -675,16 +635,18 @@ export default {
       })
     },
 
-    onmousewheel (e) {
-      this.focusPointer = {...this.getMousePoint({ x: e.clientX, y: e.clientY })}
-      this.zoomMap(-e.deltaY / 5)
+    onmousewheel(e) {
+      this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
+      // this.zoomMap(-e.deltaY / 5)
+      this.manipulateMap(-e.deltaY / 5 / 400)
       this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
+      // console.log(this.position.x, this.position.y, this.scale.x)
     },
 
-    onmousedown (e) {
+    onmousedown(e) {
       // console.log('mousedown')
-      this.lastX = null;
-      this.lastY = null;
+      this.lastMouseX = null;
+      this.lastMouseY = null;
       this.mdowntime = new Date().getTime();
       this.mdown = true;
 
@@ -700,9 +662,10 @@ export default {
       }
     },
 
-    onmousemove (e) {
+    onmousemove(e) {
       // console.log('mousemove')
-      if (this.canvas && e.target == this.canvas) {
+      // if (this.canvas && e.target == this.canvas) {
+      if (this.canvas) {
         if (this.displayVirtualButton && this.virtualButton.mselected) {
           this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
@@ -716,7 +679,10 @@ export default {
         } else if (e.buttons === 1 && this.mdown) {
           this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-          this.moveMap(px, py)
+          // if (this.lastMouseX != null && this.lastMouseY != null) this.moveMap(px - this.lastMouseX, py - this.lastMouseY)
+          if (this.lastMouseX != null && this.lastMouseY != null) this.manipulateMap(px - this.lastMouseX, py - this.lastMouseY)
+          this.lastMouseX = px
+          this.lastMouseY = py
         } else {
           this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
         }
@@ -724,7 +690,7 @@ export default {
       }
     },
 
-    onmouseup (e) {
+    onmouseup(e) {
       // console.log('mouseup')
       this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
       const currentTime = Date.now()
@@ -746,14 +712,22 @@ export default {
           return
         }
 
-        if (!(this.currentMarkerAnimation.duration >= 0 && this.currentMarkerAnimation.duration <= 0.5) 
-          && !(this.lastMarkerAnimation.duration >= 0 && this.lastMarkerAnimation.duration <= 0.5)) {
+        if (!(this.currentMarkerAnimation.timer >= 0 && this.currentMarkerAnimation.timer <= this.markerAnimationDuration) 
+          && !(this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration)) {
           if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
             if (!this.lastDoubleClick) {  // second click
-              const { x, y } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-              this.focusPointer.x = x
-              this.focusPointer.y = y
-              this.zoomMap(200)
+              this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
+              // this.zoomMap(200)
+              // this.manipulateMap(0.5)
+              this.mapAnimation = {
+                x: null,
+                y: null,
+                deltaX: 0,
+                deltaY: 0,
+                deltaScale: 0.5,
+                timer: 0,
+                duration: 0.1
+              }
 
               this.lastClickTime = currentTime
               this.lastDoubleClick = true
@@ -766,12 +740,15 @@ export default {
           this.lastClickTime = currentTime
           this.lastDoubleClick = false
         }
+      } else {
+        if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
+        this.setLocationUrl()
       }
     },
 
     chooseItem (e) {
-      if (!(this.currentMarkerAnimation.duration >= 0 && this.currentMarkerAnimation.duration <= 0.5) 
-        && !(this.lastMarkerAnimation.duration >= 0 && this.lastMarkerAnimation.duration <= 0.5)) {
+      if (!(this.currentMarkerAnimation.timer >= 0 && this.currentMarkerAnimation.timer <= this.markerAnimationDuration) 
+        && !(this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration)) {
         // occupation mode
         if (this.occupationActivated) {
           this.$alert({
@@ -786,17 +763,20 @@ export default {
         if (element) {
           this.lastDoubleClick = true
           if (typeof element === "number" && element === 1) {
-            this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
+            this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaPointList)
           } else if (typeof element === "object") {
             if (this.$route.name !== "Direction") {
-              this.setSelectedPlace(element)
-              this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
+              this.mousedownActivated = true
+              if (element.id === this.selectedPlace.id && element.placeType === this.selectedPlace.placeType)
+                this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaPointList)
+              else this.setSelectedPlace(element)
             } else {
               if (JSON.stringify(this.fromDirectionMarker) !== "{}" && JSON.stringify(this.toDirectionMarker) !== "{}") {
                 // Exit Direction
                 console.log("third point")
+                this.mousedownActivated = true
+                this.$store.commit("direction/setCachedPlaceParams", null)
                 this.setSelectedPlace(element)
-                this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
               } else {
                 if (element.areaPointList && element.placeType === "building") {
                   if (JSON.stringify(this.fromDirectionMarker) === "{}" && !this.globalFromText) {
@@ -804,13 +784,13 @@ export default {
                     if (this.globalToText || JSON.stringify(this.toDirectionMarker) !== "{}") 
                       if (`${this.toDirectionMarker.id}|${this.toDirectionMarker.type}` === `${element.id}|${element.placeType}`) return true
                     this.$store.commit("direction/setGlobalFromId", `${element.id}|${element.placeType}`)
-                    this.$refs.directionModal?.setDirectionText(false, element.name)
+                    this.$EventBus.$emit("setDirectionText", { isTo: false, text: element.name })
                   } else if (JSON.stringify(this.toDirectionMarker) === "{}" && !this.globalToText) {
                     // same item
                     if (this.globalFromText || JSON.stringify(this.fromDirectionMarker) !== "{}") 
                       if (`${this.fromDirectionMarker.id}|${this.fromDirectionMarker.type}` === `${element.id}|${element.placeType}`) return true
                     this.$store.commit("direction/setGlobalToId", `${element.id}|${element.placeType}`)
-                    this.$refs.directionModal?.setDirectionText(true, element.name)
+                    this.$EventBus.$emit("setDirectionText", { isTo: true, text: element.name })
                   }
                 }
               }
@@ -827,7 +807,7 @@ export default {
       }
     },
 
-    setSelectedPlace (element = {}) {
+    setSelectedPlace(element = {}) {
       // null => a cV lX rV
       // a => a    cX lX rX
       // a => b    cV lV rV
@@ -840,182 +820,77 @@ export default {
           areaPointList: element.areaPointList,
           name: element.name,
           iconType: element.iconType,
+          iconLevel: element.iconLevel,
           ...element.location
         } : element
         return false
       } else {
         // console.log("same item")
-        if (JSON.stringify(this.selectedPlace) !== "{}") this.$refs.modal.showModal()
+        if (JSON.stringify(this.selectedPlace) !== "{}") this.$EventBus.$emit("showModal")
         return true
       }
     },
 
-    adjustMapPosition ({ posX, posY }, type, scale) {
-      if ((posX != null && typeof(posX) != undefined) && (posY != null && typeof(posY) != undefined)) {
-        if (type === 'middle' && scale) {
-          this.scale.x = scale
-          this.scale.y = scale
+    adjustMapPosition(type, posX = 0, posY = 0, scale = 1, areaPointList) {
+      const { x: placeX, y: placeY } = this.getImageToCanvasPoint({ x: posX, y: posY })
+
+      if (type === "middle") {            
+        const { x: px, y: py }  = this.getMousePoint({ x: (this.canvasWidth + 424 + 10) / 2, y: this.canvasHeight / 2 })
+        this.mapAnimation = {
+          x: posX,
+          y: posY,
+          deltaX: parseInt(px - placeX),
+          deltaY: parseInt(py - placeY),
+          deltaScale: parseInt(((scale < 3 ? 3 : scale) - this.scale.x) * 10000) / 10000,
+          timer: 0,
+          duration: 0.5
         }
+      } else if (type === "include") {
+        let deltaX = 0
+        let deltaY = 0
+        const markerSize = this.iconSize * 2
+        
+        let pointList = [
+          {x: placeX - markerSize / 2, y: placeY - markerSize},
+          {x: placeX + markerSize / 2, y: placeY - markerSize},
+          {x: placeX - markerSize / 2, y: placeY},
+          {x: placeX + markerSize / 2, y: placeY}
+        ]
+        if (areaPointList?.length >= 3) pointList = pointList.concat(areaPointList.map(point => this.getImageToCanvasPoint(point)))
 
-        const scaleX = this.scale.x * this.scaleAdaption
-        const scaleY = this.scale.y * this.scaleAdaption
-        const offsetX = this.position.x + this.positionAdaption.x
-        const offsetY = this.position.y + this.positionAdaption.y
+        const minX = pointList.reduce((min, p) => p.x < min ? p.x : min, pointList[0].x)
+        const maxX = pointList.reduce((max, p) => p.x > max ? p.x : max, pointList[0].x)
+        const minY = pointList.reduce((min, p) => p.y < min ? p.y : min, pointList[0].y)
+        const maxY = pointList.reduce((max, p) => p.y > max ? p.y : max, pointList[0].y)
 
-        const currentWidth = this.imgWidth * this.scaleAdaption * this.scale.x
-        const currentHeight = this.imgHeight * this.scaleAdaption * this.scale.y
+        const left = parseInt(minX - 30)
+        const right = parseInt(maxX + 30)
+        const top = parseInt(minY - 30)
+        const bottom = parseInt(maxY + 30)
 
-        let newPosX = this.position.x
-        let newPosY = this.position.y
+        if (left < 0) deltaX = -left // (0 - left)
+        if (right - this.canvasWidth > 0) deltaX = this.canvasWidth - right
 
-        if (type === 'middle') {
-          newPosX = this.position.x + parseInt(this.canvasWidth / 2 - (posX * scaleX + offsetX))
-          newPosY = this.position.y + parseInt(this.canvasHeight / 2 - (posY * scaleY + offsetY))
-        } else if (type === 'include') {
-          const imgSize = 60 * 2.5
+        if (top < 0) deltaY = -top // (0 - top)
+        if (bottom - this.canvasHeight > 0) deltaY = this.canvasHeight - bottom
 
-          const left = parseInt(posX * scaleX + offsetX - imgSize / 2)
-          const right = parseInt(posX * scaleX + offsetX + imgSize / 2)
-          const top = parseInt(posY * scaleY + offsetY - imgSize)
-          const bottom = parseInt(posY * scaleY + offsetY)
-
-          if (left < 0) newPosX = this.position.x - left // - (left - 0)
-          if (right - this.canvasWidth > 0) newPosX = this.position.x - (right - this.canvasWidth)
-
-          if (top < 0) newPosY = this.position.y - top // - (top - 0)
-          if (bottom - this.canvasHeight > 0) newPosY = this.position.y - (bottom - this.canvasHeight)
-        }
-
-        // edge cases
-        if (newPosX > 0) newPosX = 0
-        else if (newPosX + currentWidth + this.positionAdaption.x < this.canvasWidth - this.positionAdaption.x)
-          newPosX = this.canvasWidth - 2 * this.positionAdaption.x - currentWidth
-
-        if (newPosY > 0) newPosY = 0
-        else if (newPosY + currentHeight + this.positionAdaption.y < this.canvasHeight - this.positionAdaption.y)
-          newPosY = this.canvasHeight - 2 * this.positionAdaption.y - currentHeight
-
-        this.position.x = newPosX
-        this.position.y = newPosY
-      }
-    },
-
-    async datetimeInput (dateStr) {
-      // console.log('datetime', dateStr)
-      if (dateStr && dateStr != '') {
-        const date = DateTime.fromISO(dateStr)
-        const startDate = DateTime.fromISO(weekInfo["start"])
-        const interval = Interval.fromDateTimes(startDate, date)
-        const days = Math.floor(interval.length('day') || -1)
-        if (days >= 0) {
-          const weekIndex = Math.floor(days / 7)
-          if (weekIndex < weekInfo["weeks"].length) {
-            this.occupationTime = date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
-            // console.log(date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY), DateTime.local().locale)
-            const weekObj = weekInfo["weeks"][weekIndex]
-            let noEmptyRoom = !!weekObj["number"]
-            if (noEmptyRoom) {
-              try {
-                this.$alert({
-                  message: 'Requesting...',
-                  time: 10000,
-                  type: "primary"
-                })
-                this.occupationRequesting = true
-                const data = await this.$api.room.getOccupiedRoom(this.selectedFloor.id, {
-                  week: weekObj["number"],
-                  day: date.weekday,
-                  hour: date.minute >= 30 ? date.hour + 0.5 : date.hour
-                })
-                if (!this.occupationRequesting) return
-                this.occupationRequesting = false
-                this.$alert({
-                  message: `Successfully get occupied rooms at ${this.occupationTime}`,
-                  time: 3000,
-                  type: "success"
-                })
-                if (!data.occupiedRoomList || data.occupiedRoomList.length === 0) {
-                  noEmptyRoom = false
-                } else {
-                  this.occupiedRoomList = data.occupiedRoomList
-                }
-              } catch (err) {
-                console.log(err)
-                this.occupationRequesting = false
-                this.$alert({
-                  message: 'Failed to get occupied rooms.\nPlease try again.',
-                  time: 3000
-                })
-                this.occupiedRoomList = []
-                this.$store.commit("button/setOccupationActivated", false)
-              }
-            }
-
-            if (!noEmptyRoom) {
-              this.$alert({
-                message: `No room occupied at ${this.occupationTime}`,
-                time: 3000,
-                type: "primary"
-              })
-              this.occupiedRoomList = []
-            }
-          }
+        this.mapAnimation = {
+          x: null,
+          y: null,
+          deltaX: deltaX,
+          deltaY: deltaY,
+          deltaScale: 0,
+          timer: 0,
+          duration: 0.1
         }
       }
     },
 
-    datetimeClose () {
-      if (!this.$refs.dt.datetime) this.$store.commit("button/setOccupationActivated", false)
-    },
+    resizeWindow() {
+      this.$store.commit('setScreenHeight', window.innerHeight)
 
-    geolocationInfo (position) {
-      const { longitude, latitude } = position?.coords
-      // console.log(position);
-
-      if (longitude && latitude) {
-        const firstcall = !this.location.x && !this.location.y
-        const { x, y } = this.geoToImage({ longitude, latitude })
-        if ((x >= 0 && x <= this.imgWidth) && (y >= 0 && y <= this.imgHeight)) {
-          this.location.x = x
-          this.location.y = y
-          if (firstcall) this.adjustMapPosition({ posX: this.location.x, posY: this.location.y }, "middle", 1)
-        } else {
-          this.$alert({
-            message: "You are not in campus right now.",
-            time: 3000,
-            type: "warning"
-          })
-        }
-      } else throw new Error("Error getting location.")
-    },
-
-    geolocationError (error) {
-      let errorMessage
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          errorMessage = "User denied the request for Geolocation."
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMessage = "Location information is unavailable."
-          break;
-        case error.TIMEOUT:
-          errorMessage = "Location request timed out."
-          break;
-        // case error.UNKNOWN_ERROR:
-        default:
-          errorMessage = "An unknown error occurred."
-          break;
-      }
-      this.$alert({
-        message: errorMessage,
-        time: 3000
-      })
-      // throw new Error("errorMessage")
-    },
-
-    resizeWindow () {
-      const clientWidth = document.documentElement.clientWidth >= 300 ? document.documentElement.clientWidth : 300;
-      const clientHeight = document.documentElement.clientHeight >= 300 ? document.documentElement.clientHeight : 300;
+      const clientWidth = document.documentElement.clientWidth >= 500 ? document.documentElement.clientWidth : 500;
+      const clientHeight = document.documentElement.clientHeight >= 500 ? document.documentElement.clientHeight : 500;
       if (this.canvas) {
         this.canvas.style.width = `${clientWidth}px`
         this.canvas.style.height = `${clientHeight}px`
@@ -1047,86 +922,123 @@ export default {
         }
   
         this.positionAdaption = {
-          x: (parseInt(this.canvasWidth) - parseInt(this.imgWidth * this.scaleAdaption)) / 2,
-          y: (parseInt(this.canvasHeight) - parseInt(this.imgHeight * this.scaleAdaption)) / 2
+          x: parseInt(this.canvasWidth - this.imgWidth * this.scaleAdaption) / 2,
+          y: parseInt(this.canvasHeight - this.imgHeight * this.scaleAdaption) / 2
         }
       }
-    }
+    },
 
-  },
-  async mounted () {
-    // console.log('map mounted')
-    document.body.style.overflow='hidden';
-    window.onresize = () => this.resizeWindow()
+    setLocationUrl() {
+      if (this.mdown) return
+      if (!this.canvasWidth || !this.canvasHeight || !this.imgWidth || !this.imgHeight) return
+      if (!this.scale.x || !this.scale.y || this.position.x == null || this.position.y == null) return
+      const { x: centerX, y: centerY } = this.getCanvasToImagePoint(this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 }))
+      const zoom = Math.floor(this.scale.x * 100) / 100
+      const currentLocationInfo = `${Math.floor(centerX)},${Math.floor(centerY)},${zoom}z`
 
-    try {
-      this.mapType = this.$route.params.buildingId ? 'floor' : 'campus'
-
-      this.canvas = this.$refs.canvas;
-      this.context = this.canvas.getContext("2d");
-
-      this.loadImage(require("assets/images/sprite/marker-sprite.png")).then(image => this.imageMap["markers"] = image)
-      this.loadImage(require("assets/images/icon/eye.png")).then(image => this.imageMap["eye"] = image)
-      this.loadImage(require("assets/images/sprite/icon-sprite.png")).then(image => this.imageMap["facilitySprite"] = image)
-
-      let data
-      if (this.mapType === 'floor') {
-        this.loadImage(require("assets/images/icon/group.png")).then(image => this.imageMap["group"] = image)
-        this.loadImage(require("assets/images/sprite/arrow-sprite.png")).then(image => this.imageMap["arrowSprite"] = image)
-
-        const buildingId = parseInt(this.$route.params.buildingId)
-        const floorId = parseInt(this.$route.params.floorId)
-        data = await this.$api.floor.getFloorInfo(buildingId, floorId)
-        console.log(data)
-        this.selectedFloor = data.selectedFloor || {}
-        this.floorList = data.floorList || []
-        this.buildingCode = data.building?.code || ""
-      } else {
-        this.loadImage(require("assets/images/icon/location-marker.png")).then(image => this.imageMap["locationMarker"] = image)
-        // this.imageMap["locationProbe"] = await this.loadImage(require("assets/images/icon/location-probe.png"))
-        this.loadImage(require("assets/images/icon/location-circle.png")).then(image => this.imageMap["locationCircle"] = image)
-
-        data = await this.$api.floor.getCampusInfo()
-        console.log(data)
+      const re = /^[+-]?(\d+),[+-]?(\d+),(\d+(\.\d*)?)z$/
+      const matchArr = this.$route.params.locationInfo?.match(re)
+      if (matchArr?.[1] && matchArr?.[2] && matchArr?.[3]) {
+        const routerX = parseInt(matchArr[1])
+        const routerY = parseInt(matchArr[2])
+        const routerZoom = Math.floor(parseFloat(matchArr[3]) * 100) / 100
+        const standardRouterLocationInfo = `${routerX},${routerY},${routerZoom}z`
+        // If router location info is the same as current location info, no need to change
+        if (currentLocationInfo === standardRouterLocationInfo) return
       }
 
-      this.placeList = this.placeList.concat(data.facilityList || [], data.roomList || [], data.buildingList || [])
+      this.$router.push({
+        name: this.$route.name,
+        query: this.$route.query,
+        params: {
+          ...this.$route.params,
+          locationInfo: currentLocationInfo
+        }
+      })
+    },
+    
+    setInitialMapLocation() {
+      let followMap = false
+      if (!this.$route.params.locationInfo) followMap = true
+      else {
+        const re = /^[+-]?(\d+),[+-]?(\d+),(\d+(\.\d*)?)z$/
+        const matchArr = this.$route.params.locationInfo?.match(re)
+        console.log(matchArr)
+        if (!matchArr) followMap = true
+        else {
+          const centerX = parseInt(matchArr[1])
+          const centerY = parseInt(matchArr[2])
+          const zoom = Math.floor(parseFloat(matchArr[3]) * 100) / 100
+          console.log(centerX, centerY, zoom)
 
-      this.imageMap["map"] = await this.loadImage(this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage)
+          this.validateScale(zoom)
 
-      this.imgWidth = parseInt(this.imageMap['map'].width)
-      this.imgHeight = parseInt(this.imageMap['map'].height)
-      console.log(this.imgWidth, this.imgHeight)
+          const { x: mapCenterX, y: mapCenterY } = this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 })
 
-      this.context.drawImage(this.imageMap['map'], 0, 0, this.imgWidth, this.imgHeight)
-      const pixel = this.context.getImageData(2, 2, 1, 1).data
-      this.mapMarginColor = (!pixel?.length) ? null : `rgb(${pixel.join(',')})`
+          const newOriginX = mapCenterX - centerX * this.scale.x * this.scaleAdaption - this.positionAdaption.x
+          const newOriginY = mapCenterY - centerY * this.scale.y * this.scaleAdaption - this.positionAdaption.y
+          this.validatePosition(newOriginX, newOriginY)
+        }
+      }
 
-      this.resizeWindow()
-
-      this.checkRequestAnimationFrame();
-      window.requestAnimationFrame(this.animate);
-
-      if (!this.loadingError) this.loading = false
-    } catch (error) {
-      console.log(error)
-      this.loadingError = true
+      if (followMap) {
+        if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
+        this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
+      }
     }
   },
 
-  destroyed () {
-    document.body.style.overflow='';
+  mounted() {
+    // console.log('map mounted')
+    window.onresize = () => this.resizeWindow()
+
+    window.onmousemove = e => this.onmousemove(e)
+    window.onmouseup = e => this.onmouseup(e)
+
+    this.$EventBus.$on("buttonZoom", zoom => {
+      this.focusedPoint = {...this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 })}
+      // this.zoomMap(mZoom)
+      // this.manipulateMap(mZoom / 400)
+      this.mapAnimation = {
+        x: null,
+        y: null,
+        deltaX: 0,
+        deltaY: 0,
+        deltaScale: zoom,
+        timer: 0,
+        duration: 0.1
+      }
+    })
+
+    this.canvas = this.$refs.canvas;
+    this.context = this.canvas.getContext("2d");
+
+    this.loadImage(require("assets/images/sprite/marker-sprite.png")).then(image => this.imageMap["markers"] = image)
+    this.loadImage(require("assets/images/icon/eye.png")).then(image => this.imageMap["eye"] = image)
+    this.loadImage(require("assets/images/sprite/icon-sprite.png")).then(image => this.imageMap["facilitySprite"] = image)
+
+    if (this.$route.params.buildingId) {
+      this.loadImage(require("assets/images/icon/group.png")).then(image => this.imageMap["group"] = image)
+      this.loadImage(require("assets/images/sprite/arrow-sprite.png")).then(image => this.imageMap["arrowSprite"] = image)
+    } else {
+      this.loadImage(require("assets/images/icon/location-marker.png")).then(image => this.imageMap["locationMarker"] = image)
+      // this.imageMap["locationProbe"] = await this.loadImage(require("assets/images/icon/location-probe.png"))
+      this.loadImage(require("assets/images/icon/location-circle.png")).then(image => this.imageMap["locationCircle"] = image)
+    }
+
+    this.checkRequestAnimationFrame();
+    window.requestAnimationFrame(this.animate);
   },
 
   watch: {
-    selectedPlace (val, oldVal) {
+    selectedPlace(val, oldVal) {
       // null => a cV lX rV
       // a => a    cX lX rX
       // a => b    cV lV rV
       // a => null cX lV rV
       if (oldVal && oldVal.x && oldVal.y && this.$route.name !== "Direction") {
         this.lastMarkerAnimation = {
-          duration: 0,
+          timer: 0,
           x: oldVal.x,
           y: oldVal.y,
           markerType: oldVal.iconType || "default"
@@ -1135,20 +1047,26 @@ export default {
       if (val) {
         if (JSON.stringify(val) !== "{}") {
           this.currentMarkerAnimation = {
-            duration: 0,
+            timer: 0,
             x: val.x,
             y: val.y,
             markerType: val.iconType || "default",
           }
+          if (this.mousedownActivated) {
+            if (this.$route.params.adjustPosition) this.adjustMapPosition("middle", this.selectedPlace.x, this.selectedPlace.y, this.selectedPlace.iconLevel)
+            else this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaPointList)
+            this.mousedownActivated = false
+          }
           if (!(this.$route.name === "Place" && this.$route.params.type == val.placeType && this.$route.params.id == val.id))
             this.$router.push({
-              name: 'Place',
+              name: "Place",
               params: {
                 buildingId: this.$route.params.buildingId,
                 floorId: this.$route.params.floorId,
                 type: val.placeType,
                 id: val.id,
-                name: val.name
+                name: val.name,
+                locationInfo: this.$route.params.locationInfo
               }
             })
         } else {
@@ -1160,12 +1078,35 @@ export default {
                 name: "Map",
                 params: {
                   buildingId: this.$route.params.buildingId,
-                  floorId: this.$route.params.floorId
+                  floorId: this.$route.params.floorId,
+                  locationInfo: this.$route.params.locationInfo
                 }
               })
             }, 500)
           }
         }
+      }
+    },
+    async mapUrl(val) {
+      if (val) {
+        this.loadImage(val).then(image => {
+          this.imageMap["map"] = image
+
+          this.imgWidth = parseInt(this.imageMap['map'].width)
+          this.imgHeight = parseInt(this.imageMap['map'].height)
+          console.log(this.imgWidth, this.imgHeight)
+
+          this.context.drawImage(this.imageMap['map'], 0, 0, this.imgWidth, this.imgHeight)
+          const pixel = this.context.getImageData(2, 2, 1, 1).data
+          this.mapMarginColor = (!pixel?.length) ? null : `rgb(${pixel.join(',')})`
+
+          this.resizeWindow()
+          this.setInitialMapLocation()
+          this.$emit("mapLoadingComplete")
+        }).catch(e => {
+          console.log(e)
+          this.$emit("mapLoadingError")
+        })
       }
     },
     placeList: {
@@ -1176,10 +1117,9 @@ export default {
             const item = this.placeList.find(e => e.id === parseInt(this.$route.params.id) && e.placeType === this.$route.params.type)
             if (item) {
               this.setSelectedPlace(item)
-              this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'middle', 3)
               this.$store.commit('setGlobalText', item.name || "")
             } else {
-              this.$router.push({name: 'PageNotFound'})
+              this.$router.push({name: "PageNotFound"})
             }
           } else if (this.$route.name === "Direction") {
             if (this.globalFromId && JSON.stringify(this.fromDirectionMarker) === "{}") {
@@ -1215,74 +1155,14 @@ export default {
     },
     displayVirtualButton(val) {
       if (val) {
-        this.virtualButton.mselected = false
         const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
         const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
         this.virtualButton.position.x = parseInt(canvasWidth * 0.98 - this.virtualButton.size)
         this.virtualButton.position.y = parseInt((canvasHeight - this.virtualButton.size) / 2)
       }
     },
-    occupationActivated (val) {
+    gateActivated(val) {
       if (val) {
-        this.$refs.dt.datetime = null
-        const input = document.querySelector('#datetime')
-        input.click()
-      } else {
-        this.occupiedRoomList = []
-        if (this.occupationRequesting) this.occupationRequesting = false
-        this.$alert.close()
-        this.occupationTime = null
-      }
-    },
-    async gateActivated (val) {
-      if (val) {
-        if (!this.gateList) {
-          try {
-            this.$alert({
-              message: 'Requesting...',
-              time: 10000,
-              type: "primary"
-            })
-            this.gateRequesting = true
-            const data = await this.$api.gate.getGateList(this.selectedFloor.id)
-            if (!this.gateRequesting) return
-            this.gateRequesting = false
-            this.$alert.close()
-            const gateList = data.gateList || []
-            this.gateList = gateList.map(e => {
-              let color
-              switch (e.endTime - e.startTime) {
-                case 24:
-                  color = 24
-                  break;
-                case 16:
-                  color = 11
-                  break;
-                case 10.5:
-                  color = 5
-                  break;
-                default:
-                  color = 0
-                  break;
-              }
-              return {
-                ...e,
-                arrow: color
-              }
-            })
-            console.log(this.gateList)
-          } catch (err) {
-            console.log(err)
-            this.gateRequesting = false
-            this.$alert({
-              message: 'Failed to get gates.\nPlease try again.',
-              time: 3000
-            })
-            this.gateList = null
-            this.$store.commit("button/setGateActivated", false)
-          }
-        }
-
         this.gateIntervalId = setInterval(() => {
           const targetTimezone = -8
           let currentTime = new Date()
@@ -1292,57 +1172,26 @@ export default {
           this.currentHour = currentTime.getHours() + currentTime.getMinutes() / 60
         }, 1000 * 60)
       } else {
-        if (this.gateRequesting) {
-          this.$alert.close()
-          this.gateRequesting = false
-        }
         if (this.gateIntervalId) clearInterval(this.gateIntervalId)
       }
     },
-
-    locationActivated (val) {
-      try {
-        if (val) {
-          if (navigator.geolocation) {
-            this.location.timer = 0
-
-            // this.geolocationInfo({
-            //   coords: {
-            //     longitude: 31.275891,
-            //     latitude: 120.734979
-            //   }
-            // })
-            // this.geolocationInfo({
-            //   coords: {
-            //     longitude: 31.275657,
-            //     latitude: 120.736146
-            //   }
-            // })
-            
-            const options = {
-              enableHighAccuracy: true,
-              timeout: 2000,
-              maximumAge: 2000
-            }
-            // navigator.geolocation.getCurrentPosition(displayLocationInfo, handleLocationError, options);
-            this.geoWatchId = navigator.geolocation.watchPosition(this.geolocationInfo, this.geolocationError, options)
-          } else {
-            throw new Error("Geolocation is not supported in this browser.")
+    geolocation(val, oldVal) {
+      if (val.lon && val.lat) {
+        const firstcall = !oldVal.lon && !oldVal.lat
+        const { x, y } = this.geoToImage({ longitude: val.lon, latitude: val.lat })
+        if ((x >= 0 && x <= this.imgWidth) && (y >= 0 && y <= this.imgHeight)) {
+          this.location = {
+            x,
+            y
           }
+          if (firstcall) this.adjustMapPosition({ posX: this.location.x, posY: this.location.y }, "middle", 1)
         } else {
-          navigator.geolocation.clearWatch(this.geoWatchId)
-          this.geoWatchId = null
-
-          this.location.x = null
-          this.location.y = null
+          this.$alert({
+            message: "You are not in campus right now.",
+            time: 3000,
+            type: "warning"
+          })
         }
-      } catch (error) {
-        console.log(error)
-        this.$alert({
-          message: error.message,
-          time: 3000
-        })
-        this.$store.commit("button/setLocationActivated", false)
       }
     },
     globalFromId: {
@@ -1382,49 +1231,69 @@ export default {
         } else 
           this.toDirectionMarker = {}
       }
-    }
-  },
-
-  beforeRouteUpdate (to, from, next) {
-    // console.log('map update')
-    const fromBuildingId = from.params.buildingId || ''
-    const fromFloorId = from.params.floorId || ''
-    const toBuildingId = to.params.buildingId || ''
-    const toFloorId = to.params.floorId || ''
-
-    if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}`) {
-      if (to.name === 'Place') {
-        const item = this.placeList.find(e => e.id === parseInt(to.params.id) && e.placeType === to.params.type)
-        if (item) {
-          if (this.occupationActivated) this.$store.commit("button/setOccupationActivated", false)
-          this.setSelectedPlace(item)
-          this.adjustMapPosition({ posX: this.selectedPlace.x, posY: this.selectedPlace.y }, 'include')
-        } else {
-          next({name: 'PageNotFound'})
-          return
+    },
+    scale: {
+      deep: true,
+      handler: function(val) {
+        if (val.x && val.y) {
+          if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
+          this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
+          this.$store.commit("setScale", val.x)
         }
-      } else {
-        this.setSelectedPlace()
-        if (to.name === "Direction")
-          this.lastMarkerAnimation = {
-            ...this.lastMarkerAnimation,
-            duration: 0.51
-          }
       }
-    }
-    next()
-  },
+    },
+    position: {
+      deep: true,
+      handler: function(val) {
+        if (val.x != null && val.y != null) {
+          if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
+          this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
+        }
+      }
+    },
+    $route(to, from) {
+      if (this.checkRouterChange(to.fullPath, from.fullPath)) {
+        const fromBuildingId = from.params.buildingId || ""
+        const fromFloorId = from.params.floorId || ""
+        const toBuildingId = to.params.buildingId || ""
+        const toFloorId = to.params.floorId || ""
+  
+        if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}`) {
+          if (to.name === 'Place') {
+            const item = this.placeList.find(e => e.id === parseInt(to.params.id) && e.placeType === to.params.type)
+            if (item) {
+              if (this.occupationActivated) this.$store.commit("button/setOccupationActivated", false)
+              if (to.params.adjustPosition) this.mousedownActivated = true
+              this.setSelectedPlace(item)
+            } else {
+              next({name: 'PageNotFound'})
+              return
+            }
+          } else {
+            this.setSelectedPlace()
+            if (to.name === "Direction")
+              this.lastMarkerAnimation = {
+                ...this.lastMarkerAnimation,
+                timer: this.markerAnimationDuration + 0.01
+              }
+          }
+        }
+  
+        if (from.name === "Direction" && to.name !== "Direction") {
+          this.$store.commit("direction/setGlobalFromText", "")
+          this.$store.commit("direction/setGlobalToText", "")
+          this.$store.commit("direction/setGlobalFromId", "")
+          this.$store.commit("direction/setGlobalToId", "")
+          this.$store.commit("direction/setGlobalPathList", [])
+        }
+      }
 
+      this.setLocationUrl()
+    },
+  }
 }
 </script>
 
 <style lang="scss">
-.canvas-map-loading-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: #ffffff;
-  z-index: 0;
-}
 </style>
 

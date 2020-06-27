@@ -36,19 +36,6 @@ export default {
     },
   },
   methods: {
-    async getItemInfo (type, id, name) {
-      this.showModal()
-      this.$router.push({
-        name: 'Place',
-        params: {
-          buildingId: this.$route.params.buildingId,
-          floorId: this.$route.params.floorId,
-          type,
-          id,
-          name
-        }
-      })
-    },
   }
 }
 </script>

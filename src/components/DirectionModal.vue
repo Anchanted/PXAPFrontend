@@ -83,18 +83,18 @@ export default {
       this.refreshPage()
     },
     closeModal() {
-      this.$router.push({
-        name: "Map",
-        params: this.$route.params
-      })
-    },
-    setDirectionText(isTo, text = "") {
-      if (!isTo) {
-        this.fromText = text
-      } else {
-        this.toText = text
+      if (this.$store.state?.direction?.cachedPlaceParams) {
+        this.$router.push({
+          name: "Place",
+          params: this.$store.state?.direction?.cachedPlaceParams
+        })
+        this.$store.commit("direction/setCachedPlaceParams", null)
       }
-      this.onSubmit(null, isTo)
+      else
+        this.$router.push({
+          name: "Map",
+          params: this.$route.params,
+        })
     },
     onSubmit(e, isTo) {
       this.refreshPage()
@@ -114,11 +114,19 @@ export default {
             fromPlace: this.fromText || "",
             toPlace: this.toText || "",
             buildingId: this.$route.params.buildingId,
-            floorId: this.$route.params.floorId
+            floorId: this.$route.params.floorId,
+            locationInfo: this.$route.params.locationInfo
           }
         })
       }
     },
+  },
+  mounted() {
+    this.$EventBus.$on("setDirectionText", ({ isTo, text = "" }) => {
+      if (!isTo) this.fromText = text
+      else this.toText = text
+      this.onSubmit(null, isTo)
+    })
   },
   watch: {
     fromText(val) {

@@ -224,7 +224,7 @@ export default {
         });
     },
 
-    back () {
+    back() {
       this.$router.push({
         name: "SearchTop",
         query: {
@@ -232,7 +232,8 @@ export default {
         },
         params: {
           buildingId: this.$route.params.buildingId,
-          floorId: this.$route.params.floorId
+          floorId: this.$route.params.floorId,
+          locationInfo: this.$route.params.locationInfo
         }
       })
     },

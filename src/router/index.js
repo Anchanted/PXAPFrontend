@@ -10,7 +10,7 @@ import CheckMap from 'views/deprecated/CheckMap'
 import TimetableForm from 'views/deprecated/TimetableForm'
 // import TimetableCheck from 'views/deprecated/TimetableTest3'
 import TimetableCheck from 'components/deprecated/ElasticTimetable'
-import CanvasMap from 'views/CanvasMap'
+import MapPage from 'views/MapPage'
 
 import store from 'store'
 
@@ -43,37 +43,45 @@ const routes = [
     name: 'TimetableCheck'
   },
   {
-    path: '/:buildingId(\\d+)?/:floorId(\\d+)?',
-    component: CanvasMap,
+    // path: '/:buildingId(\\d+)?/:floorId(\\d+)?/@:latitude((-)?([^0][0-9]+|0)+\\.([0-9]{1,2})),:longitude((-)?([^0][0-9]+|0)+\\.([0-9]{1,2})),:zoom(\\d\\.([0-9]{1,2}))',
+    // path: '/:buildingId(\\d+)?/:floorId(\\d+)?/@:x(\\d+)?,:y(\\d+)?,:zoom(\\d|\\d\\.\\d{1,2})?z',
+    path: "/:buildingId(\\d+)?/:floorId(\\d+)?/@:locationInfo?",
+    alias: "/:buildingId(\\d+)?/:floorId(\\d+)?",
+    // path: '/:buildingId(\\d+)?/:floorId(\\d+)?',
+    component: MapPage,
     name: "Map",
     children: [
       {
-        path: 'search',
+        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/search/@:locationInfo?",
+        alias: "search",
         component: SearchTop,
-        name: 'SearchTop',
+        name: "SearchTop",
         meta: {
           keepAlive: true
         },
       },
       {
-        path: 'search/:type(building|room|facility)',
+        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/search/:type(building|room|facility)/@:locationInfo?",
+        alias: "search/:type(building|room|facility)",
         component: SearchMore,
-        name: 'SearchMore',
+        name: "SearchMore",
         meta: {
           keepAlive: false,
           display: true
         },
       },
       {
-        path: 'place/:type(building|room|facility)/:id(\\d+)',
+        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/place/:type(building|room|facility)/:id(\\d+)/@:locationInfo?",
+        alias: "place/:type(building|room|facility)/:id(\\d+)",
         component: Place,
-        name: 'Place',
+        name: "Place",
         meta: {
           keepAlive: false,
         },
       },
       {
-        path: "dir/:fromPlace([^/]*)?/:toPlace([^/]*)?",
+        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/dir/:fromPlace([^/]*)?/:toPlace([^/]*)?/@:locationInfo?",
+        alias: "dir/:fromPlace([^/]*)?/:toPlace([^/]*)?",
         components: {
           direction: Direction
         },
@@ -96,7 +104,7 @@ router.beforeEach((to, from, next) => {
   if (to.params.buildingId && !to.params.floorId) next({ name: 'PageNotFound' })
   else if (to.name === "Direction" && (to.params.buildingId || to.params.floorId)) next({ name: "Map", params: to.params })
   else {
-    if (to.matched?.[0]?.name === "Map") {
+    if (to.matched?.[0]?.name === "Map" && to.fullPath.split(/@.*?(\?|$)/).join("") !== from.fullPath.split(/@.*?(\?|$)/).join("")) {
       const fromBuildingId = from.params.buildingId || ''
       const fromFloorId = from.params.floorId || ''
       const toBuildingId = to.params.buildingId || ''
@@ -107,19 +115,37 @@ router.beforeEach((to, from, next) => {
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', true)
       }
-
+  
       let globalText = ""
       if (to.matched.length > 1) {
         store.commit("setDisplayDirectionButton", false)
         store.commit('setPanelCollapsed', false)
         store.commit('setModalCollapsed', to.name === "Direction")
         if (to.name === "Direction") store.commit("direction/setDisplayDirection", true)
-
+  
         if (to.name.indexOf('Search') !== -1) globalText = decodeURIComponent(to.query.q || '')
         else if (to.name === 'Place') globalText = to.params.name || ''
       } else store.commit("setDisplayDirectionButton", true)
-
       store.commit('setGlobalText', globalText)
+  
+      $('[data-toggle="tooltip"]').tooltip("dispose");
+      $('[data-tooltip="tooltip"]').tooltip("dispose");
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-tooltip="tooltip"]').tooltip();
+  
+      // if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}` 
+      //   && store.commit("checkRouterChange", { toPath: to.fullPath, fromPath: from.fullPath })) {
+      //   if (from.params.locationInfo && from.params.locationInfo !== to.params.locationInfo) {
+      //     next({
+      //       name: to.name,
+      //       params: {
+      //         ...to.params,
+      //         locationInfo: from.params.locationInfo
+      //       },
+      //       query: to.query
+      //     })
+      //   } else next()
+      // } else next()
     }
     next()
   }

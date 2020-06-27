@@ -7,7 +7,8 @@ const direction = {
     globalToText: "",
     globalFromId: "",
     globalToId: "",
-    globalPathList: []
+    globalPathList: [],
+    cachedPlaceParams: null
   },
 
   getters: {
@@ -32,6 +33,9 @@ const direction = {
     },
     setGlobalPathList(state, payload) {
       state.globalPathList = payload instanceof Array ? payload : []
+    },
+    setCachedPlaceParams(state, payload) {
+      state.cachedPlaceParams = payload
     }
   },
 

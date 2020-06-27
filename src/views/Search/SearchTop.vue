@@ -209,10 +209,9 @@ export default {
   },
 
   beforeRouteUpdate(to, from, next) {
-    // console.log('top update')
+    console.log('top update')
     // console.log(this.$vnode.parent.componentInstance.cache)
-
-    this.deleteCache()
+    if (this.checkRouterChange(to.fullPath, from.fullPath)) this.deleteCache()
     if (!to.query.q) next({ name: 'PageNotFound' })
     else next()
     // console.log(this.$vnode.parent.componentInstance.cache)

@@ -168,13 +168,15 @@ export default {
       }
     },
     onclickDirection() {
+      this.$store.commit("direction/setCachedPlaceParams", this.$route.params)
       this.$router.push({ 
         name: 'Direction', 
         params: { 
           buildingId: null, 
           floorId: null, 
           fromPlace: this.place.name, 
-          toPlace: '' 
+          toPlace: '',
+          locationInfo: !this.$route.params.buildingId && !this.$route.params.floorId ? this.$route.params.locationInfo : null
         } 
       })
       this.$store.commit("direction/setGlobalFromId", `${this.place.id}|${this.place.placeType}`)

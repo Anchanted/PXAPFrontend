@@ -97,7 +97,6 @@ import { mapState } from 'vuex'
 
 export default {
   props: {
-    scale: Number,
     buttonList: {
       type: Array,
       default: () => []
@@ -122,7 +121,8 @@ export default {
     ...mapState({
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
-      locationActivated: state => state.button.locationActivated
+      locationActivated: state => state.button.locationActivated,
+      scale: state => state.scale
     }),
     containerStyle () {
       return {
@@ -159,15 +159,15 @@ export default {
       window.open("/static/html/guide.html", '_blank')
     },
     hideButton () {
-      this.$emit("hideButtonGroup");
+      this.$store.commit("button/setDisplayVirtualButton", true)
     },
     refreshZoomBtn (scale = 1) {
       if (this.$refs.zinbtn && this.$refs.zinbtn) {
-        if (scale > 3.9) {
+        if (scale >= 4) {
           $(this.$refs.zinbtn).tooltip('dispose')
           this.$refs.zinbtn.disabled = true;
         }
-        if (scale < 3.9) {
+        if (scale < 4) {
           $(this.$refs.zinbtn).tooltip()
           this.$refs.zinbtn.disabled = false;
         }
@@ -183,12 +183,12 @@ export default {
     },
     zoomIn () {
       if (!this.$refs.zinbtn.disabled) {
-        this.$emit('zoom', 200, 'button');
+        this.$EventBus.$emit("buttonZoom", 0.5)
       }
     },
     zoomOut () {
       if (!this.$refs.zoutbtn.disabled) {
-        this.$emit('zoom', -200, 'button');
+        this.$EventBus.$emit("buttonZoom", -0.5)
       }
     },
     clickGate () {

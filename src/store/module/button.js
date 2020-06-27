@@ -2,12 +2,16 @@ const button = {
   namespaced: true,
 
   state: {
+    displayVirtualButton: false,
     gateActivated: false,
     occupationActivated: false,
     locationActivated: false
   },
 
   mutations: {
+    setDisplayVirtualButton(state, payload) {
+      state.displayVirtualButton = payload
+    },
     setGateActivated(state, payload) {
       state.gateActivated = payload
     },

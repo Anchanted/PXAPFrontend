@@ -18,6 +18,7 @@ export default new Vuex.Store({
     modalLoading: true,
     globalText: '',
     displayDirectionButton: true,
+    scale: 1
   },
   mutations: {
     setScreenHeight (state, payload) {
@@ -48,6 +49,9 @@ export default new Vuex.Store({
     setDisplayDirectionButton(state, payload) {
       state.displayDirectionButton = payload
     },
+    setScale(state, payload) {
+      state.scale = payload
+    }
   },
   actions: {
   },

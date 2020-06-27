@@ -27,11 +27,13 @@ export default {
   },
   computed: {
     ...mapState(["screenHeight", 'scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', 'modalLoading']),
-    key () {
-      const route = this.$route
-      return route.fullPath
+    key() {
+      const fullPath = this.$route.fullPath || ""
+      console.log(fullPath)
+      console.log(fullPath.split(this.urlLocationReg).join(""))
+      return fullPath.split(this.urlLocationReg).join("")
     },
-    modalStyle () {
+    modalStyle() {
       const computedHeight = this.screenHeight - 66 - 50
       let h, overflow = false
       if (this.modalCollapsed) return {
@@ -51,14 +53,15 @@ export default {
     },
   },
   methods: {
-    showModal () {
-      this.$store.commit('setPanelCollapsed', false)
-      this.$store.commit('setModalCollapsed', false)
-    },
-
     onscroll () {
       this.$store.commit('setModalScrollTop', this.$refs.modal.scrollTop)
     }
+  },
+  mounted() {
+    this.$EventBus.$on("showModal", () => {
+      this.$store.commit('setPanelCollapsed', false)
+      this.$store.commit('setModalCollapsed', false)
+    })
   }
 }
 </script>

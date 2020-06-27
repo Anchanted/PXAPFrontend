@@ -65,10 +65,6 @@ export default {
     console.log('scrollBarWidth', scrollBarWidth)
     this.$store.commit('setScrollBarWidth', scrollBarWidth)
     this.$store.dispatch('searchHistory/refreshHistoryList', this.unifySearchItem)
-  },
-  mounted () {
-    this.$store.commit('setScreenHeight', window.innerHeight)
-    window.onresize = () => this.$store.commit('setScreenHeight', window.innerHeight)
   }
 }
 </script>
@@ -82,6 +78,8 @@ export default {
 
 body {
   position: relative;
+  overflow: hidden;
+
 }
 
 .tooltip .tooltip-inner{

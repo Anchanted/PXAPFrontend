@@ -76,7 +76,7 @@ module.exports = {
         'collapsePanel': 'Collapse side panel',
         'expandPanel': 'Expand side panel',
         'search': 'Search',
-        "clear": "Clear Search",
+        "clear": "Clear search",
         'indoor': 'View indoor maps',
         "direction": {
             "entrance": "Directions",
@@ -86,7 +86,7 @@ module.exports = {
         "menu": "Menu",
         "language": "Change to another language",
         "help": "Help",
-        "hideButton": "Hide Buttons",
+        "hideButton": "Hide buttons",
         'floor': 'Choose another floor',
         'home': 'Back to campus map',
         "gate": {
