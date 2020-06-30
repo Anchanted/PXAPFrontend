@@ -18,7 +18,9 @@ export default new Vuex.Store({
     modalLoading: true,
     globalText: '',
     displayDirectionButton: true,
-    scale: 1
+    scale: 1,
+    modalTransitionName: null,
+    modalRouterLeave: false
   },
   mutations: {
     setScreenHeight (state, payload) {
@@ -51,6 +53,12 @@ export default new Vuex.Store({
     },
     setScale(state, payload) {
       state.scale = payload
+    },
+    setModalTransitionName(state, payload) {
+      state.modalTransitionName = payload
+    },
+    setModalRouterLeave(state, payload) {
+      state.modalRouterLeave = payload
     }
   },
   actions: {

@@ -26,7 +26,7 @@
     <div class="second-button-container">
       <button 
         v-if="displayDirectionButton"
-        class="iconfont icon-plane text-primary second-button direction-button" 
+        class="iconfont icon-direction text-primary second-button direction-button" 
         type="button"
         :disabled="$route.params.buildingId || $route.params.floorId"
         data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.direction.entrance')"
@@ -75,7 +75,10 @@ export default {
       // console.log('onfocus')
       if (this.text === '') {
         this["searchHistory/commitDisplaySearchHistory"](true)
-        if (!this.modalCollapsed) this.$store.commit('setModalCollapsed', true)
+        if (!this.modalCollapsed) {
+          this.$store.commit("setModalRouterLeave", true)
+          this.$store.commit('setModalCollapsed', true)
+        }
       }
     },
     onblur() {
@@ -108,13 +111,16 @@ export default {
     text (val) {
       if (val === '') {
         if (this.$refs.input == document.activeElement) {
+          this["searchHistory/commitDisplaySearchHistory"](true)
+          if (!this.modalCollapsed) {
+            this.$store.commit("setModalRouterLeave", true)
+            this.$store.commit('setModalCollapsed', true)
+          }
           if (this.$route.matched.length > 1)
             this.$router.push({
               name: "Map",
               params: this.$route.params
             })
-          this["searchHistory/commitDisplaySearchHistory"](true)
-          if (!this.modalCollapsed) this.$store.commit('setModalCollapsed', true)
         }
       } else {
         this["searchHistory/commitDisplaySearchHistory"](false)
@@ -207,8 +213,12 @@ export default {
       }
     }
     
-    .direction-button:disabled {
-      opacity: 0.65;
+    .direction-button {
+      font-size: 22px;
+
+      &:disabled {
+        opacity: 0.65;
+      }
     }
 
     .close-button {

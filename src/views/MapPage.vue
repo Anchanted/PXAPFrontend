@@ -27,6 +27,7 @@
       :loading="loading"></button-group>
 
     <datetime
+      v-if="displayDatetime"
       type="datetime"
       v-model="occupationTime"
       format="yyyy-MM-dd HH:mm"
@@ -113,7 +114,7 @@ export default {
       occupationActivated: state => state.button.occupationActivated,
       locationActivated: state => state.button.locationActivated
     }),
-    buttonList () {
+    buttonList() {
       const buttonList = this.mapType === "floor" ? ["floor","home"] : ["location"]
       if (this.mapType === "floor") {
         if (this.selectedFloor.hasGate) buttonList.push("gate")
@@ -121,7 +122,10 @@ export default {
       }
       return buttonList
     },
-    datetimeStyle () {
+    displayDatetime() {
+      return this.buttonList.some(e => e === "occupation")
+    },
+    datetimeStyle() {
       return null
     },
     loading() {
@@ -254,9 +258,7 @@ export default {
       }
 
       this.placeList = this.placeList.concat(data.facilityList || [], data.roomList || [], data.buildingList || [])
-
       this.mapUrl = this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage
-
       this.dataLoadingComplete = true
     } catch (error) {
       console.log(error)

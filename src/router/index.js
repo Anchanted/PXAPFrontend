@@ -120,6 +120,7 @@ router.beforeEach((to, from, next) => {
       if (to.matched.length > 1) {
         store.commit("setDisplayDirectionButton", false)
         store.commit('setPanelCollapsed', false)
+        if (to.name === "Direction" && !store.state.modalCollapsed) store.commit("setModalRouterLeave", true)
         store.commit('setModalCollapsed', to.name === "Direction")
         if (to.name === "Direction") store.commit("direction/setDisplayDirection", true)
   

@@ -87,7 +87,9 @@ export default {
   beforeRouteUpdate(to, from, next) {
     next()
     // if (to.params.fromPlace || to.params.toPlace)
-    if (!to.params.noRequest) this.searchDirection(to)
+    if (this.checkRouterChange(to.fullPath, from.fullPath)) {
+      if (!to.params.noRequest) this.searchDirection(to)
+    }
   },
 }
 </script>

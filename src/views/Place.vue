@@ -20,7 +20,7 @@
             @click="$router.push({ name: 'Map', params: { buildingId: place.id, floorId: place.baseFloorId } })"></button>
         </div>
         <div v-show="place.placeType === 'building'" class="additional direction">
-          <button type="button" class="iconfont icon-plane btn btn-primary additional-button direction-button"
+          <button type="button" class="iconfont icon-direction btn btn-primary additional-button direction-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.direction.entrance')"
             @click="onclickDirection"></button>
         </div>
@@ -256,7 +256,7 @@ export default {
       margin-left: 20px;
 
       &-button {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
       }
     }
   }

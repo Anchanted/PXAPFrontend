@@ -2,15 +2,10 @@
   <div class="shadow bg-white rounded modal-area" :style="modalStyle" :class="{'panel-collapsed': panelCollapsed}">
     <div class="modal-window" ref="modal" @scroll="onscroll">
       <!-- <div class="modal-container pb-3" ref="modalContainer"> -->
-        <!-- <div v-if="modalLoading" class="d-flex flex-column justify-content-center loading" :style="{ height: modalStyle.height }">
-          HI
-        </div> -->
-
         <keep-alive :max="1">
-          <router-view v-if="$route.meta.keepAlive" :key="key"></router-view>
+          <router-view v-if="$route.meta.keepAlive" :key="key" ref="aliveRouter"></router-view>
         </keep-alive>
-        <router-view v-if="!$route.meta.keepAlive" :key="key"></router-view>
-        <!-- <router-view :key="key"></router-view> -->
+        <router-view v-if="!$route.meta.keepAlive" :key="key" ref="router"></router-view>
       <!-- </div> -->
     </div>
   </div>
@@ -21,16 +16,12 @@ import { mapState } from 'vuex'
 
 export default {
   name: "Modal",
-  data() {
-    return {
-    }
-  },
   computed: {
-    ...mapState(["screenHeight", 'scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', 'modalLoading']),
+    ...mapState(["screenHeight", 'scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', "modalRouterLeave"]),
     key() {
       const fullPath = this.$route.fullPath || ""
-      console.log(fullPath)
-      console.log(fullPath.split(this.urlLocationReg).join(""))
+      // console.log(fullPath)
+      // console.log(fullPath.split(this.urlLocationReg).join(""))
       return fullPath.split(this.urlLocationReg).join("")
     },
     modalStyle() {
@@ -62,6 +53,24 @@ export default {
       this.$store.commit('setPanelCollapsed', false)
       this.$store.commit('setModalCollapsed', false)
     })
+  },
+  watch: {
+    modalRouterLeave(val) {
+      if (val) {
+        const routerViewEl = this.$refs.aliveRouter?.$el || this.$refs.router?.$el
+        if (routerViewEl) {
+          const clonedNode = routerViewEl.cloneNode(true)
+          clonedNode.classList.add("animation-cache")
+          if (this.$refs.modal) {
+            this.$refs.modal.appendChild(clonedNode)
+            setTimeout(() => {
+              this.$refs.modal.removeChild(clonedNode)
+              this.$store.commit("setModalRouterLeave", false)
+            }, 500)
+          }
+        }
+      }
+    }
   }
 }
 </script>
@@ -164,5 +173,9 @@ export default {
 }
 .more-enter-to, .more-leave {
   transform: translateX(0px);
+}
+
+.fade-leave-active {
+  transition: all .1s;
 }
 </style>

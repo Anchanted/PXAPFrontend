@@ -1,4 +1,3 @@
-import { mapActions } from 'vuex'
 import translationFields from "assets/json/searchTranslationFields.json"
 import campusLocationList from "assets/json/campusLocation.json"
 import i18n from "locales"
@@ -51,8 +50,9 @@ const mixin = {
     },
 
     unifySearchItem(itemList, type) {
-      const fallbackLocale = i18n.fallbackLocale || "en"
-      let currentLocale = i18n.locale || "en"
+      const i18nVue = i18n._vm || {}
+      const fallbackLocale = i18nVue.fallbackLocale || "en"
+      let currentLocale = i18nVue.locale || "en"
       currentLocale = new RegExp(/^(en|zh|es)$/).test(currentLocale) ? currentLocale : fallbackLocale
       return itemList.map(e => {
         const item = JSON.parse(JSON.stringify(e || {}))
@@ -67,20 +67,30 @@ const mixin = {
       })
     },
 
-    geoToImage({ longitude, latitude }) {
+    getImageToCanvasPoint({ x = 0, y = 0 }) {
+      return {
+        x: x * this.scale.x * this.scaleAdaption + this.position.x + this.positionAdaption.x,
+        y: y * this.scale.y * this.scaleAdaption + this.position.y + this.positionAdaption.y
+      }
+    },
+
+    getCanvasToImagePoint({ x = 0, y = 0 }) {
+      return {
+        x: (x - this.positionAdaption.x - this.position.x) / (this.scale.x * this.scaleAdaption),
+        y: (y - this.positionAdaption.y - this.position.y) / (this.scale.y * this.scaleAdaption)
+      }
+    },
+
+    getGeoToImagePoint({ longitude, latitude }) {
       const p1 = campusLocationList[0]
       const p2 = campusLocationList[1]
       const ratio = {
         x: (p2["geo"]["longitude"] - p1["geo"]["longitude"]) / (p2["image"]["x"] - p1["image"]["x"]),
         y: (p2["geo"]["latitude"] - p1["geo"]["latitude"]) / (p2["image"]["y"] - p1["image"]["y"])
       }
-      const origin = {
-        longitude: p1["geo"]["longitude"] - p1["image"]["x"] * ratio.x,
-        latitude: p1["geo"]["latitude"] - p1["image"]["y"] * ratio.y
-      }
       return {
-        x: Math.floor((longitude - origin.longitude) / ratio.x),
-        y: Math.floor((latitude - origin.latitude) / ratio.y)
+        x: Math.floor((longitude - p1["geo"]["longitude"]) / ratio.x) + p1["image"]["x"],
+        y: Math.floor((latitude - p1["geo"]["latitude"]) / ratio.y) + p1["image"]["y"]
       }
     },
 

@@ -3,9 +3,9 @@ const button = {
 
   state: {
     displayVirtualButton: false,
+    locationActivated: false,
     gateActivated: false,
-    occupationActivated: false,
-    locationActivated: false
+    occupationActivated: false
   },
 
   mutations: {

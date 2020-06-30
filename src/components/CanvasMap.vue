@@ -10,7 +10,7 @@ import markerSpriteInfo from "assets/json/markerSpriteInfo.json"
 import arrowSpriteInfo from "assets/json/arrowSpriteInfo.json"
 import { easeOutBack, easeOutCirc, arrowAnimation, locationAnimation } from 'utils/utilFunctions.js'
 
-import { mapState } from 'vuex';
+import { mapState } from "vuex"
 
 export default {
   name: "CanvasMap",
@@ -65,7 +65,7 @@ export default {
       lastMouseX: null,
       lastMouseY: null,
       init: false,
-      mdown: false, // desktop drag
+      mdown: false, 
       mclick: false,
       mdowntime: null,
       clickTimeoutId: 0,
@@ -171,7 +171,6 @@ export default {
       // this.validatePosition()
 
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
-      // indoor map drawing function
       this.drawMapInfo()
       window.requestAnimationFrame(this.animate)
     },
@@ -281,7 +280,7 @@ export default {
             const t = this.currentMarkerAnimation.timer
             const size = t < this.markerAnimationDuration ? easeOutBack(t, this.iconSize*2/3, this.iconSize*2*2/3, this.markerAnimationDuration) : this.iconSize*2
             this.drawMarker(this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, this.currentMarkerAnimation.markerType)
-            if (t < this.markerAnimationDuration) this.currentMarkerAnimation.timer += 0.016
+            if (t <= this.markerAnimationDuration) this.currentMarkerAnimation.timer += 0.016
           }
         } else {
           if (JSON.stringify(this.fromDirectionMarker) !== "{}") this.drawMarker(this.fromDirectionMarker.x, this.fromDirectionMarker.y, this.iconSize * 2, "fromDir")
@@ -297,7 +296,7 @@ export default {
         })
       }
 
-      if (this.locationActivated && this.location.x && this.location.y) {
+      if (this.locationActivated && this.location.x != null && this.location.y != null) {
         const size = parseInt(this.iconSize * 1.5)
         this.drawImage(this.imageMap["locationMarker"], this.location.x, this.location.y, size, size, size/2, size/2, true, false)
         const aniSize = parseInt(size * 0.3 + locationAnimation(this.locationAnimation.timer, size * 0.15, this.locationAnimation.duration))
@@ -347,11 +346,6 @@ export default {
       let translateX
       let translateY
 
-      const scaleX = this.scale.x * this.scaleAdaption
-      const scaleY = this.scale.y * this.scaleAdaption
-      const offsetX = this.position.x + this.positionAdaption.x
-      const offsetY = this.position.y + this.positionAdaption.y
-
       if (arguments.length === 10 || arguments.length === 12) {
         degree = arguments[9]
         translateX = arguments[10] || 0
@@ -371,29 +365,38 @@ export default {
 
       const ctx = this.context
       if (degree != null) {
-        ctx.save();
-        ctx.translate(x * scaleX + offsetX, y * scaleY + offsetY);
-        ctx.rotate(degree * Math.PI / 180);
-        ctx.translate(-(x * scaleX + offsetX), -(y * scaleY + offsetY));
-        ctx.translate(translateX, translateY);
+        const { x: translateX, y: translateY } = this.getImageToCanvasPoint({ x, y })
+
+        ctx.save()
+        ctx.translate(translateX, translateY)
+        ctx.rotate(degree * Math.PI / 180)
+        ctx.translate(-translateX, -translateY)
+        ctx.translate(translateX, translateY)
       }
+
+      const scaleX = this.scale.x * this.scaleAdaption
+      const scaleY = this.scale.y * this.scaleAdaption
       if (!this.rotate || !selfRotate) {
         if (!fixSize) {
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt((x - imgOffsetX) * scaleX + offsetX), parseInt((y - imgOffsetY) * scaleY + offsetY), sizeX * scaleX, sizeY * scaleY)
-          else ctx.drawImage(image, parseInt((x - imgOffsetX) * scaleX + offsetX), parseInt((y - imgOffsetY) * scaleY + offsetY), sizeX * scaleX, sizeY * scaleY)
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: x - imgOffsetX, y: y - imgOffsetY })
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(canvasX), parseInt(canvasY), sizeX * scaleX, sizeY * scaleY)
+          else ctx.drawImage(image, parseInt(canvasX), parseInt(canvasY), sizeX * scaleX, sizeY * scaleY)
         } else {
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(x * scaleX + offsetX - imgOffsetX), parseInt(y * scaleY + offsetY - imgOffsetY), sizeX, sizeY)
-          else ctx.drawImage(image, parseInt(x * scaleX + offsetX - imgOffsetX), parseInt(y * scaleY + offsetY - imgOffsetY), sizeX, sizeY)
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x, y })
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(canvasX - imgOffsetX), parseInt(canvasY - imgOffsetY), sizeX, sizeY)
+          else ctx.drawImage(image, parseInt(canvasX - imgOffsetX), parseInt(canvasY - imgOffsetY), sizeX, sizeY)
         }
       } else {
         ctx.restore()
         if (!fixSize) {
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - ((y + imgOffsetX) * scaleY + offsetY)), parseInt((x - imgOffsetY) * scaleX + offsetX), sizeX * scaleY, sizeY * scaleX)
-          else ctx.drawImage(image, parseInt(this.canvasHeight - ((y + imgOffsetX) * scaleY + offsetY)), parseInt((x - imgOffsetY) * scaleX + offsetX), sizeX * scaleY, sizeY * scaleX)
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: x - imgOffsetY, y: y + imgOffsetX })
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - canvasY), parseInt(canvasX), sizeX * scaleY, sizeY * scaleX)
+          else ctx.drawImage(image, parseInt(this.canvasHeight - canvasY), parseInt(canvasX), sizeX * scaleY, sizeY * scaleX)
         }
         else {
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - (y * scaleY + offsetY + imgOffsetX)), parseInt(x * scaleX + offsetX - imgOffsetY), sizeX, sizeY)
-          else ctx.drawImage(image, parseInt(this.canvasHeight - (y * scaleY + offsetY + imgOffsetX)), parseInt(x * scaleX + offsetX - imgOffsetY), sizeX, sizeY)
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x, y })
+          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - (canvasY + imgOffsetX)), parseInt(canvasX - imgOffsetY), sizeX, sizeY)
+          else ctx.drawImage(image, parseInt(this.canvasHeight - (canvasY + imgOffsetX)), parseInt(canvasX - imgOffsetY), sizeX, sizeY)
         }
         ctx.save()
         ctx.translate(this.canvasHeight, 0)
@@ -434,20 +437,6 @@ export default {
       ctx.shadowBlur = 0
     },
 
-    getImageToCanvasPoint({ x = 0, y = 0 }) {
-      return {
-        x: x * this.scale.x * this.scaleAdaption + this.position.x + this.positionAdaption.x,
-        y: y * this.scale.y * this.scaleAdaption + this.position.y + this.positionAdaption.y
-      }
-    },
-
-    getCanvasToImagePoint({ x = 0, y = 0 }) {
-      return {
-        x: (x - this.positionAdaption.x - this.position.x) / (this.scale.x * this.scaleAdaption),
-        y: (y - this.positionAdaption.y - this.position.y) / (this.scale.y * this.scaleAdaption)
-      }
-    },
-
     getMousePoint ({ x, y }, followRotation = true) {
       return {
         x: (!this.rotate || !followRotation) ? x - this.canvas.getBoundingClientRect().left : y - this.canvas.getBoundingClientRect().top,
@@ -482,27 +471,6 @@ export default {
 
       if (this.position.x !== newPosX) this.position.x = newPosX
       if (this.position.y !== newPosY) this.position.y = newPosY
-    },
-
-    zoomMap(mZoom) {
-      if (!mZoom) return
-
-      // new scale
-      const newScale = this.scale.x + mZoom / 400;
-      const oldScale = this.scale.x
-      this.validateScale(newScale)
-
-      const newPosX = this.focusedPoint.x - this.positionAdaption.x - (this.focusedPoint.x - this.positionAdaption.x - this.position.x) * this.scale.x / oldScale
-      const newPosY = this.focusedPoint.y - this.positionAdaption.y - (this.focusedPoint.y - this.positionAdaption.y - this.position.y) * this.scale.y / oldScale
-      this.validatePosition(newPosX, newPosY)
-    },
-
-    moveMap(deltaCanvasX, deltaCanvasY) {
-      if (deltaCanvasX == null || deltaCanvasY == null) return
-
-      const newPosX = this.position.x + deltaCanvasX
-      const newPosY = this.position.y + deltaCanvasY
-      this.validatePosition(newPosX, newPosY)
     },
 
     manipulateMap() {
@@ -566,49 +534,56 @@ export default {
         image.onload = () => resolve(image);
         image.onerror = () => reject(new Error('Could not load image at ' + url));
         image.crossOrigin = ''
-        image.src = url;
+        image.src = url
       });
     },
 
     isPointinItem(pointX, pointY) {
-      const ctx = this.context;
+      const ctx = this.context
+      let { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }, false)
 
       // click on virtual button
       if (this.displayVirtualButton) {
-        const { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }, false)
         ctx.beginPath()
         ctx.rect(this.virtualButton.position.x, this.virtualButton.position.y, this.virtualButton.size, this.virtualButton.size)
         if (ctx.isPointInPath(px, py)) return 4
       }
 
       // click on markers
-      const scaleX = this.scale.x * this.scaleAdaption
-      const scaleY = this.scale.y * this.scaleAdaption
-      const offsetX = this.position.x + this.positionAdaption.x
-      const offsetY = this.position.y + this.positionAdaption.y
       const size = this.iconSize * 2
       const selfRotate = false
-      let { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }, false)
       if (this.$route.name !== "Direction") {
         if (JSON.stringify(this.selectedPlace) !== "{}") {
-          ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.currentMarkerAnimation.y * scaleY + offsetY - size), size * 0.8, size)
-          else ctx.rect(parseInt(this.canvasHeight - (this.currentMarkerAnimation.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.currentMarkerAnimation.x * scaleX + offsetX - size), size * 0.8, size)
+          if (this.selectedPlace.areaPointList) {
+            ctx.beginPath()
+            this.selectedPlace.areaPointList.forEach((e, index) => {
+              const { x, y } = this.getImageToCanvasPoint(e)
+              if (index == 0) ctx.moveTo(x, y)
+              else ctx.lineTo(x, y)
+            })
+            if (ctx.isPointInPath(px, py)) return 1
+          }
 
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.currentMarkerAnimation.x, y: this.currentMarkerAnimation.y })
+          ctx.beginPath()
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - size/2), parseInt(canvasY - size), size, size)
+          else ctx.rect(parseInt(this.canvasHeight - (canvasY + size/2)), parseInt(canvasX - size), size, size)
           if (ctx.isPointInPath(px, py)) return 1
         }
       } else {
         if (JSON.stringify(this.fromDirectionMarker) !== "{}") {
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.fromDirectionMarker.x, y: this.fromDirectionMarker.y })
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.fromDirectionMarker.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.fromDirectionMarker.y * scaleY + offsetY - size), size * 0.8, size)
-          else ctx.rect(parseInt(this.canvasHeight - (this.fromDirectionMarker.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.fromDirectionMarker.x * scaleX + offsetX - size), size * 0.8, size)
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - size/2), parseInt(canvasY - size), size, size)
+          else ctx.rect(parseInt(this.canvasHeight - (canvasY + size/2)), parseInt(canvasX - size), size, size)
 
           if (ctx.isPointInPath(px, py)) return 2
         }
         if (JSON.stringify(this.toDirectionMarker) !== "{}") {
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.toDirectionMarker.x, y: this.toDirectionMarker.y })
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(this.toDirectionMarker.x * scaleX + offsetX - size/2 * 0.8), parseInt(this.toDirectionMarker.y * scaleY + offsetY - size), size * 0.8, size)
-          else ctx.rect(parseInt(this.canvasHeight - (this.toDirectionMarker.y * scaleY + offsetY + size/2 * 0.8)), parseInt(this.toDirectionMarker.x * scaleX + offsetX - size), size * 0.8, size)
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - size/2), parseInt(canvasY - size), size, size)
+          else ctx.rect(parseInt(this.canvasHeight - (canvasY + size/2)), parseInt(canvasX - size), size, size)
 
           if (ctx.isPointInPath(px, py)) return 3
         }
@@ -637,7 +612,6 @@ export default {
 
     onmousewheel(e) {
       this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
-      // this.zoomMap(-e.deltaY / 5)
       this.manipulateMap(-e.deltaY / 5 / 400)
       this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
       // console.log(this.position.x, this.position.y, this.scale.x)
@@ -652,13 +626,8 @@ export default {
 
       if (this.displayVirtualButton) {
         this.virtualButton.mselected = false
-        const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
-        this.context.beginPath();
-        this.context.rect(this.virtualButton.position.x, this.virtualButton.position.y, this.virtualButton.size, this.virtualButton.size)
-        if (this.context.isPointInPath(px, py)) {
-          this.virtualButton.mselected = true
-          return
-        }
+        const element = this.isPointinItem(e.clientX, e.clientY)
+        if (element && typeof element === "number" && element === 4) this.virtualButton.mselected = true
       }
     },
 
@@ -679,7 +648,6 @@ export default {
         } else if (e.buttons === 1 && this.mdown) {
           this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-          // if (this.lastMouseX != null && this.lastMouseY != null) this.moveMap(px - this.lastMouseX, py - this.lastMouseY)
           if (this.lastMouseX != null && this.lastMouseY != null) this.manipulateMap(px - this.lastMouseX, py - this.lastMouseY)
           this.lastMouseX = px
           this.lastMouseY = py
@@ -693,7 +661,6 @@ export default {
     onmouseup(e) {
       // console.log('mouseup')
       this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
-      const currentTime = Date.now()
 
       const mdown = this.mdown
       const mselected = this.virtualButton.mselected
@@ -701,6 +668,7 @@ export default {
       this.mdown = false
       if (this.displayVirtualButton && this.virtualButton.mselected) this.virtualButton.mselected = false
 
+      const currentTime = Date.now()
       if (mdown && currentTime - this.mdowntime < 200) { // simple click event
         if (this.displayVirtualButton && mselected) {
           // button group hidden mode
@@ -717,7 +685,6 @@ export default {
           if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
             if (!this.lastDoubleClick) {  // second click
               this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
-              // this.zoomMap(200)
               // this.manipulateMap(0.5)
               this.mapAnimation = {
                 x: null,
@@ -761,15 +728,14 @@ export default {
 
         const element = this.isPointinItem(e.clientX, e.clientY)
         if (element) {
-          this.lastDoubleClick = true
           if (typeof element === "number" && element === 1) {
+            this.$store.commit('setPanelCollapsed', false)
+            this.$store.commit('setModalCollapsed', false)
             this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaPointList)
           } else if (typeof element === "object") {
             if (this.$route.name !== "Direction") {
               this.mousedownActivated = true
-              if (element.id === this.selectedPlace.id && element.placeType === this.selectedPlace.placeType)
-                this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaPointList)
-              else this.setSelectedPlace(element)
+              this.setSelectedPlace(element)
             } else {
               if (JSON.stringify(this.fromDirectionMarker) !== "{}" && JSON.stringify(this.toDirectionMarker) !== "{}") {
                 // Exit Direction
@@ -936,7 +902,7 @@ export default {
       const zoom = Math.floor(this.scale.x * 100) / 100
       const currentLocationInfo = `${Math.floor(centerX)},${Math.floor(centerY)},${zoom}z`
 
-      const re = /^[+-]?(\d+),[+-]?(\d+),(\d+(\.\d*)?)z$/
+      const re = /^([+-]?\d+),([+-]?\d+),(\d+(\.\d*)?)z$/
       const matchArr = this.$route.params.locationInfo?.match(re)
       if (matchArr?.[1] && matchArr?.[2] && matchArr?.[3]) {
         const routerX = parseInt(matchArr[1])
@@ -961,7 +927,7 @@ export default {
       let followMap = false
       if (!this.$route.params.locationInfo) followMap = true
       else {
-        const re = /^[+-]?(\d+),[+-]?(\d+),(\d+(\.\d*)?)z$/
+        const re = /^([+-]?\d+),([+-]?\d+),(\d+(\.\d*)?)z$/
         const matchArr = this.$route.params.locationInfo?.match(re)
         console.log(matchArr)
         if (!matchArr) followMap = true
@@ -997,7 +963,6 @@ export default {
 
     this.$EventBus.$on("buttonZoom", zoom => {
       this.focusedPoint = {...this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 })}
-      // this.zoomMap(mZoom)
       // this.manipulateMap(mZoom / 400)
       this.mapAnimation = {
         x: null,
@@ -1036,7 +1001,7 @@ export default {
       // a => a    cX lX rX
       // a => b    cV lV rV
       // a => null cX lV rV
-      if (oldVal && oldVal.x && oldVal.y && this.$route.name !== "Direction") {
+      if (oldVal && oldVal.x != null && oldVal.y != null && this.$route.name !== "Direction") {
         this.lastMarkerAnimation = {
           timer: 0,
           x: oldVal.x,
@@ -1070,35 +1035,35 @@ export default {
               }
             })
         } else {
-          if (this.$route.name.indexOf("Search") === -1 && this.$route.name !== "Direction" && this.$route.name !== "Map") {
+          // if (this.$route.name.indexOf("Search") === -1 && this.$route.name !== "Direction" && this.$route.name !== "Map") {
+          if (!this.$route.name.match(/Search.*|Direction|Map/g)) {
             // not from place to search or to direction
-            this.$store.commit('setModalCollapsed', true)
-            setTimeout(() => {
-              this.$router.push({
-                name: "Map",
-                params: {
-                  buildingId: this.$route.params.buildingId,
-                  floorId: this.$route.params.floorId,
-                  locationInfo: this.$route.params.locationInfo
-                }
-              })
-            }, 500)
+            this.$store.commit("setModalRouterLeave", true)
+            this.$store.commit("setModalCollapsed", true)
+            this.$router.push({
+              name: "Map",
+              params: {
+                buildingId: this.$route.params.buildingId,
+                floorId: this.$route.params.floorId,
+                locationInfo: this.$route.params.locationInfo
+              }
+            })
           }
         }
       }
     },
-    async mapUrl(val) {
+    mapUrl(val) {
       if (val) {
         this.loadImage(val).then(image => {
           this.imageMap["map"] = image
 
-          this.imgWidth = parseInt(this.imageMap['map'].width)
-          this.imgHeight = parseInt(this.imageMap['map'].height)
+          this.imgWidth = parseInt(this.imageMap["map"].width)
+          this.imgHeight = parseInt(this.imageMap["map"].height)
           console.log(this.imgWidth, this.imgHeight)
 
-          this.context.drawImage(this.imageMap['map'], 0, 0, this.imgWidth, this.imgHeight)
+          this.context.drawImage(this.imageMap["map"], 0, 0, this.imgWidth, this.imgHeight)
           const pixel = this.context.getImageData(2, 2, 1, 1).data
-          this.mapMarginColor = (!pixel?.length) ? null : `rgb(${pixel.join(',')})`
+          this.mapMarginColor = (!pixel?.length) ? null : `rgb(${pixel.join(",")})`
 
           this.resizeWindow()
           this.setInitialMapLocation()
@@ -1178,13 +1143,13 @@ export default {
     geolocation(val, oldVal) {
       if (val.lon && val.lat) {
         const firstcall = !oldVal.lon && !oldVal.lat
-        const { x, y } = this.geoToImage({ longitude: val.lon, latitude: val.lat })
+        const { x, y } = this.getGeoToImagePoint({ longitude: val.lon, latitude: val.lat })
         if ((x >= 0 && x <= this.imgWidth) && (y >= 0 && y <= this.imgHeight)) {
           this.location = {
             x,
             y
           }
-          if (firstcall) this.adjustMapPosition({ posX: this.location.x, posY: this.location.y }, "middle", 1)
+          if (firstcall) this.adjustMapPosition("middle", this.location.x, this.location.y, 1)
         } else {
           this.$alert({
             message: "You are not in campus right now.",
@@ -1251,45 +1216,48 @@ export default {
         }
       }
     },
-    $route(to, from) {
-      if (this.checkRouterChange(to.fullPath, from.fullPath)) {
-        const fromBuildingId = from.params.buildingId || ""
-        const fromFloorId = from.params.floorId || ""
-        const toBuildingId = to.params.buildingId || ""
-        const toFloorId = to.params.floorId || ""
-  
-        if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}`) {
-          if (to.name === 'Place') {
-            const item = this.placeList.find(e => e.id === parseInt(to.params.id) && e.placeType === to.params.type)
-            if (item) {
-              if (this.occupationActivated) this.$store.commit("button/setOccupationActivated", false)
-              if (to.params.adjustPosition) this.mousedownActivated = true
-              this.setSelectedPlace(item)
-            } else {
-              next({name: 'PageNotFound'})
-              return
-            }
-          } else {
-            this.setSelectedPlace()
-            if (to.name === "Direction")
-              this.lastMarkerAnimation = {
-                ...this.lastMarkerAnimation,
-                timer: this.markerAnimationDuration + 0.01
+    $route: {
+      immediate: true,
+      handler: function(to, from) {
+        if (to && from) {
+          if (this.checkRouterChange(to.fullPath, from.fullPath)) {
+            const fromBuildingId = from.params.buildingId || ""
+            const fromFloorId = from.params.floorId || ""
+            const toBuildingId = to.params.buildingId || ""
+            const toFloorId = to.params.floorId || ""
+      
+            if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}`) {
+              if (to.name === 'Place') {
+                const item = this.placeList.find(e => e.id === parseInt(to.params.id) && e.placeType === to.params.type)
+                if (item) {
+                  if (this.occupationActivated) this.$store.commit("button/setOccupationActivated", false)
+                  if (to.params.adjustPosition) this.mousedownActivated = true
+                  this.setSelectedPlace(item)
+                } else {
+                  this.$router.push({name: 'PageNotFound'})
+                }
+              } else {
+                this.setSelectedPlace()
+                if (to.name === "Direction")
+                  this.lastMarkerAnimation = {
+                    ...this.lastMarkerAnimation,
+                    timer: this.markerAnimationDuration + 0.01
+                  }
               }
+            }
+      
+            if (from.name === "Direction" && to.name !== "Direction") {
+              this.$store.commit("direction/setGlobalFromText", "")
+              this.$store.commit("direction/setGlobalToText", "")
+              this.$store.commit("direction/setGlobalFromId", "")
+              this.$store.commit("direction/setGlobalToId", "")
+              this.$store.commit("direction/setGlobalPathList", [])
+            }
           }
-        }
-  
-        if (from.name === "Direction" && to.name !== "Direction") {
-          this.$store.commit("direction/setGlobalFromText", "")
-          this.$store.commit("direction/setGlobalToText", "")
-          this.$store.commit("direction/setGlobalFromId", "")
-          this.$store.commit("direction/setGlobalToId", "")
-          this.$store.commit("direction/setGlobalPathList", [])
+          this.setLocationUrl()
         }
       }
-
-      this.setLocationUrl()
-    },
+    }
   }
 }
 </script>
