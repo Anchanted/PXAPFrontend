@@ -16,7 +16,7 @@
               type="search" :placeholder="inputPlaceHolder(true)" aria-label="Search"
               @focus="refreshPage"
               @blur="refreshPage"
-              @keyup.enter="onSubmit($event, false)">
+              @keyup.enter="onsubmit($event, false)">
           </div>
           <div class="direction-input-container">
             <span>终</span>
@@ -25,7 +25,7 @@
               type="search" :placeholder="inputPlaceHolder(false)" aria-label="Search"
               @focus="refreshPage"
               @blur="refreshPage"
-              @keyup.enter="onSubmit($event, true)">
+              @keyup.enter="onsubmit($event, true)">
           </div>
         </div>
         <button 
@@ -53,7 +53,8 @@ export default {
       screenHeight: state => state.screenHeight, 
       panelCollapsed: state => state.panelCollapsed,
       globalFromText: state => state.direction.globalFromText,
-      globalToText: state => state.direction.globalToText
+      globalToText: state => state.direction.globalToText,
+      cachedPlaceParams: state => state.direction.cachedPlaceParams
     }),
     modalStyle() {
       const computedHeight = this.screenHeight - 66 - 50
@@ -83,10 +84,10 @@ export default {
       this.refreshPage()
     },
     closeModal() {
-      if (this.$store.state?.direction?.cachedPlaceParams) {
+      if (this.cachedPlaceParams) {
         this.$router.push({
           name: "Place",
-          params: this.$store.state?.direction?.cachedPlaceParams
+          params: this.cachedPlaceParams
         })
         this.$store.commit("direction/setCachedPlaceParams", null)
       }
@@ -96,12 +97,12 @@ export default {
           params: this.$route.params,
         })
     },
-    onSubmit(e, isTo) {
+    onsubmit(e, isTo = false) {
       this.refreshPage()
 
-      if (isTo === false) {
+      if (!isTo) {
         this.$refs.fromInput?.blur()
-      } else if (isTo) {
+      } else {
         this.$refs.toInput?.blur()
       }
     },
@@ -125,7 +126,7 @@ export default {
     this.$EventBus.$on("setDirectionText", ({ isTo, text = "" }) => {
       if (!isTo) this.fromText = text
       else this.toText = text
-      this.onSubmit(null, isTo)
+      this.onsubmit(null, isTo)
     })
   },
   watch: {

@@ -100,18 +100,18 @@ export default {
       let zone
       switch (this.place.placeType) {
         case 'room':
-          building = this.place.building || {}
+          building = this.place.buildingName || ""
           floor = this.place.floorInfo || []
           zone = this.place.zone || "b"
-          str = `${floor.map(e => this.$t("place.floor." + e.floorName || "GF")).join(this.$t("place.floor.conj"))}, ${building.name}, ${this.$t("place.zone." + zone)}`
+          str = `${floor.map(e => this.$t("place.floor." + e.floorName || "GF")).join(this.$t("place.floor.conj"))}, ${building}, ${this.$t("place.zone." + zone)}`
           break
         case 'facility': {
-          building = this.place.building || {}
-          floor = this.place.floor || {}
+          building = this.place.buildingName || ""
+          floor = this.place.floorName || ""
           zone = this.place.zone || "b"
           const locationArr = []
-          if (floor.name) locationArr.push(this.$t("place.floor." + floor.name))
-          if (building.name) locationArr.push(building.name)
+          if (floor) locationArr.push(this.$t("place.floor." + floor))
+          if (building) locationArr.push(building)
           locationArr.push(this.$t("place.zone." + zone))
           str = locationArr.join(', ')
           break
@@ -170,16 +170,16 @@ export default {
     onclickDirection() {
       this.$store.commit("direction/setCachedPlaceParams", this.$route.params)
       this.$router.push({ 
-        name: 'Direction', 
+        name: "Direction", 
         params: { 
           buildingId: null, 
           floorId: null, 
-          fromPlace: this.place.name, 
-          toPlace: '',
+          // fromPlace: "", 
+          toPlace: this.place.name,
           locationInfo: !this.$route.params.buildingId && !this.$route.params.floorId ? this.$route.params.locationInfo : null
         } 
       })
-      this.$store.commit("direction/setGlobalFromId", `${this.place.id}|${this.place.placeType}`)
+      this.$store.commit("direction/setGlobalToId", `${this.place.id}|${this.place.placeType}`)
     }
   },
   mounted () {

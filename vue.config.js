@@ -60,6 +60,7 @@ module.exports = {
     }
   },
   // publicPath: process.env.NODE_ENV === "production" ? "/mxap/" : "/",
+  // publicPath: "/wenqi/pxap/",
   publicPath: "/",
   // assetsPublicPath: process.env.NODE_ENV === 'production' ? "/xap/" : "/",
   outputDir: "dist", // 打包的目录
@@ -69,7 +70,7 @@ module.exports = {
     open: false, // 启动服务后是否打开浏览器
     host: "0.0.0.0",
     port: 8080, // 服务端口
-    https: true,
+    https: false,
     // https: {
     //   key: fs.readFileSync('src/cert/server.key'),
     //   cert: fs.readFileSync('src/cert/server.crt'),

@@ -97,6 +97,7 @@ const routes = [
 const router = new Router({
   routes,
   mode: 'history',
+  // base: '/wenqi/pxap/'
   base: '/'
 })
 
@@ -104,7 +105,8 @@ router.beforeEach((to, from, next) => {
   if (to.params.buildingId && !to.params.floorId) next({ name: 'PageNotFound' })
   else if (to.name === "Direction" && (to.params.buildingId || to.params.floorId)) next({ name: "Map", params: to.params })
   else {
-    if (to.matched?.[0]?.name === "Map" && to.fullPath.split(/@.*?(\?|$)/).join("") !== from.fullPath.split(/@.*?(\?|$)/).join("")) {
+    if (to.matched?.[0]?.name === "Map" 
+      && decodeURIComponent(to.fullPath.split(/@.*?(\?|$)/).join("")) !== decodeURIComponent(from.fullPath.split(/@.*?(\?|$)/).join(""))) {
       const fromBuildingId = from.params.buildingId || ''
       const fromFloorId = from.params.floorId || ''
       const toBuildingId = to.params.buildingId || ''
@@ -133,20 +135,6 @@ router.beforeEach((to, from, next) => {
       $('[data-tooltip="tooltip"]').tooltip("dispose");
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-tooltip="tooltip"]').tooltip();
-  
-      // if (`b${fromBuildingId}f${fromFloorId}` === `b${toBuildingId}f${toFloorId}` 
-      //   && store.commit("checkRouterChange", { toPath: to.fullPath, fromPath: from.fullPath })) {
-      //   if (from.params.locationInfo && from.params.locationInfo !== to.params.locationInfo) {
-      //     next({
-      //       name: to.name,
-      //       params: {
-      //         ...to.params,
-      //         locationInfo: from.params.locationInfo
-      //       },
-      //       query: to.query
-      //     })
-      //   } else next()
-      // } else next()
     }
     next()
   }

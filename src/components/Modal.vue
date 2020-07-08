@@ -20,9 +20,8 @@ export default {
     ...mapState(["screenHeight", 'scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', "modalRouterLeave"]),
     key() {
       const fullPath = this.$route.fullPath || ""
-      // console.log(fullPath)
       // console.log(fullPath.split(this.urlLocationReg).join(""))
-      return fullPath.split(this.urlLocationReg).join("")
+      return decodeURIComponent(fullPath.split(this.urlLocationReg).join(""))
     },
     modalStyle() {
       const computedHeight = this.screenHeight - 66 - 50

@@ -8,8 +8,8 @@ module.exports = {
         'noResult': 'Your search returned no results.',
     },
     direction: {
-        "fromInput": "Choose starting point",
-        "toInput": "Choose destination",
+        "fromInput": "Choose a starting point",
+        "toInput": "Choose a destination",
         "clickMap": " or click on the map",
         "go": "Go"
     },

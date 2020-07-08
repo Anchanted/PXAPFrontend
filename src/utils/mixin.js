@@ -25,8 +25,8 @@ const mixin = {
             }
           })
         } else {
-          const buildingId = item.building ? item.building.id : item.building_id
-          const floorId = item.floor ? item.floor.id : item.floor_id
+          const buildingId = item.building ? item.buildingId : item.building_id
+          const floorId = item.floor ? item.floorId : item.floor_id
           let params = {
             buildingId,
             floorId,
@@ -95,7 +95,7 @@ const mixin = {
     },
 
     checkRouterChange(toPath = "", fromPath = "") {
-      return toPath.split(this.urlLocationReg).join("") !== fromPath.split(this.urlLocationReg).join("")
+      return decodeURIComponent(toPath.split(this.urlLocationReg).join("")) !== decodeURIComponent(fromPath.split(this.urlLocationReg).join(""))
     }
   }
 }

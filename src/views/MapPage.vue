@@ -6,7 +6,7 @@
       :occupied-room-list="occupiedRoomList"
       :gate-list="gateList"
       :geolocation="geolocation"
-      @mapLoadingComplete="imageLoadingComplete = true"
+      @mapLoadingComplete="loadingComplete.image = true"
       @mapLoadingError="loadingError = true"
     ></canvas-map>
 
@@ -20,7 +20,7 @@
       :button-list="buttonList"
       :current-floor="selectedFloor"
       :floor-list="floorList"
-      :building-code="buildingCode"
+      :currentBuilding="selectedBuilding"
       :occupation-time="occupationTime"
       :occupation-requesting="occupationRequesting"
       :gate-requesting="gateRequesting"
@@ -89,7 +89,7 @@ export default {
       campusImage: require("assets/images/map/campus/map.png"),
       mapUrl: null,
       mapType: null,
-      buildingCode: null,
+      selectedBuilding: null,
       selectedFloor: {},
       occupiedRoomList: [],
       placeList: [],
@@ -101,8 +101,10 @@ export default {
       loadingError: false,
       occupationRequesting: false,
       gateRequesting: false,
-      imageLoadingComplete: false,
-      dataLoadingComplete: false
+      loadingComplete: {
+        image: false,
+        place: false
+      }
     }
   },
   computed: {
@@ -129,7 +131,7 @@ export default {
       return null
     },
     loading() {
-      return !(this.imageLoadingComplete && this.dataLoadingComplete)
+      return !(this.loadingComplete.place && this.loadingComplete.image)
     }
   },
   methods: {
@@ -251,7 +253,7 @@ export default {
         console.log(data)
         this.selectedFloor = data.selectedFloor || {}
         this.floorList = data.floorList || []
-        this.buildingCode = data.building?.code || ""
+        this.selectedBuilding = data.building || {}
       } else {
         data = await this.$api.floor.getCampusInfo()
         console.log(data)
@@ -259,7 +261,7 @@ export default {
 
       this.placeList = this.placeList.concat(data.facilityList || [], data.roomList || [], data.buildingList || [])
       this.mapUrl = this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage
-      this.dataLoadingComplete = true
+      this.loadingComplete.place = true
     } catch (error) {
       console.log(error)
       this.loadingError = true
@@ -289,7 +291,7 @@ export default {
               type: "primary"
             })
             this.gateRequesting = true
-            const data = await this.$api.gate.getGateList(this.selectedFloor.id)
+            const data = await this.$api.portal.getGateList(this.selectedBuilding.id, this.selectedFloor.id)
             if (!this.gateRequesting) return
             this.gateRequesting = false
             this.$alert.close()

@@ -37,7 +37,7 @@
 
       <!-- Floor Dropdown -->
       <div v-if="buttonList.indexOf('floor') !== -1 && !loading" class="floor">
-        <button type="button" class="btn btn-outline-secondary dropdown-building" disabled>{{buildingCode}}</button>
+        <button type="button" class="btn btn-outline-secondary dropdown-building" disabled>{{currentBuilding.code}}</button>
         <button type="button" class="btn btn-secondary dropdown-floor" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
           data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.floor')">{{floorName}}</button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -106,7 +106,10 @@ export default {
       type: Array,
       default: () => []
     },
-    buildingCode: String,
+    currentBuilding: {
+      type: Object,
+      default: () => ""
+    },
     occupationTime: String,
     loading: Boolean,
     occupationRequesting: Boolean,

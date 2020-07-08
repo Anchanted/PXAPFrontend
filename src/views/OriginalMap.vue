@@ -19,6 +19,7 @@ import NorthPath from "assets/json/northPath.json5"
 import SouthPath from "assets/json/southPath.json5"
 import UnderPath from "assets/json/underPath.json5"
 import FilteredPath from "assets/json/filteredPath.json5"
+import { drawArrow } from "utils/utilFunctions.js"
 
 export default {
   components: {
@@ -37,7 +38,6 @@ export default {
       mouseX: 0,
       mouseY: 0,
       pathArr: [],
-      underPathArr: [],
       focusPointX: 0,
       focusPointY: 0,
       singlePointArr: [],
@@ -99,7 +99,7 @@ export default {
       //alert('x: ' + x + '\ny: ' + y);
       return { 'x': x, 'y': y };
     },
-    loadImage: function (url) {
+    loadImage (url) {
       return new Promise(function(resolve, reject) {
         var image = new Image()
 
@@ -115,7 +115,7 @@ export default {
         image.src = url
       })
     },
-    getCentroid: function (coordsStr) {
+    getCentroid (coordsStr) {
       const coordsArr = coordsStr.split(",");
       const coordsArrLength = coordsArr.length;
       const vertexArr = [];
@@ -198,9 +198,26 @@ export default {
             this.context.fill()
           })
 
-          this.context.globalAlpha = 0.5
-          this.context.strokeStyle = properties.selected ? "yellow" : (properties.type ? "purple" : "orange")
           this.context.lineWidth = properties.selected ? 6 : 4
+          // if (properties.selected) {
+          //   this.context.strokeStyle = "yellow"
+          // } else {
+          //   this.context.globalAlpha = 0.5
+          //   if (properties.walk != null && properties.car != null) this.context.strokeStyle = "orangered"
+          //   else if (properties.walk != null) this.context.strokeStyle = "purple"
+          //   else if (properties.car != null) this.context.strokeStyle = "cyan"
+          // }
+          if (properties.selected) {
+            this.context.strokeStyle = "yellow"
+          } else {
+            this.context.globalAlpha = 0.5
+            if (properties.level[0] === 1 && properties.level[1] === 1) this.context.strokeStyle = "purple"
+            else if (properties.level[0] > 1 && properties.level[1] > 1) this.context.strokeStyle = "red"
+            else if (properties.level[0] < 1 && properties.level[1] < 1) this.context.strokeStyle = "teal"
+            else if ((properties.level[0] === 1 && properties.level[1] > 1) || (properties.level[1] === 1 && properties.level[0] > 1)) this.context.strokeStyle = "orange"
+            else if ((properties.level[0] === 1 && properties.level[1] < 1) || (properties.level[1] === 1 && properties.level[0] < 1)) this.context.strokeStyle = "lime"
+          }
+
           this.context.beginPath()
           for (let i = 0; i < lineString.length; i ++) {
             const point = lineString[i]
@@ -208,37 +225,28 @@ export default {
             else this.context.lineTo(point[0], point[1])
           }
           this.context.stroke()
+
           this.context.lineWidth = 1
           this.context.globalAlpha = 1
+
+          if (properties.car === 0) {
+            this.context.strokeStyle = "green"
+            drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, 0)
+          }
+          if (properties.car === 1) {
+            this.context.strokeStyle = "red"
+            drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], 2, 0)
+          }
+          if (properties.level[0] !== properties.level[1]) {
+            if ((properties.level[0] === 1 && properties.level[1] > 1) || (properties.level[1] === 1 && properties.level[0] > 1)) {
+              this.context.strokeStyle = "orange"
+            } else if ((properties.level[0] === 1 && properties.level[1] < 1) || (properties.level[1] === 1 && properties.level[0] < 1)) {
+              this.context.strokeStyle = "lime"
+            }
+            drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, properties.level[0] !== 1 ? 0 : 1)
+          }
         })
       }
-
-      // if (this.underPathArr.length) {
-      //   this.underPathArr.forEach(feature => {
-      //     const lineString = feature.geometry.coordinates
-      //     const properties = feature.properties
-
-      //     this.context.fillStyle="green"
-      //     lineString.forEach(point => {
-      //       this.context.beginPath()
-      //       this.context.arc(point[0], point[1], 3, 0, 2*Math.PI)
-      //       this.context.fill()
-      //     })
-
-      //     this.context.globalAlpha = 0.5
-      //     this.context.strokeStyle = properties.selected ? "yellow" : "blue"
-      //     this.context.lineWidth = properties.selected ? 6 : 4
-      //     this.context.beginPath()
-      //     for (let i = 0; i < lineString.length; i ++) {
-      //       const point = lineString[i]
-      //       if (i == 0) this.context.moveTo(point[0], point[1])
-      //       else this.context.lineTo(point[0], point[1])
-      //     }
-      //     this.context.stroke()
-      //     this.context.lineWidth = 1
-      //     this.context.globalAlpha = 1
-      //   })
-      // }
 
       this.context.fillStyle="blue"
       this.context.beginPath()
@@ -280,7 +288,7 @@ export default {
       if (size) {
         this.context.strokeStyle = "yellow"
         this.context.lineWidth = 6
-        const cc = ~~(this.calTime / 10)
+        const cc = ~~(this.calTime / 2)
         for (let n = 0; n <= cc; n++) {
           const lineString = this.ftdPathArr[n];
           this.context.beginPath()
@@ -425,9 +433,8 @@ export default {
     // NorthPath?.features?.forEach(e => this.pathArr.push(e))
     // SouthPath?.features?.forEach(e => this.pathArr.push(e))
     // UnderPath?.features?.forEach(e => this.pathArr.push(e))
-    FilteredPath?.features?.forEach(e => this.pathArr.push(e))
 
-    UnderPath?.features?.forEach(e => this.underPathArr.push(e))
+    FilteredPath?.features?.forEach(e => this.pathArr.push(e))
 
     this.pathArr.forEach(feature => {
       const lineString = feature.geometry.coordinates
@@ -457,17 +464,16 @@ export default {
         if (value.length === i) sortedMap.set(key, value)
       })
     }
-    this.pointMap = sortedMap
-    // this.ftdPathArr.push([])
-    // this.pathRecursion(0, this.pointMap.get([...this.pointMap.keys()][0])[0][0])
-    console.log(this.ftdPathArr.length)
-    // const data = await this.$api.direction.getPath()
-    // console.log(data)
-    // this.ftdPathArr = data.map(e => e.pointList.map(point => [point.x, point.y]))
+    // this.pointMap = sortedMap
+    // console.log(this.pointMap)
 
-    const data = await this.$api.direction.getPath(2, 18)
-    this.apiPathList = data.pathList
-    console.log(this.apiPathList)
+    // // // this.ftdPathArr.push([])
+    // this.pathRecursion(0, this.pointMap.get([...this.pointMap.keys()][0])[0][0])
+    // console.log(this.ftdPathArr.length)
+
+    // const data = await this.$api.direction.getPath(2, 18)
+    // this.apiPathList = data.pathList
+    // console.log(this.apiPathList)
 
     // const lineDict = new Map()
     // this.ftdPathArr.forEach(pointArr => {
@@ -507,6 +513,7 @@ export default {
       else if (this.floorIndex === 0) floorName = 'G'
       else if (this.floorIndex === -1) floorName = 'B'
 
+      // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
       // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/EMPBF.png`)
       this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
     } catch (error) {

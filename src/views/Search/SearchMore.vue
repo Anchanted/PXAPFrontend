@@ -123,7 +123,7 @@ export default {
     ...mapState(['modalScrollTop']),
     searchTitle () {
       // return this.query && this.dataType ? `"${decodeURIComponent(this.query)}" in ${this.dataType.charAt(0).toUpperCase()}${this.dataType.slice(1)}` : ''
-      return this.query && this.dataType ? this.$i18n.t('search.moreTopbar',{ query: decodeURIComponent(this.query), type: this.$i18n.t(`placeType.${this.dataType}`) }) : ''
+      return this.query && this.dataType ? this.$t('search.moreTopbar',{ query: decodeURIComponent(this.query), type: this.$t(`placeType.${this.dataType}`) }) : ''
     },
     itemLocation () {
       return (item, type) => {

@@ -4,7 +4,7 @@ import floor from './floor'
 import room from './room'
 import facility from './facility'
 import gate from './gate'
-import search from './search'
+import portal from './portal'
 import direction from "./direction"
 
 export default {
@@ -14,6 +14,6 @@ export default {
     room,
     facility,
     gate,
-    search,
+    portal,
     direction
 }

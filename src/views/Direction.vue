@@ -30,9 +30,8 @@ export default {
     }
   },
   methods: {
-    async searchDirection(route) {
+    async searchDirection(route = this.$route) {
       this.errorInfo = ""
-      if (!route) route = this.$route
       const fromText = route.params.fromPlace?.trim() || ""
       const toText = route.params.toPlace?.trim() || ""
       this.$store.commit("direction/setGlobalFromText", fromText)
@@ -81,16 +80,36 @@ export default {
     }
   },
   mounted() {
-    // if (this.$route.params.fromPlace || this.$route.params.toPlace) 
-      this.searchDirection()
+  },
+  beforeRouteEnter(to, from, next) {
+    const fromText = to.params.fromPlace?.trim() || ""
+    const toText = to.params.toPlace?.trim() || ""
+    next(vm => {
+      vm.$store.commit("direction/setGlobalFromText", fromText)
+      vm.$store.commit("direction/setGlobalToText", toText)
+      vm.searchDirection()
+    })
   },
   beforeRouteUpdate(to, from, next) {
-    next()
-    // if (to.params.fromPlace || to.params.toPlace)
+    const fromText = to.params.fromPlace?.trim() || ""
+    const toText = to.params.toPlace?.trim() || ""
+
+    this.$store.commit("direction/setGlobalFromText", fromText)
+    this.$store.commit("direction/setGlobalToText", toText)
+
     if (this.checkRouterChange(to.fullPath, from.fullPath)) {
       if (!to.params.noRequest) this.searchDirection(to)
     }
+    next()
   },
+  beforeRouteLeave(to, from, next) {
+    this.$store.commit("direction/setGlobalFromText", "")
+    this.$store.commit("direction/setGlobalToText", "")
+    this.$store.commit("direction/setGlobalFromId", "")
+    this.$store.commit("direction/setGlobalToId", "")
+    this.$store.commit("direction/setGlobalPathList", [])
+    next()
+  }
 }
 </script>
 
