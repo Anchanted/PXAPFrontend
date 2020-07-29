@@ -78,7 +78,7 @@ export default {
 
 body {
   position: relative;
-  /* overflow: hidden; */
+  overflow: hidden;
 
 }
 

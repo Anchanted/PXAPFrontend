@@ -3,6 +3,7 @@
     <canvas-map
       :place-list="placeList"
       :map-url="mapUrl"
+      :map-level="mapLevel"
       :occupied-room-list="occupiedRoomList"
       :gate-list="gateList"
       :geolocation="geolocation"
@@ -20,7 +21,7 @@
       :button-list="buttonList"
       :current-floor="selectedFloor"
       :floor-list="floorList"
-      :currentBuilding="selectedBuilding"
+      :current-building="selectedBuilding"
       :occupation-time="occupationTime"
       :occupation-requesting="occupationRequesting"
       :gate-requesting="gateRequesting"
@@ -89,7 +90,7 @@ export default {
       campusImage: require("assets/images/map/campus/map.png"),
       mapUrl: null,
       mapType: null,
-      selectedBuilding: null,
+      selectedBuilding: {},
       selectedFloor: {},
       occupiedRoomList: [],
       placeList: [],
@@ -123,6 +124,9 @@ export default {
         if (this.selectedFloor.hasOccupation) buttonList.push("occupation")
       }
       return buttonList
+    },
+    mapLevel() {
+      return (this.selectedFloor?.indexNum || 0) - (this.selectedBuilding?.levelDifference || 0)
     },
     displayDatetime() {
       return this.buttonList.some(e => e === "occupation")

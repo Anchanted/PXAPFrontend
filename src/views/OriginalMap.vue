@@ -14,11 +14,23 @@
 <script>
 import OriginalMapPanel from '@/components/OriginalMapPanel'
 
-import RoadPath from "assets/json/roadPath.json5"
-import NorthPath from "assets/json/northPath.json5"
-import SouthPath from "assets/json/southPath.json5"
-import UnderPath from "assets/json/underPath.json5"
-import FilteredPath from "assets/json/filteredPath.json5"
+// import RoadPath from "assets/json/campus/roadPath.json5"
+// import NorthPath from "assets/json/campus/northPath.json5"
+// import SouthPath from "assets/json/campus/southPath.json5"
+// import UnderPath from "assets/json/campus/underPath.json5"
+import FilteredPath from "assets/json/campus/filteredPath.json5"
+import SPath from "assets/json/S/filteredPath.json"
+import BSPath from "assets/json/BS/filteredPath.json"
+import CBPath from "assets/json/CB/filteredPath.json"
+// import BSBFPath from "assets/json/BS/BSBF.json5"
+// import BSGFPath from "assets/json/BS/BSGF.json5"
+// import BS1FPath from "assets/json/BS/BS1F.json5"
+// import BS2FPath from "assets/json/BS/BS2F.json5"
+// import BS3FPath from "assets/json/BS/BS3F.json5"
+// import BS4FPath from "assets/json/BS/BS4F.json5"
+// import BS5FPath from "assets/json/BS/BS5F.json5"
+// import BSZPath from "assets/json/CB/zPath.json5"
+// import PortalPath from "assets/json/portalPath.json5"
 import { drawArrow } from "utils/utilFunctions.js"
 
 export default {
@@ -45,7 +57,16 @@ export default {
       ftdPathArr: [],
       calTime: 0,
       selectedPath: null,
-      apiPathList: null
+      apiPathList: null,
+      buildingList: [],
+      emptyFeature: {
+        "type": "Feature", 
+        "properties": {}, 
+        "geometry": {
+            "type": "LineString", 
+            "coordinates": []
+        }
+      }
     }
   },
   methods: {
@@ -59,6 +80,10 @@ export default {
         this.pathArr.forEach(feature => {
           const lineString = feature.geometry.coordinates
           const properties = feature.properties
+
+          if (this.$route.params.floorIndex) 
+            if ((properties.buildingCode[0] !== this.buildingCode && properties.buildingCode[1] !== this.buildingCode)
+              || (Math.abs(properties.floorIndex[0] - this.floorIndex) >= 1 && Math.abs(properties.floorIndex[1] - this.floorIndex) >= 1)) return
 
           this.context.beginPath()
           for (let i = 0; i < lineString.length; i ++) {
@@ -191,31 +216,62 @@ export default {
           const lineString = feature.geometry.coordinates
           const properties = feature.properties
 
-          this.context.fillStyle="green"
-          lineString.forEach(point => {
-            this.context.beginPath()
-            this.context.arc(point[0], point[1], 3, 0, 2*Math.PI)
-            this.context.fill()
-          })
-
           this.context.lineWidth = properties.selected ? 6 : 4
-          // if (properties.selected) {
-          //   this.context.strokeStyle = "yellow"
-          // } else {
-          //   this.context.globalAlpha = 0.5
-          //   if (properties.walk != null && properties.car != null) this.context.strokeStyle = "orangered"
-          //   else if (properties.walk != null) this.context.strokeStyle = "purple"
-          //   else if (properties.car != null) this.context.strokeStyle = "cyan"
-          // }
-          if (properties.selected) {
-            this.context.strokeStyle = "yellow"
+
+          if (!this.$route.params.floorIndex) {
+            // if (properties.selected) {
+            //   this.context.strokeStyle = "yellow"
+            // } else {
+            //   this.context.globalAlpha = 0.5
+            //   this.context.strokeStyle = "purple"
+            //   if (properties.walk != null && properties.car != null) this.context.strokeStyle = "orangered"
+            //   else if (properties.walk != null) this.context.strokeStyle = "purple"
+            //   else if (properties.car != null) this.context.strokeStyle = "cyan"
+            // }
+            if (properties.selected) {
+              this.context.strokeStyle = "yellow"
+            } else {
+              this.context.globalAlpha = 0.5
+              if (properties.level[0] === 0 && properties.level[1] === 0) this.context.strokeStyle = "purple"
+              else if (properties.level[0] > 0 && properties.level[1] > 0) this.context.strokeStyle = "red"
+              else if (properties.level[0] < 0 && properties.level[1] < 0) this.context.strokeStyle = "teal"
+              else if ((properties.level[0] === 0 && properties.level[1] > 0) || (properties.level[1] === 0 && properties.level[0] > 0)) this.context.strokeStyle = "orange"
+              else if ((properties.level[0] === 0 && properties.level[1] < 0) || (properties.level[1] === 0 && properties.level[0] < 0)) this.context.strokeStyle = "lime"
+            }
           } else {
-            this.context.globalAlpha = 0.5
-            if (properties.level[0] === 1 && properties.level[1] === 1) this.context.strokeStyle = "purple"
-            else if (properties.level[0] > 1 && properties.level[1] > 1) this.context.strokeStyle = "red"
-            else if (properties.level[0] < 1 && properties.level[1] < 1) this.context.strokeStyle = "teal"
-            else if ((properties.level[0] === 1 && properties.level[1] > 1) || (properties.level[1] === 1 && properties.level[0] > 1)) this.context.strokeStyle = "orange"
-            else if ((properties.level[0] === 1 && properties.level[1] < 1) || (properties.level[1] === 1 && properties.level[0] < 1)) this.context.strokeStyle = "lime"
+            if ((properties.buildingCode[0] !== this.buildingCode && properties.buildingCode[1] !== this.buildingCode)
+              || (Math.abs(properties.floorIndex[0] - this.floorIndex) >= 1 && Math.abs(properties.floorIndex[1] - this.floorIndex) >= 1)) return
+
+            if (properties.selected) {
+              this.context.strokeStyle = "yellow"
+            } else {
+              this.context.globalAlpha = 0.5
+              this.context.strokeStyle = "yellow"
+              if (properties.buildingCode[0] === properties.buildingCode[1]) {
+                switch (this.buildingList.indexOf(properties.buildingCode[0])) {
+                  case 0:
+                    this.context.strokeStyle = "purple"
+                    break;
+                  case 1:
+                    this.context.strokeStyle = "lime"
+                    break;
+                  case 2:
+                    this.context.strokeStyle = "lightpink"
+                    break;
+                  case 3:
+                    this.context.strokeStyle = "cyan"
+                    break;
+                  case 4:
+                    this.context.strokeStyle = "teal"
+                    break;
+                  default:
+                    this.context.strokeStyle = "yellow"
+                    break;
+                }
+              }
+  
+              if (Math.abs(properties.floorIndex[0] - this.floorIndex) > 0 || Math.abs(properties.floorIndex[1] - this.floorIndex) > 0) this.context.strokeStyle = "red"
+            } 
           }
 
           this.context.beginPath()
@@ -229,22 +285,45 @@ export default {
           this.context.lineWidth = 1
           this.context.globalAlpha = 1
 
-          if (properties.car === 0) {
-            this.context.strokeStyle = "green"
-            drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, 0)
-          }
-          if (properties.car === 1) {
-            this.context.strokeStyle = "red"
-            drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], 2, 0)
-          }
-          if (properties.level[0] !== properties.level[1]) {
-            if ((properties.level[0] === 1 && properties.level[1] > 1) || (properties.level[1] === 1 && properties.level[0] > 1)) {
-              this.context.strokeStyle = "orange"
-            } else if ((properties.level[0] === 1 && properties.level[1] < 1) || (properties.level[1] === 1 && properties.level[0] < 1)) {
-              this.context.strokeStyle = "lime"
+          if (!this.$route.params.floorIndex) {
+            if (properties.car === 0) {
+              this.context.strokeStyle = "green"
+              drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, 0)
             }
-            drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, properties.level[0] !== 1 ? 0 : 1)
+            if (properties.car === 1) {
+              this.context.strokeStyle = "red"
+              drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], 2, 0)
+            }
+            if (properties.level[0] !== properties.level[1]) {
+              if ((properties.level[0] === 0 && properties.level[1] > 0) || (properties.level[1] === 0 && properties.level[0] > 0)) {
+                this.context.strokeStyle = "orange"
+              } else if ((properties.level[0] === 0 && properties.level[1] < 0) || (properties.level[1] === 0 && properties.level[0] < 0)) {
+                this.context.strokeStyle = "lime"
+              }
+              drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, properties.level[0] !== 0 ? 0 : 1)
+            }  
+          } else {
+            if ((properties.floorIndex[0] === this.floorIndex && Math.abs(properties.floorIndex[1] - this.floorIndex) > 0)  
+                || (properties.floorIndex[1] === this.floorIndex && Math.abs(properties.floorIndex[0] - this.floorIndex) > 0)) {
+              let style = 1
+              this.context.strokeStyle = "black"
+              this.context.fillStyle = "black"
+              if (properties.floorIndex[0] > this.floorIndex || properties.floorIndex[1] > this.floorIndex) style = 3
+              if (properties.floorIndex[0] < this.floorIndex || properties.floorIndex[1] < this.floorIndex) style = 2
+              drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], style, 0)
+              drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], style, 0)
+            }
           }
+
+          this.context.globalAlpha = 0.5
+          this.context.fillStyle = properties.portal != null ? "orange" :"green"
+          const radius = properties.portal != null ? 6 : 3
+          lineString.forEach(point => {
+            this.context.beginPath()
+            this.context.arc(point[0], point[1], radius, 0, 2*Math.PI)
+            this.context.fill()
+          })
+          this.context.globalAlpha = 1
         })
       }
 
@@ -284,24 +363,24 @@ export default {
       //   this.context.fill()
       // })
 
-      const size = this.ftdPathArr.length
-      if (size) {
-        this.context.strokeStyle = "yellow"
-        this.context.lineWidth = 6
-        const cc = ~~(this.calTime / 2)
-        for (let n = 0; n <= cc; n++) {
-          const lineString = this.ftdPathArr[n];
-          this.context.beginPath()
-          for (let i = 0; i < lineString.length; i ++) {
-            const point = lineString[i]
-            if (i == 0) this.context.moveTo(point[0], point[1])
-            else this.context.lineTo(point[0], point[1])
-          }
-          this.context.stroke()
-        }
-        this.context.lineWidth = 1
-        if (cc < size-1) this.calTime ++
-      }
+      // const size = this.ftdPathArr.length
+      // if (size) {
+      //   this.context.strokeStyle = "yellow"
+      //   this.context.lineWidth = 6
+      //   const cc = ~~(this.calTime / 5)
+      //   for (let n = 0; n <= cc; n++) {
+      //     const lineString = this.ftdPathArr[n].geometry.coordinates;
+      //     this.context.beginPath()
+      //     for (let i = 0; i < lineString.length; i ++) {
+      //       const point = lineString[i]
+      //       if (i == 0) this.context.moveTo(point[0], point[1])
+      //       else this.context.lineTo(point[0], point[1])
+      //     }
+      //     this.context.stroke()
+      //   }
+      //   this.context.lineWidth = 1
+      //   if (cc < size-1) this.calTime ++
+      // }
 
       if (this.apiPathList) {
         this.context.lineWidth = 6
@@ -324,10 +403,12 @@ export default {
       // console.log(index, dim, value)
       if (/^\d+$/.test(value)) {
         this.pointArr[index][dim] = parseInt(value)
-        let pointStr = ''
-        for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
-        console.log(pointStr)
-        if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
+        // let pointStr = ''
+        // for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
+        // console.log(pointStr)
+        // if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
+
+        console.log(this.pointArr.map(point => `[${point.x}, ${point.y}]`).join(","))
       }
     },
     removePoint (index) {
@@ -336,7 +417,7 @@ export default {
     removePoints () {
       this.pointArr = []
     },
-    async pathRecursion (p, curPoint) {
+    pathRecursion (p, curPoint) {
       const curKey = `${curPoint[0]},${curPoint[1]}`
       const curPointAss = this.pointMap.get(curKey)
       let found
@@ -344,84 +425,126 @@ export default {
 
       if (!curPointAss.length) return
       if (curPointAss.length === 1) {  // first, last
-        const nxtPoint = curPointAss[0][1]
+        const nxtFeature = curPointAss[0]
+        const nxtPath = nxtFeature.geometry.coordinates
+        const nxtPoint = nxtPath[1]
         const nxtKey = `${nxtPoint[0]},${nxtPoint[1]}`
 
         // first
         if (!this.ftdPathArr.length) {
-          this.ftdPathArr.push([curPoint])
+          const newFeature = { 
+            ...JSON.parse(JSON.stringify(this.emptyFeature)), 
+            "properties": nxtFeature.properties 
+          }
+          newFeature.geometry.coordinates = [curPoint]
+          this.ftdPathArr.push(newFeature)
           return this.pathRecursion(1, nxtPoint)
         }
 
         // check if is the last
-        const lastPath = this.ftdPathArr[this.ftdPathArr.length-1]
+        const lastPath = this.ftdPathArr[this.ftdPathArr.length-1].geometry.coordinates
         const prePoint = lastPath[lastPath.length-1]
         if (this.orderPathString(1, curPoint, prePoint) === this.orderPathString(1, curPoint, nxtPoint)) { // check if last line is ass
           // last
-          this.ftdPathArr[this.ftdPathArr.length-1].push(curPoint)
+          this.ftdPathArr[this.ftdPathArr.length-1].geometry.coordinates.push(curPoint)
           return
         } else { // new path
           // first
           // check if this line appears before
-          found = this.ftdPathArr.some(path => {
+          found = this.ftdPathArr.some(feature => {
+            const path = feature.geometry.coordinates
             for (let i = 0; i < path.length-1; i++) 
               if (this.orderPathString(2.5, path[i], path[i+1]) === this.orderPathString(2.5, curPoint, nxtPoint)) return true 
           })
           if (!found) {
-            this.ftdPathArr.push([curPoint])
+            const newFeature = { 
+              ...JSON.parse(JSON.stringify(this.emptyFeature)), 
+              "properties": nxtFeature.properties 
+            }
+            newFeature.geometry.coordinates = [curPoint]
+            this.ftdPathArr.push(newFeature)
             return this.pathRecursion(2, nxtPoint)
           }
         }
       } else if (curPointAss.length === 2) {  // middle
-        const lastPath = this.ftdPathArr[this.ftdPathArr.length-1]
-        const prePoint = curPointAss.find(line => this.orderPathString(2, curPoint, line[1]) === this.orderPathString(2, curPoint, lastPath[lastPath.length-1]))[1]
+        const lastFeature = this.ftdPathArr[this.ftdPathArr.length-1]
+        const lastPath = lastFeature.geometry.coordinates
+        const preFeature = curPointAss.find(feature => this.orderPathString(2, curPoint, feature.geometry.coordinates[1]) === this.orderPathString(2, curPoint, lastPath[lastPath.length-1]))
+        const prePath = preFeature.geometry.coordinates
+        const prePoint = prePath[1]
         // check if last line is in ass
         // cannot be the first point
         if (!prePoint) return
 
         // last and get another line
-        const nxtPoint = curPointAss.find(line => this.orderPathString(2.2, curPoint, line[1]) !== this.orderPathString(2.2, curPoint, prePoint))[1]
+        const nxtFeature = curPointAss.find(feature => this.orderPathString(2.2, curPoint, feature.geometry.coordinates[1]) !== this.orderPathString(2.2, curPoint, prePoint))
+        const nxtPath = nxtFeature.geometry.coordinates
+        const nxtPoint = nxtPath[1]
         const nxtKey = `${nxtPoint[0]},${nxtPoint[1]}`
-        
-        // check if new line appears before
-        // but first check if it is the second point
-        if (lastPath.length <= 1) {
-          // repetitive line checked in when first point created
-          this.ftdPathArr[this.ftdPathArr.length-1].push(curPoint)
-          return this.pathRecursion(3, nxtPoint)
+
+        // check if it is the first point
+        if (JSON.stringify(lastFeature.properties) !== JSON.stringify(nxtFeature.properties)) {
+          this.ftdPathArr[this.ftdPathArr.length-1].geometry.coordinates.push(curPoint)
+
+          const newFeature = { 
+            ...JSON.parse(JSON.stringify(this.emptyFeature)), 
+            "properties": nxtFeature.properties 
+          }
+          newFeature.geometry.coordinates = [curPoint]
+          this.ftdPathArr.push(newFeature)
+          return this.pathRecursion(6, nxtPoint)
         }
-        // third more point
-        found = this.ftdPathArr.some((path, index) => {
-          for (let i = 0; i < path.length-1; i++)
-            if (this.orderPathString(2.5, path[i], path[i+1]) === this.orderPathString(2.5, curPoint, nxtPoint)) return true 
-        })
-        
-        if (!found) {
-          // new and concatenate
-          this.ftdPathArr[this.ftdPathArr.length-1].push(curPoint)
-          return this.pathRecursion(4, nxtPoint)
+
+        // check if it is the second point
+        if (!lastPath.length) throw new Error()
+        else if (lastPath.length === 1) {
+          // repetitive line checked in when first point created
+          this.ftdPathArr[this.ftdPathArr.length-1].geometry.coordinates.push(curPoint)
+          return this.pathRecursion(3, nxtPoint)
+        } else {
+          // third more point
+          // check if new line appears before
+          found = this.ftdPathArr.some((feature, index) => {
+            const path = feature.geometry.coordinates
+            for (let i = 0; i < path.length-1; i++)
+              if (this.orderPathString(2.5, path[i], path[i+1]) === this.orderPathString(2.5, curPoint, nxtPoint)) return true 
+          })
+          
+          if (!found) {
+            // new and concatenate
+            this.ftdPathArr[this.ftdPathArr.length-1].geometry.coordinates.push(curPoint)
+            return this.pathRecursion(4, nxtPoint)
+          }
         }
       } else { // last point in last path and initiates a new path
-        this.ftdPathArr[this.ftdPathArr.length-1].push(curPoint)
+        this.ftdPathArr[this.ftdPathArr.length-1].geometry.coordinates.push(curPoint)
 
         // iterate every ass
-        curPointAss.forEach(async branch => {
-          // console.log(curKey, branch, this.ftdPathArr)
-          const nxtPoint = branch[1]
+        curPointAss.forEach(feature => {
+          // console.log(curKey, feature, this.ftdPathArr)
+          const nxtPath = feature.geometry.coordinates
+          const nxtPoint = nxtPath[1]
           const nxtKey = `${nxtPoint[0]},${nxtPoint[1]}`
           // check if this line appears before
-          found = this.ftdPathArr.some(path => {
+          found = this.ftdPathArr.some(feature => {
+            const path = feature.geometry.coordinates
             for (let i = 0; i < path.length-1; i++) 
               if (this.orderPathString(2.5, path[i], path[i+1]) === this.orderPathString(2.5, curPoint, nxtPoint)) return true 
           })
           if (!found) {
-            this.ftdPathArr.push([curPoint])
+            const newFeature = { 
+              ...JSON.parse(JSON.stringify(this.emptyFeature)), 
+              "properties": feature.properties 
+            }
+            newFeature.geometry.coordinates = [curPoint]
+            this.ftdPathArr.push(newFeature)
             return this.pathRecursion(5, nxtPoint)
           }
         })
       }
     },
     orderPathString (a, p1, p2) {
+      if (p1 == null && p2 == null) throw new Error()
       if (p1[0] < p2[0]) return `${p1[0]},${p1[1]}|${p2[0]},${p2[1]}`
       else if (p1[0] > p2[0]) return `${p2[0]},${p2[1]}|${p1[0]},${p1[1]}`
       else if (p1[1] <= p2[1]) return `${p1[0]},${p1[1]}|${p2[0]},${p2[1]}`
@@ -429,74 +552,6 @@ export default {
     }
   },
   async mounted () {
-    // RoadPath?.features?.forEach(e => this.pathArr.push(e))
-    // NorthPath?.features?.forEach(e => this.pathArr.push(e))
-    // SouthPath?.features?.forEach(e => this.pathArr.push(e))
-    // UnderPath?.features?.forEach(e => this.pathArr.push(e))
-
-    FilteredPath?.features?.forEach(e => this.pathArr.push(e))
-
-    this.pathArr.forEach(feature => {
-      const lineString = feature.geometry.coordinates
-
-      for (let i = 0; i < lineString.length - 1; i ++) {
-        const p1 = lineString[i]
-        const p2 = lineString[i+1]
-        if (!this.pointMap.get(`${p1[0]},${p1[1]}`)) this.pointMap.set(`${p1[0]},${p1[1]}`, [])
-        if (!this.pointMap.get(`${p2[0]},${p2[1]}`)) this.pointMap.set(`${p2[0]},${p2[1]}`, [])
-        this.pointMap.get(`${p1[0]},${p1[1]}`).push([p1, p2])
-        this.pointMap.get(`${p2[0]},${p2[1]}`).push([p2, p1])
-      }
-    })
-    
-    this.pointMap.forEach((value, key) => {
-      if (value.length === 1) {
-        const pointArr = key.split(",")
-        this.singlePointArr.push([+pointArr[0], +pointArr[1]])
-      }
-    })
-    // console.log(this.pointMap)
-    console.log(this.singlePointArr.length)
-
-    const sortedMap = new Map()
-    for (let i = 0; i < 7; i ++) {
-      this.pointMap.forEach((value, key) => {
-        if (value.length === i) sortedMap.set(key, value)
-      })
-    }
-    // this.pointMap = sortedMap
-    // console.log(this.pointMap)
-
-    // // // this.ftdPathArr.push([])
-    // this.pathRecursion(0, this.pointMap.get([...this.pointMap.keys()][0])[0][0])
-    // console.log(this.ftdPathArr.length)
-
-    // const data = await this.$api.direction.getPath(2, 18)
-    // this.apiPathList = data.pathList
-    // console.log(this.apiPathList)
-
-    // const lineDict = new Map()
-    // this.ftdPathArr.forEach(pointArr => {
-    //   pointArr.forEach((v, i) => {
-    //     if (i < pointArr.length-1) {
-    //       const p1 = pointArr[i]
-    //       const p2 = pointArr[i+1]
-    //       const key = this.orderPathString(0, p1, p2)
-    //       if (!lineDict.get(key)) lineDict.set(key, 0)
-    //       lineDict.set(key, lineDict.get(key)+1)
-    //     }
-    //   })
-    // })
-    // this.ftdPathArr = []
-    // lineDict.forEach((value, key) => {
-    //   if (value > 1) {
-    //     const path = []
-    //     key.split("|").forEach(str => path.push(str.split(",")))
-    //     this.ftdPathArr.push(path)
-    //   }
-    // })
-    // console.log(this.ftdPathArr.length)
-
     const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB", "IA", "IR", "GM"]
     this.buildingCode = this.$route.params.buildingCode.toUpperCase()
     this.floorIndex = parseInt(this.$route.params.floorIndex)
@@ -513,13 +568,150 @@ export default {
       else if (this.floorIndex === 0) floorName = 'G'
       else if (this.floorIndex === -1) floorName = 'B'
 
-      // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
       // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/EMPBF.png`)
-      this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
+      if (!this.$route.params.floorIndex) this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
+      else this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
+
+      const changeFloorList = ["FB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE"]
+      if (changeFloorList.indexOf(this.buildingCode) > -1 && this.floorIndex > 0) this.floorIndex -= 1 
     } catch (error) {
       alert(error.message)
       return
     }
+
+    if (!this.$route.params.floorIndex) {
+      // RoadPath?.features?.forEach(e => this.pathArr.push(e))
+      // NorthPath?.features?.forEach(e => this.pathArr.push(e))
+      // SouthPath?.features?.forEach(e => this.pathArr.push(e))
+      // UnderPath?.features?.forEach(e => this.pathArr.push(e))
+      FilteredPath?.features?.forEach(e => this.pathArr.push(e))
+    } else {
+      const buildingSet = new Set()
+      SPath?.features?.forEach(e => {
+        this.pathArr.push(e)
+        e.properties.buildingCode.forEach(code => {
+          if (code) buildingSet.add(code.toUpperCase())
+        })
+      })
+      BSPath?.features?.forEach(e => {
+        this.pathArr.push(e)
+        e.properties.buildingCode.forEach(code => {
+          if (code) buildingSet.add(code.toUpperCase())
+        })
+      })
+      CBPath?.features?.forEach(e => {
+        this.pathArr.push(e)
+        e.properties.buildingCode.forEach(code => {
+          if (code) buildingSet.add(code.toUpperCase())
+        })
+      })
+      // BSBFPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BSGFPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BS1FPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BS2FPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BS3FPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BS4FPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BS5FPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BSZPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => buildingSet.add(code.toUpperCase()))
+      // })
+      // PortalPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      
+      this.buildingList = Array.from(buildingSet)
+    }
+
+    this.pathArr.forEach(feature => {
+      const lineString = feature.geometry.coordinates
+      
+      for (let i = 0; i < lineString.length - 1; i ++) {
+        const p1 = lineString[i]
+        const p2 = lineString[i+1]
+
+        const feature1 = { 
+          ...JSON.parse(JSON.stringify(this.emptyFeature)), 
+          "properties": feature.properties 
+        }
+        const feature2 = {
+          ...JSON.parse(JSON.stringify(this.emptyFeature)), 
+          "properties": feature.properties 
+        }
+        feature1.geometry.coordinates = [p1, p2]
+        feature2.geometry.coordinates = [p2, p1]
+
+        if (!this.pointMap.get(`${p1[0]},${p1[1]}`)) this.pointMap.set(`${p1[0]},${p1[1]}`, [])
+        if (!this.pointMap.get(`${p2[0]},${p2[1]}`)) this.pointMap.set(`${p2[0]},${p2[1]}`, [])
+        this.pointMap.get(`${p1[0]},${p1[1]}`).push(feature1)
+        this.pointMap.get(`${p2[0]},${p2[1]}`).push(feature2)
+      }
+    })
+    
+    this.pointMap.forEach((value, key) => {
+      if (value.length === 1) {
+        // if (value[0].properties.floorIndex[0] === this.floorIndex || value[0].properties.floorIndex[1] === this.floorIndex) {
+          const pointArr = key.split(",")
+          this.singlePointArr.push([+pointArr[0], +pointArr[1]])
+        // }
+      }
+    })
+    console.log(this.singlePointArr.length)
+
+    // const sortedMap = new Map()
+    // for (let i = 0; i < 7; i ++) {
+    //   this.pointMap.forEach((value, key) => {
+    //     if (value.length === i) sortedMap.set(key, value)
+    //   })
+    // }
+    // this.pointMap = sortedMap
+    // console.log(this.pointMap)
+
+    // this.pathRecursion(0, this.pointMap.get([...this.pointMap.keys()][0])[0].geometry.coordinates[0])
+    // console.log(this.ftdPathArr.length)
+    // this.pathArr = JSON.parse(JSON.stringify(this.ftdPathArr))
+
+    // const data = await this.$api.direction.getPath(2, 18)
+    // this.apiPathList = data.pathList
+    // console.log(this.apiPathList)
 
     this.context = this.$refs.map.getContext('2d')
     this.context.lineCap = 'round';

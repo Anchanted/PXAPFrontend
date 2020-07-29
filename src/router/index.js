@@ -23,7 +23,7 @@ const routes = [
     name: 'PageNotFound'
   },
   {
-    path: "/original/:buildingCode([a-z]{2})/:floorIndex(-?\\d+)",
+    path: "/original/:buildingCode([a-z]{2})?/:floorIndex(-?\\d+)?",
     component: OriginalMap,
     name: 'OriginalMap'
   },
@@ -97,7 +97,6 @@ const routes = [
 const router = new Router({
   routes,
   mode: 'history',
-  // base: '/wenqi/pxap/'
   base: '/'
 })
 

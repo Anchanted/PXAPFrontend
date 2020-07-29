@@ -12,6 +12,7 @@
                     [410, 54],
                     [411, 99],
                     [411, 136],
+                    [436, 135],
                     [462, 134],
                     [462, 97],
                     [461, 51]
@@ -855,6 +856,7 @@
                 "type": "LineString",
                 "coordinates": [
                     [745, 554], 
+                    [711, 555],
                     [697, 556]
                 ]
             }
@@ -959,22 +961,7 @@
                 "type": "LineString",
                 "coordinates": [
                     [675, 426],
-                    [674, 402],
-                    [640, 403]
-                ]
-            }
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "direction": 2
-            },
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [640, 399],
-                    [640, 403],
-                    [641, 433]
+                    [674, 402]
                 ]
             }
         },
@@ -987,22 +974,7 @@
                 "type": "LineString",
                 "coordinates": [
                     [705, 403],
-                    [706, 427],
-                    [739, 426]
-                ]
-            }
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "direction": 2
-            },
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [738, 397],
-                    [739, 426],
-                    [739, 430]
+                    [706, 427]
                 ]
             }
         },
@@ -1015,22 +987,7 @@
                 "type": "LineString",
                 "coordinates": [
                     [677, 481],
-                    [678, 503],
-                    [644, 504]
-                ]
-            }
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "direction": 2
-            },
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [643, 477],
-                    [644, 504],
-                    [644, 509]
+                    [678, 503]
                 ]
             }
         },
@@ -1043,8 +1000,7 @@
                 "type": "LineString",
                 "coordinates": [
                     [711, 555],
-                    [711, 577],
-                    [746, 576]
+                    [711, 577]
                 ]
             }
         },
@@ -1056,9 +1012,8 @@
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
-                    [745, 549],
-                    [746, 576],
-                    [746, 580]
+                    [436, 135], 
+                    [436, 163]
                 ]
             }
         },

@@ -45,7 +45,7 @@ module.exports = {
       // new htmlWebpackPlugin({
       //   // filename: "index.html",
       //   template: resolve("public/index.html"),
-      //   title: "pxapfrontend",
+      //   title: "dxapfrontend",
       //   favicon:  resolve("public/favicon.ico"),
       //   inject: true
       // })
@@ -60,7 +60,6 @@ module.exports = {
     }
   },
   // publicPath: process.env.NODE_ENV === "production" ? "/mxap/" : "/",
-  // publicPath: "/wenqi/pxap/",
   publicPath: "/",
   // assetsPublicPath: process.env.NODE_ENV === 'production' ? "/xap/" : "/",
   outputDir: "dist", // 打包的目录

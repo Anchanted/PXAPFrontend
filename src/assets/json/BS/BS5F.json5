@@ -1,0 +1,485 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [214, 718],
+                    [200, 736],
+                    [424, 924],
+                    [472, 964],
+                    [551, 964],
+                    [966, 964],
+                    [1154, 964],
+                    [1271, 867],
+                    [1308, 837], 
+                    [1582, 610],
+                    [1663, 543],
+                    [1673, 483],
+                    [1724, 194]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1308, 837],             
+                    [1396, 942],
+                    [1662, 722],
+                    [1706, 686],
+                    [1736, 661],
+                    [1769, 634],
+                    [1792, 502],
+                    [1832, 271],
+                    [1724, 194],
+                    [1691, 179]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1582, 610],
+                    [1605, 638],
+                    [1685, 660],
+                    [1706, 686]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1673, 483],
+                    [1792, 502]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [424, 924],
+                    [348, 1015]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [551, 964],
+                    [551, 1042],
+                    [551, 1104],
+                    [516, 1104],
+                    [516, 1130]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [516, 1164],
+                    [516, 1188]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [966, 964],
+                    [966, 1007],
+                    [966, 1042],
+                    [966, 1130]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [966, 1164],
+                    [966, 1188]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [551, 1042],
+                    [966, 1042]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1271, 867],
+                    [1293, 894],
+                    [1313, 919],
+                    [1365, 983],
+                    [1324, 1018]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1350, 1049],
+                    [1366, 1069]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1694, 761],
+                    [1709, 779]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [191, 697],
+                    [216, 666]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1695, 150],
+                    [1657, 144]
+                ]
+            }
+        },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // portal
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [214, 718],
+                    [236, 692]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [966, 1007],
+                    [1011, 1007]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [966, 1042],
+                    [1011, 1042]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1293, 894],
+                    [1266, 916]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1313, 919],
+                    [1287, 942]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1736, 661],
+                    [1759, 688]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1691, 179],
+                    [1658, 176]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 2
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [214, 718],
+                    [191, 697]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 2
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [516, 1130],
+                    [516, 1164]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 2
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [966, 1130],
+                    [966, 1164]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 2
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1324, 1018],
+                    [1350, 1049]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 2
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1662, 722],
+                    [1694, 761]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["BS", "BS"], 
+                "floorIndex": [5, 5],
+                "portal": 2
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1691, 179],
+                    [1695, 150]
+                ]
+            }
+        }
+    ]
+}

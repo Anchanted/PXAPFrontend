@@ -1,0 +1,110 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [0, 0]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [689, 324],
+                    [634, 324],
+                    [527, 324],
+                    [527, 226],
+                    [517, 226],
+                    [517, 188]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [0, 0]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [612, 242],
+                    [621, 242],
+                    [634, 242],
+                    [634, 293],
+                    [634, 324]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [0, 0]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [685, 293],
+                    [634, 293]
+                ]
+            }
+        },
+
+
+
+
+
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [0, 0],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [695, 277],
+                    [685, 293]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", null], 
+                "floorIndex": [0, 0],
+                "portal": 1
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [689, 324],
+                    [523, 432]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", null], 
+                "floorIndex": [0, 0],
+                "portal": 1
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [517, 188],
+                    [470, 402]
+                ]
+            }
+        },
+    ]
+}

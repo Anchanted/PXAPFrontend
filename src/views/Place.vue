@@ -19,7 +19,7 @@
             data-toggle="tooltip" data-placement="left" :title="$t('tooltip.indoor')"
             @click="$router.push({ name: 'Map', params: { buildingId: place.id, floorId: place.baseFloorId } })"></button>
         </div>
-        <div v-show="place.placeType === 'building'" class="additional direction">
+        <div v-show="!place.buildingId && !place.floorId" class="additional direction">
           <button type="button" class="iconfont icon-direction btn btn-primary additional-button direction-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.direction.entrance')"
             @click="onclickDirection"></button>

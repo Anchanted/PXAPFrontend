@@ -101,14 +101,17 @@ export default {
       type: Array,
       default: () => []
     },
-    currentFloor: Object,
+    currentFloor: {
+      type: Object,
+      default: () => {}
+    },
     floorList: {
       type: Array,
       default: () => []
     },
     currentBuilding: {
       type: Object,
-      default: () => ""
+      default: () => {}
     },
     occupationTime: String,
     loading: Boolean,

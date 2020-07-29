@@ -1,0 +1,46 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [-1, -1]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [1100, 448],
+                    [960, 448],
+                    [960, 345],
+                    [804, 345],
+                    [753, 304],
+                    [753, 287],
+                    [740, 287]
+                ]
+            }
+        },
+
+
+
+
+
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [-1, -1],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [804, 345],
+                    [815, 322]
+                ]
+            }
+        },
+    ]
+}

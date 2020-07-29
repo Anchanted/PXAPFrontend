@@ -1,0 +1,108 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [1, 1]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [638, 369],
+                    [620, 369],
+                    [620, 307],
+                    [620, 248],
+                    [585, 248],
+                    [415, 248],
+                    [415, 218]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [1, 1]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [585, 248],
+                    [585, 261]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [1, 1]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [654, 307],
+                    [620, 307]
+                ]
+            }
+        },
+
+
+
+
+
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [1, 1],
+                "portal": 3
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [662, 294],
+                    [654, 307]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", null], 
+                "floorIndex": [1, 1],
+                "portal": 1
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [638, 369],
+                    [510, 457]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", null], 
+                "floorIndex": [1, 1],
+                "portal": 1
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [415, 218],
+                    [441, 402]
+                ]
+            }
+        },
+    ]
+}

@@ -19,9 +19,8 @@ export default {
       type: Array,
       default: () => []
     },
-    mapUrl: {
-      type: String,
-    },
+    mapUrl: String,
+    mapLevel: Number,
     occupiedRoomList: {
       type: Array,
       default: () => []
@@ -242,7 +241,14 @@ export default {
           ctx.lineWidth = 8
           this.globalPathList.forEach(path => {
             const pointList = path.pointList || []
-            ctx.strokeStyle = (path.isUnderground) ? "brown" : "#5298FF"
+            ctx.strokeStyle = "#5298FF"
+            if (path.startLevel !== this.mapLevel || path.endLevel !== this.mapLevel) {
+              if (path.startLevel > this.mapLevel || path.endLevel > this.mapLevel) {
+                ctx.strokeStyle = "green"
+              } else if (path.startLevel < this.mapLevel || path.endLevel < this.mapLevel) {
+                ctx.strokeStyle = "brown"
+              }
+            } 
             ctx.lineCap = 'round'
             ctx.lineJoin = 'round'
             ctx.beginPath()
@@ -273,6 +279,9 @@ export default {
           this.placeList.forEach(place => {
             // selected place
             if (JSON.stringify(this.selectedPlace) !== "{}" && this.selectedPlace.id === place.id && this.selectedPlace.placeType === place.placeType) return
+            // direction marker
+            if (JSON.stringify(this.fromDirectionMarker) !== "{}" && this.fromDirectionMarker.id === place.id && this.fromDirectionMarker.placeType === place.placeType) return
+            if (JSON.stringify(this.toDirectionMarker) !== "{}" && this.toDirectionMarker.id === place.id && this.toDirectionMarker.placeType === place.placeType) return
             // place not to display
             if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
             this.drawImage(this.imageMap["facilitySprite"], place.location.x, place.location.y, size, size, size/2, size/2, true, true, 
@@ -762,17 +771,17 @@ export default {
                 this.$store.commit("direction/setCachedPlaceParams", null)
                 this.setSelectedPlace(element)
               } else {
-                if (element.areaPointList && element.placeType === "building") {
+                if (!element.buildingId && !element.floorId) {
                   if (JSON.stringify(this.fromDirectionMarker) === "{}" && !this.globalFromText) {
                     // same item
                     if (this.globalToText || JSON.stringify(this.toDirectionMarker) !== "{}") 
-                      if (`${this.toDirectionMarker.id}|${this.toDirectionMarker.type}` === `${element.id}|${element.placeType}`) return true
+                      if (`${this.toDirectionMarker.id}|${this.toDirectionMarker.placeType}` === `${element.id}|${element.placeType}`) return true
                     this.$store.commit("direction/setGlobalFromId", `${element.id}|${element.placeType}`)
                     this.$EventBus.$emit("setDirectionText", { isTo: false, text: element.name })
                   } else if (JSON.stringify(this.toDirectionMarker) === "{}" && !this.globalToText) {
                     // same item
                     if (this.globalFromText || JSON.stringify(this.fromDirectionMarker) !== "{}") 
-                      if (`${this.fromDirectionMarker.id}|${this.fromDirectionMarker.type}` === `${element.id}|${element.placeType}`) return true
+                      if (`${this.fromDirectionMarker.id}|${this.fromDirectionMarker.placeType}` === `${element.id}|${element.placeType}`) return true
                     this.$store.commit("direction/setGlobalToId", `${element.id}|${element.placeType}`)
                     this.$EventBus.$emit("setDirectionText", { isTo: true, text: element.name })
                   }
@@ -1317,7 +1326,7 @@ export default {
               y: place.location?.y,
               areaPointList: place.areaPointList,
               id: place.id,
-              type: place.placeType,
+              placeType: place.placeType,
               name: place.name
             }
         } else 
@@ -1337,7 +1346,7 @@ export default {
               y: place.location?.y,
               areaPointList: place.areaPointList,
               id: place.id,
-              type: place.placeType,
+              placeType: place.placeType,
               name: place.name
             }
         } else 
