@@ -13,14 +13,13 @@
           <div class="search-result-section-type">{{$t('placeType.building')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="building in topBuildingList" :key="building.id"
-              :simple="false" 
               :data-type="'building'"
               :name-title="building.name"
-              :location-title="itemLocation(building, 'building')"
-              @click.native="onclick($event, building, 'building')">
+              :location-title="placeAddress(building)"
+              @click.native="onclick($event, building)">
               <template #icon>{{building.code}}</template>
               <template #name>{{building.name}}</template>
-              <template #location>{{itemLocation(building, 'building')}}</template>
+              <template #address>{{placeAddress(building)}}</template>
             </place-card>
 
             <div v-if="buildingTotal > 3" class="search-result-section-items-more">
@@ -33,16 +32,15 @@
           <div class="search-result-section-type">{{$t('placeType.room')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="room in topRoomList" :key="room.id"
-              :simple="false" 
               :data-type="'room'"
               :name-title="room.name"
               :type-title="room.type && room.type.capitalize()"
-              :location-title="itemLocation(room, 'room')"
-              @click.native="onclick($event, room, 'room')">
+              :location-title="placeAddress(room)"
+              @click.native="onclick($event, room)">
               <template #icon>{{room.building_code}}</template>
               <template #name>{{room.name}}</template>
               <template #type>{{room.type && room.type.capitalize()}}</template>
-              <template #location>{{itemLocation(room, 'room')}}</template>
+              <template #address>{{placeAddress(room)}}</template>
             </place-card>
 
             <div v-if="roomTotal > 3" class="search-result-section-items-more">
@@ -55,18 +53,17 @@
           <div class="search-result-section-type">{{$t('placeType.facility')}}</div>
           <div class="search-result-section-items">
             <place-card v-for="facility in topFacilityList" :key="facility.id"
-              :simple="false" 
               :data-type="'facility'"
               :name-title="facility.name"
               :type-title="facility.type && facility.type.capitalize()"
-              :location-title="itemLocation(facility, 'facility')"
-              @click.native="onclick($event, facility, 'facility')">
+              :location-title="placeAddress(facility)"
+              @click.native="onclick($event, facility)">
               <template #icon>
-                <span class="iconfont facility-icon" :class="`icon-${facility.icon_type || facility.place_type}`"></span>
+                <span class="iconfont" :class="`icon-${facility.icon_type || facility.place_type}`"></span>
               </template>
               <template #name>{{facility.name}}</template>
               <template #type>{{facility.type && facility.type.capitalize()}}</template>
-              <template #location>{{itemLocation(facility, 'facility')}}</template>
+              <template #address>{{placeAddress(facility)}}</template>
             </place-card>
 
             <div v-if="facilityTotal > 3" class="search-result-section-items-more">
@@ -113,15 +110,22 @@ export default {
     }
   },
   computed: {
-    itemLocation () {
-      return (item, type) => {
-        if (type === 'building' || !(item.floor_name && item.building_name)) return item.zone
-        else return `${this.$t("place.floor." + item.floor_name)}, ${item.building_name}, ${item.zone}`
+    placeAddress() {
+      return place => {
+        let addressArr = []
+        const floor = place.floor_name
+        const building = place.building_name
+        const zone = place.zone || place.building_zone
+        if (floor) addressArr.push(this.$t("place.floor." + floor))
+        if (building) addressArr.push(building)
+        addressArr.push(zone || this.$t("place.zone.b"))
+        if (this.$t("place.address.reverse") === "true") addressArr = addressArr.reverse()
+        return addressArr.join(this.$t("place.address.conj"))
       }
     }
   },
   methods: {
-    async search () {
+    async search() {
       this.loading = true
       this.loadingError = false
       this.$nextTick(() => {
@@ -131,7 +135,7 @@ export default {
       try {
         this.query = this.$route.query.q
         if (this.query) {
-          const data = await this.$api.search.searchTop({ q: this.query })
+          const data = await this.$api.search.searchTop({ q: this.query, id: this.$route.params.buildingId })
           console.log(data)
           this.topBuildingList = this.unifySearchItem(data.building.content || [])
           this.buildingTotal = data.building.totalElements
@@ -139,9 +143,8 @@ export default {
           this.roomTotal = data.room.totalElements
           this.topFacilityList = this.unifySearchItem(data.facility.content || [])
           this.facilityTotal = data.facility.totalElements
-
-          this.hasResult = this.buildingTotal > 0 || this.roomTotal > 0 || this.facilityTotal > 0
-        } else this.hasResult = false
+        }
+        this.hasResult = this.buildingTotal > 0 || this.roomTotal > 0 || this.facilityTotal > 0
 
         this.loading = false
         this.$nextTick(() => {
@@ -153,11 +156,11 @@ export default {
       }
     },
 
-    onclick (e, item, type) {
-      this.selectItem({ ...item, dataType: type })
+    onclick(e, item) {
+      this.selectItem({ ...item, dataType: item.placeType })
     },
 
-    deleteCache () {
+    deleteCache() {
       if (this.$vnode?.data?.keepAlive) {
         if (this.$vnode?.parent?.componentInstance?.cache) {
           if (this.$vnode.componentOptions) {
@@ -182,7 +185,7 @@ export default {
     },
 
   },
-  mounted () {
+  mounted() {
     // console.log('top mounted')
     // console.log(this)
     // console.log(this.$vnode.parent.componentInstance.cache)
@@ -190,7 +193,7 @@ export default {
     this.search()
   },
 
-  activated () {
+  activated() {
     // console.log('top activated')
     if (this.isAlive) {
       this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'SearchTop' })
@@ -202,9 +205,9 @@ export default {
   //   console.log('top deactivated')
   // },
 
-  beforeRouteEnter (to, from, next) {
+  beforeRouteEnter(to, from, next) {
     // console.log('top enter')
-    if (!to.query.q) next({ name: 'PageNotFound' })
+    if (!to.query.q) next({ name: "PageNotFound" })
     else next()
   },
 
@@ -212,12 +215,12 @@ export default {
     console.log('top update')
     // console.log(this.$vnode.parent.componentInstance.cache)
     if (this.checkRouterChange(to.fullPath, from.fullPath)) this.deleteCache()
-    if (!to.query.q) next({ name: 'PageNotFound' })
+    if (!to.query.q) next({ name: "PageNotFound" })
     else next()
     // console.log(this.$vnode.parent.componentInstance.cache)
   },
 
-  beforeRouteLeave (to, from, next) {
+  beforeRouteLeave(to, from, next) {
     // console.log('top leave')
     // console.log(this.$vnode.parent.componentInstance.cache)
     if (!(from.name === 'SearchTop' && to.name === 'SearchMore')) {
@@ -270,7 +273,7 @@ export default {
       border-top: 1px #C6C6C6 solid;
 
       &-type {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
         font-weight: bold;
         line-height: 2;
         vertical-align: middle;
@@ -287,7 +290,7 @@ export default {
           margin: 0 15px;
           padding: 5px 0;
           border-top: 1px #C6C6C6 solid;
-          font-size: 1.4rem;
+          font-size: 1.2rem;
           color: #0069d9;
           text-align: center;
           line-height: 1.5;

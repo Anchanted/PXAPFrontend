@@ -29,14 +29,14 @@
         </div>
 
         <!-- Home Button -->
-        <div v-if="buttonList.indexOf('home') !== -1" class="home button-container">
+        <div v-if="buttonList.includes('home')" class="home button-container">
           <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button button iconfont icon-campus" @click="$router.push({ path: '/' })"
             data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.home')"></button>
         </div>
       </div>
 
       <!-- Floor Dropdown -->
-      <div v-if="buttonList.indexOf('floor') !== -1 && !loading" class="floor">
+      <div v-if="buttonList.includes('floor') && !loading" class="floor">
         <button type="button" class="btn btn-outline-secondary dropdown-building" disabled>{{currentBuilding.code}}</button>
         <button type="button" class="btn btn-secondary dropdown-floor" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
           data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.floor')">{{floorName}}</button>
@@ -51,14 +51,14 @@
 
     <div v-show="!loading" class="bottom-button-group">
       <!-- Gate Button -->
-      <div v-if="buttonList.indexOf('gate') !== -1" class="gate button-container" :style="{ 'z-index': gateRequesting ? 1 : null }">
+      <div v-if="buttonList.includes('gate')" class="gate button-container" :style="{ 'z-index': gateRequesting ? 1 : null }">
         <button class="btn btn-light d-flex flex-column justify-content-around align-items-center gate-button button iconfont icon-entrance" :style="{ color : gateActivated ? '#007bff' : '#555555' }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.gate.${gateActivated ? 'hide' : 'show'}`)"
           @click="clickGate"></button>
       </div>
 
       <!-- Occupation Button -->
-      <div v-if="buttonList.indexOf('occupation') !== -1" class="occupation" :style="{ 'z-index': occupationRequesting ? 1 : null }">
+      <div v-if="buttonList.includes('occupation')" class="occupation" :style="{ 'z-index': occupationRequesting ? 1 : null }">
         <div v-if="occupationActivated && occupationTime" class="occupation-time">{{occupationTime}}</div>
         <div class="button-container">
           <button class="btn btn-light d-flex flex-column justify-content-around align-items-center occupation-button button iconfont icon-group" :style="{ color : occupationActivated ? '#007bff' : '#555555' }"
@@ -68,7 +68,7 @@
       </div>
 
       <!-- Location Button -->
-      <div v-if="buttonList.indexOf('location') !== -1" class="location button-container">
+      <div v-if="buttonList.includes('location')" class="location button-container">
         <button class="btn btn-light d-flex flex-column justify-content-around align-items-center location-button button iconfont icon-location" :style="{ color : locationActivated ? '#007bff' : '#555555' }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.location.${locationActivated ? 'hide' : 'show'}`)"
           @click="clickLocation"></button>

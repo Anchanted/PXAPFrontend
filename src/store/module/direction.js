@@ -5,10 +5,12 @@ const direction = {
     displayDirection: false,
     globalFromText: "",
     globalToText: "",
-    globalFromId: "",
-    globalToId: "",
+    globalFromObj: {},
+    globalToObj: {},
     globalPathList: [],
-    cachedPlaceParams: null
+    isSelectorTo: false,
+    cachedPlaceInfo: {},
+    transportIndex: 0
   },
 
   getters: {
@@ -25,17 +27,23 @@ const direction = {
     setGlobalToText(state, payload) {
       state.globalToText = payload
     },
-    setGlobalFromId(state, payload) {
-      state.globalFromId = payload && /^[0-9]+|[a-z]+$/.test(payload) ? payload : ""
+    setGlobalFromObj(state, payload) {
+      state.globalFromObj = payload instanceof Object ? payload : {}
     },
-    setGlobalToId(state, payload) {
-      state.globalToId = payload && /^[0-9]+|[a-z]+$/.test(payload) ? payload : ""
+    setGlobalToObj(state, payload) {
+      state.globalToObj = payload instanceof Object ? payload : {}
     },
     setGlobalPathList(state, payload) {
       state.globalPathList = payload instanceof Array ? payload : []
     },
-    setCachedPlaceParams(state, payload) {
-      state.cachedPlaceParams = payload
+    setIsSelectorTo(state, payload) {
+      state.isSelectorTo = payload
+    },
+    setCachedPlaceInfo(state, payload) {
+      state.cachedPlaceInfo = payload
+    },
+    setTransportIndex(state, payload) {
+      state.transportIndex = payload
     }
   },
 

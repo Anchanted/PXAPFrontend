@@ -7,7 +7,7 @@
       x:<input type="input" v-model.trim="focusPointX">&nbsp;y:<input type="input" v-model.trim="focusPointY">
     </div>
     <panel :points="pointArr" @updateCoords="changeCoords" @deletePoint="removePoint" @deletePoints="removePoints"></panel>
-    <canvas style="display: block;" ref="map"></canvas>
+    <canvas style="display: block;" ref="map" @click="clickMap"></canvas>
   </div>
 </template>
 
@@ -37,7 +37,27 @@ export default {
   components: {
     panel: OriginalMapPanel
   },
-  data () {
+  data() {
+    const groundArea = "(172 74,605 54,616 310,1018 297,1054 350,1102 406,1140 452,1160 478,1181 509,1197 538,1213 575,1220 612,1221 647,568 674,564 571,373 580,172 74)"
+    // const groundArea = "(0 0,1310 0,1310 1390,0 1390,0 0),(844 390,864 389,864 445,924 444,926 481,835 484,838 572,808 573,804 464,846 462,844 390),(835 813,796 881,820 900,800 920,784 909,760 907,740 915,728 880,751 874,747 818,835 813)"
+    // const groundArea = "(0 0,1310 0,1310 1390,0 1390,0 0),(400 100,900 100,900 400,400 400,400 100),(607 174,818 190,685 308,607 174)"
+    const underArea = "(844 390,864 389,864 445,924 444,926 481,835 484,838 572,808 573,808 627,833 627,833 655,808 656,814 814,835 813,796 881,820 900,800 920,784 909,760 907,740 915,728 880,751 874,747 818,789 815,783 658,757 659,756 629,782 628,775 441,845 438,844 390)"
+    const string2collection = (wkt) => {
+      const linestringWKTArr = wkt.replace(/\),/g, ");").split(";")
+      const linestringArr = linestringWKTArr.map(linestring => {
+        const pointArr = linestring.substring(1, linestring.length - 1).split(",")
+        return pointArr.map(point => {
+          const coordArr = point.split(" ")
+          return {
+            x: parseInt(coordArr[0]),
+            y: parseInt(coordArr[1])
+          }
+        })
+      })
+      // const pointArr = linestringArr.flat()
+      // linestringArr.reverse().forEach(linestring => pointArr.push(linestring[linestring.length - 1]))
+      return linestringArr
+    }
     return {
       mapWidth: 0,
       mapHeight: 0,
@@ -66,7 +86,9 @@ export default {
             "type": "LineString", 
             "coordinates": []
         }
-      }
+      },
+      groundPolygon: string2collection(groundArea),
+      underPolygon: string2collection(underArea)
     }
   },
   methods: {
@@ -340,6 +362,8 @@ export default {
           this.context.fill()
         })
 
+        this.context.lineCap = 'round';
+        this.context.lineJoin = 'round';
         this.context.fillStyle = 'red'
         this.context.strokeStyle = 'rgb(255, 0, 0)'
         this.context.lineWidth = 2
@@ -349,7 +373,56 @@ export default {
           if (i == 0) this.context.moveTo(this.pointArr[i].x, this.pointArr[i].y)
           else this.context.lineTo(this.pointArr[i].x, this.pointArr[i].y)
         }
-        // this.context.closePath()
+        this.context.closePath()
+        this.context.fill("evenodd")
+        this.context.globalAlpha = 1
+        this.context.stroke()
+        this.context.lineWidth = 1
+      }
+
+      // if (this.underPolygon.length) {
+      //   this.context.lineCap = 'round';
+      //   this.context.lineJoin = 'round';
+      //   this.context.fillStyle = 'blue'
+      //   this.context.strokeStyle = 'rgb(255, 0, 0)'
+      //   this.context.lineWidth = 2
+      //   this.context.globalAlpha = 0.5
+      //   this.context.beginPath()
+      //   for (let i = 0; i < this.underPolygon.length; i ++) {
+      //     if (i == 0) this.context.moveTo(this.underPolygon[i].x, this.underPolygon[i].y)
+      //     else this.context.lineTo(this.underPolygon[i].x, this.underPolygon[i].y)
+      //   }
+      //   this.context.closePath()
+      //   this.context.fill("evenodd")
+      //   this.context.globalAlpha = 1
+      //   this.context.stroke()
+      //   this.context.lineWidth = 1
+      // }
+
+      if (this.groundPolygon.length) {
+        this.context.lineCap = 'round';
+        this.context.lineJoin = 'round';
+        this.context.fillStyle = 'yellow'
+        this.context.strokeStyle = 'rgb(255, 0, 0)'
+        this.context.lineWidth = 2
+        this.context.globalAlpha = 0.5
+        this.context.beginPath()
+        // for (let i = 0; i < this.groundPolygon.length; i ++) {
+        //   if (i == 0) this.context.moveTo(this.groundPolygon[i].x, this.groundPolygon[i].y)
+        //   else this.context.lineTo(this.groundPolygon[i].x, this.groundPolygon[i].y)
+        // }
+        this.groundPolygon.forEach((pointList, i) => {
+          // const tmp = i === 1 ? pointList : pointList.reverse()
+          pointList.forEach((point, j) => {
+            if (j === 0) this.context.moveTo(point.x, point.y)
+            else this.context.lineTo(point.x, point.y)
+          })
+        })
+        // this.groundPolygon.forEach((pointList, i) => {
+        //   this.context.lineTo(pointList[pointList.length-1].x, pointList[pointList.length-1].y)
+        // })
+        this.context.closePath()
+        this.context.fill("evenodd")
         // this.context.fill()
         this.context.globalAlpha = 1
         this.context.stroke()
@@ -408,7 +481,8 @@ export default {
         // console.log(pointStr)
         // if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
 
-        console.log(this.pointArr.map(point => `[${point.x}, ${point.y}]`).join(","))
+        // console.log(this.pointArr.map(point => `[${point.x}, ${point.y}]`).join(","))
+        console.log(`LINESTRING(${this.pointArr.map(point => point.x + " " + point.y).join(",")})`)
       }
     },
     removePoint (index) {
@@ -549,6 +623,30 @@ export default {
       else if (p1[0] > p2[0]) return `${p2[0]},${p2[1]}|${p1[0]},${p1[1]}`
       else if (p1[1] <= p2[1]) return `${p1[0]},${p1[1]}|${p2[0]},${p2[1]}`
       else return `${p2[0]},${p2[1]}|${p1[0]},${p1[1]}`
+    },
+    clickMap(e) {
+      // this.context.beginPath()
+      // this.groundPolygon.forEach((pointList, i) => {
+      //   pointList.forEach((point, j) => {
+      //     if (j === 0) this.context.moveTo(point.x, point.y)
+      //     else this.context.lineTo(point.x, point.y)
+      //   })
+      // })
+      // this.context.closePath()
+      // this.context.fill("evenodd")
+      // console.log(this.context.isPointInPath(e.pageX, e.pageY))
+
+        this.context.beginPath()
+      this.groundPolygon.forEach((pointList, i) => {
+        // this.context.beginPath()
+        pointList.forEach((point, j) => {
+          if (j === 0) this.context.moveTo(point.x, point.y)
+          else this.context.lineTo(point.x, point.y)
+        })
+        // this.context.closePath()
+        // console.log(i, this.context.isPointInPath(e.pageX, e.pageY))
+      })
+        console.log(this.context.isPointInPath(e.pageX, e.pageY))
     }
   },
   async mounted () {

@@ -20,7 +20,7 @@ const routes = [
   {
     path: "*",
     component: PageNotFound,
-    name: 'PageNotFound'
+    name: "PageNotFound"
   },
   {
     path: "/original/:buildingCode([a-z]{2})?/:floorIndex(-?\\d+)?",
@@ -71,8 +71,8 @@ const routes = [
         },
       },
       {
-        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/place/:type(building|room|facility)/:id(\\d+)/@:locationInfo?",
-        alias: "place/:type(building|room|facility)/:id(\\d+)",
+        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/place/@:locationInfo?",
+        alias: "place",
         component: Place,
         name: "Place",
         meta: {
@@ -80,8 +80,8 @@ const routes = [
         },
       },
       {
-        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/dir/:fromPlace([^/]*)?/:toPlace([^/]*)?/@:locationInfo?",
-        alias: "dir/:fromPlace([^/]*)?/:toPlace([^/]*)?",
+        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/dir/:fromText([^/]*)?/:toText([^/]*)?/@:locationInfo?",
+        alias: "dir/:fromText([^/]*)?/:toText([^/]*)?",
         components: {
           direction: Direction
         },
@@ -101,7 +101,7 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.params.buildingId && !to.params.floorId) next({ name: 'PageNotFound' })
+  if (to.params.buildingId && !to.params.floorId) next({ name: "PageNotFound" })
   else if (to.name === "Direction" && (to.params.buildingId || to.params.floorId)) next({ name: "Map", params: to.params })
   else {
     if (to.matched?.[0]?.name === "Map" 
@@ -127,7 +127,9 @@ router.beforeEach((to, from, next) => {
   
         if (to.name.indexOf('Search') !== -1) globalText = decodeURIComponent(to.query.q || '')
         else if (to.name === 'Place') globalText = to.params.name || ''
-      } else store.commit("setDisplayDirectionButton", true)
+      } else {
+        store.commit("setDisplayDirectionButton", true)
+      }
       store.commit('setGlobalText', globalText)
   
       $('[data-toggle="tooltip"]').tooltip("dispose");

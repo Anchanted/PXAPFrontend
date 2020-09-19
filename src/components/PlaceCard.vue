@@ -1,7 +1,7 @@
 <template>
   <div v-if="!simple" class="item">
     <div class="item-container">
-      <div class="item-icon">
+      <div class="item-icon" :style="{ 'background-color': dataType === 'query' ? '#8e8e93' : '#0069d9'}">
         <slot name="icon"></slot>
       </div>
       <div class="item-info">
@@ -11,23 +11,23 @@
         <div class="item-info-type one-line" :title="typeTitle">
           <slot name="type"></slot>
         </div>
-        <div class="item-info-location one-line" :title="locationTitle">
-          <slot name="location"></slot>
+        <div class="item-info-address one-line" :title="addressTitle">
+          <slot name="address"></slot>
         </div>
       </div>
     </div>
   </div>
 
   <div v-else class="simple-item">
-    <div class="simple-item-icon">
+    <div class="simple-item-icon" :style="{ 'background-color': dataType === 'query' ? '#8e8e93' : '#0069d9'}">
       <slot name="icon"></slot>
     </div>
     <div class="simple-item-info">
       <div class="simple-item-info-name one-line" :title="nameTitle">
         <slot name="name"></slot>
       </div>
-      <div class="simple-item-info-location one-line" :title="locationTitle">
-        <slot name="location"></slot>
+      <div class="simple-item-info-address one-line" :title="addressTitle">
+        <slot name="address"></slot>
       </div>
     </div>
   </div>
@@ -50,7 +50,7 @@ export default {
     typeTitle: {
       type: String
     },
-    locationTitle: {
+    addressTitle: {
       type: String
     }
   }
@@ -71,55 +71,56 @@ export default {
     border-top: 1px #C6C6C6 solid;
     display: flex;
     justify-content: flex-start;
+    align-items: center;
   }
 
   &-icon {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     text-align: center;
     vertical-align: middle;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     line-height: 1.5;
     font-weight: bold;
     color: #FFFFFF;
     background: #0069d9;
-    border-radius: 25px;
+    border-radius: 20px;
     flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: center;
 
     span {
-      font-size: 1.5rem;
-      line-height: 50px;
+      font-size: 1.2rem;
+      line-height: 40px;
       font-weight: normal;
     }
   }
 
   &-info {
     width: calc(100% - 50px - 15px);
-    height: 80px;
+    height: 70px;
     margin-left: 15px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 
     &-name {
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       line-height: 1.2;
       height: 50px;
       flex-grow: 1;
     }
 
     &-type {
-      font-size: 1rem;
+      font-size: 0.8rem;
       line-height: 1.5;
       color: #8E8E93;
       flex-shrink: 0;
     }
 
-    &-location {
-      font-size: 1rem;
+    &-address {
+      font-size: 0.8rem;
       line-height: 1.5;
       color: #8E8E93;
       flex-shrink: 0;
@@ -134,19 +135,20 @@ export default {
 .simple-item {
   width: 100%;
   height: auto;
-  padding: 10px;
+  padding: 5px 10px;
   cursor: pointer;
   // border-top: 1px #C6C6C6 solid;
   display: flex;
   justify-content: flex-start;
+  align-items: center;
 
   &-icon {
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
     text-align: center;
     vertical-align: middle;
-    font-size: 1.8rem;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 30px;
     font-weight: bold;
     color: #FFFFFF;
     background: #0069d9;
@@ -157,29 +159,29 @@ export default {
     align-items: center;
 
     span {
-      font-size: 1.5rem;
-      line-height: 50px;
+      font-size: 1rem;
+      line-height: 30px;
       font-weight: normal;
     }
   }
 
   &-info {
-    width: calc(100% - 50px - 15px);
-    height: 60px;
+    width: calc(100% - 30px - 15px);
+    height: 50px;
     margin-left: 15px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
 
     &-name {
-      font-size: 1.4rem;
-      line-height: 1.2;
+      font-size: 1.2rem;
+      line-height: 1.5;
       // height: 40px;
     }
 
-    &-location {
-      font-size: 1rem;
-      line-height: 1.5;
+    &-address {
+      font-size: 0.8rem;
+      line-height: 1.2;
       color: #8E8E8E;
       flex-shrink: 0;
     }

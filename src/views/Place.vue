@@ -14,16 +14,21 @@
       </div>
 
       <div class="additional-button-container">
-        <div v-show="place.placeType === 'building' && place.baseFloorId" class="additional indoor">
+        <div v-if="place.baseFloorId" class="additional indoor">
           <button type="button" class="iconfont icon-indoor btn btn-primary additional-button indoor-button"
-            data-toggle="tooltip" data-placement="left" :title="$t('tooltip.indoor')"
+            data-toggle="tooltip" data-placement="top" :title="$t('tooltip.indoor')"
             @click="$router.push({ name: 'Map', params: { buildingId: place.id, floorId: place.baseFloorId } })"></button>
         </div>
-        <div v-show="!place.buildingId && !place.floorId" class="additional direction">
+        <!-- <div v-if="!place.buildingId && !place.floorId" class="additional direction">
           <button type="button" class="iconfont icon-direction btn btn-primary additional-button direction-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.direction.entrance')"
             @click="onclickDirection"></button>
-        </div>
+        </div> -->
+        <!-- <div v-if="place.id != null" class="additional share">
+          <button type="button" class="iconfont icon-share btn btn-primary additional-button share-button"
+            data-toggle="tooltip" data-placement="top" :title="$t('tooltip.share')"
+            @click="onclickShare"></button>
+        </div> -->
       </div>
 
       <div class="section basic p-3" style="border: none">
@@ -32,9 +37,22 @@
         <div class="basic-type">
           <span class="basic-type-placeType">{{$t(`placeType.${place.placeType || ''}`)}}</span><span class="basic-type-itemType"><pre> · </pre>{{itemType}}</span>
         </div>
-        <div class="basic-location">
-          <div class="iconfont icon-marker basic-location-icon"></div>
-          <div class="basic-location-text">{{placeLocation}}</div>
+        <div class="basic-address">
+          <div class="iconfont icon-marker basic-address-icon"></div>
+          <div class="basic-address-text">{{placeAddress}}</div>
+        </div>
+      </div>
+
+      <div class="section function-button-group px-3 py-2">
+        <template v-if="!place.buildingId && !place.floorId">
+          <div v-for="level in levelList" :key="level" class="function-button-wrapper direction">
+            <button type="button" class="iconfont icon-direction btn btn-primary function-button direction-button" @click="onclickDirection"></button>
+            <span class="text-primary function-button-text" @click="onclickDirection">{{directionName(level)}}</span>
+          </div>
+        </template>
+        <div v-if="place.id != null" class="function-button-wrapper share">
+          <button type="button" class="iconfont icon-share btn btn-primary function-button share-button" @click="onclickShare"></button>
+          <span class="text-primary function-button-text" @click="onclickShare">{{$t('tooltip.share')}}</span>
         </div>
       </div>
 
@@ -43,7 +61,7 @@
         <div v-if="place.phone" class="contact-section contact-phone">
           <div class="iconfont icon-phone contact-section-icon"></div>
           <div class="contact-section-text">
-            <span v-for="(e, index) in place.phone" :key="index" style="display: block;">+86&nbsp;<a :href="`tel:${e}`">{{e}}</a></span>
+            <span v-for="(e, index) in place.phone" :key="index" style="display: block;">+86&nbsp;{{e}}</span>
           </div>
         </div>
         <div v-if="place.email" class="contact-section contact-email">
@@ -77,12 +95,12 @@ import Timetable from 'components/Timetable'
 import LoadingPanel from "components/LoadingPanel"
 
 export default {
-  name: 'Place',
+  name: "Place",
   components: {
     Timetable,
     LoadingPanel
   },
-  data () {
+  data() {
     return {
       baseUrl: process.env.VUE_APP_BASE_API + '/static',
       lessonList: [],
@@ -93,68 +111,71 @@ export default {
     }
   },
   computed: {
-    placeLocation () {
-      let str
-      let building
-      let floor
-      let zone
-      switch (this.place.placeType) {
-        case 'room':
-          building = this.place.buildingName || ""
-          floor = this.place.floorInfo || []
-          zone = this.place.zone || "b"
-          str = `${floor.map(e => this.$t("place.floor." + e.floorName || "GF")).join(this.$t("place.floor.conj"))}, ${building}, ${this.$t("place.zone." + zone)}`
-          break
-        case 'facility': {
-          building = this.place.buildingName || ""
-          floor = this.place.floorName || ""
-          zone = this.place.zone || "b"
-          const locationArr = []
-          if (floor) locationArr.push(this.$t("place.floor." + floor))
-          if (building) locationArr.push(building)
-          locationArr.push(this.$t("place.zone." + zone))
-          str = locationArr.join(', ')
-          break
-        }
-        case 'building':
-          zone = this.place.zone || "b"
-          str = `${this.$t("place.zone." + zone)}`
-          break
+    placeAddress() {
+      let addressArr = []
+      const floor = this.place.floorInfo || this.place.floorName
+      const building = this.place.buildingName
+      let zone = this.place.zone || this.place.buildingZone 
+      if (floor) {
+        if (floor instanceof Array) addressArr.push(floor.map(e => this.$t("place.floor." + (e.floorName || "GF"))).join(this.$t("place.floor.conj")))
+        else if (typeof(floor) === "string") addressArr.push(this.$t("place.floor." + floor))
       }
-      return str
+      if (building) addressArr.push(building)
+      addressArr.push(this.$t("place.zone." + (zone || "b")))
+      if (this.$t("place.address.reverse") === "true") addressArr = addressArr.reverse()
+      return addressArr.join(this.$t("place.address.conj"))
     },
 
-    itemType () {
-      if (this.place.placeType === 'building') return this.place.code
-      if (this.place.type && this.place.type instanceof Array) return this.place.type.map(e => e?.capitalize()).join(', ')
+    itemType() {
+      if (!this.place.id) return this.$t("place.marker.place")
+      else if (this.place.placeType === 'building') return this.place.code
+      else if (this.place.type && this.place.type instanceof Array) return this.place.type.map(e => e?.capitalize()).join(', ')
       return null
     },
 
-    departmentAllocation () {
-      const str = this.place.department
-      return str ? str.replace(/,/g, '\n') : 'None'
+    levelList() {
+      return this.place.levelList || (this.place.level != null ? [this.place.level] : [])
     },
 
-    placeDescription () {
+    directionName() {
+      return (level) => {
+        const suffix = (this.levelList.length > 1 && level < 0) ? ` (${this.$t("place.level.underground")})` : ""
+        return this.$t("tooltip.direction.entrance") + suffix
+      }
+    },
+
+    departmentAllocation() {
+      const str = this.place.department
+      return str ? str.replace(/,/g, '\n') : this.$t("place.departmentNone")
+    },
+
+    placeDescription() {
       return this.place.description.replace(/\\n/g, "<br />")
     }
   },
   methods: {
-    async getPlaceInfo () {
+    async getPlaceInfo() {
       this.loading = true
       this.loadingError = false
       this.$nextTick(() => {
         this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
       })
 
-      const { id, type } = this.$route.params
+      const {id, type, location} = this.$route.query
+      const {buildingId, floorId} = this.$route.params
+
+      const params = {
+        pid: (id && type) ? `${type?.substr(0, 1)}${id}` : null,
+        location,
+        indoor: (!(id && type) && (buildingId && floorId)) ? `${buildingId},${floorId}` : null
+      }
 
       try {
-        const data = await this.$api.place.getPlaceInfo(id, type)
+        const data = await this.$api.place.getPlaceInfo(params)
         console.log(data)
-        if (!data[type]) throw new Error('Data Not Found')
-        this.place = { ...data[type] }
-        this.lessonList = data.room?.timetable || []
+        if (!data.place) throw new Error('Data Not Found')
+        this.place = { ...data.place }
+        this.lessonList = data.place.timetable || []
 
         if (!this.loadingError) this.loading = false
         this.$nextTick(() => {
@@ -167,22 +188,45 @@ export default {
         this.loadingError = true
       }
     },
-    onclickDirection() {
-      this.$store.commit("direction/setCachedPlaceParams", this.$route.params)
+    onclickDirection(e, level) {
+      this.$store.commit("direction/setCachedPlaceInfo", { params: this.$route.params, query: this.$route.query })
+      
+      const obj = {}
+      this.globalObjKeyArr.forEach(key => obj[key] = this.place[key])
+      obj["level"] = level
+      this.$store.commit("direction/setGlobalToObj", obj)
+
+      const query = {}
+      if (this.place.location?.x != null && this.place.location?.y != null) query["toLocation"] = `${this.place.location.x},${this.place.location.y}` + (level != null ? `,${level}` : "")
+      if (this.place.buildingId && this.place.floorId) query["toIndoor"] = `${this.place.buildingId},${this.place.floorId}`
       this.$router.push({ 
         name: "Direction", 
         params: { 
           buildingId: null, 
           floorId: null, 
-          // fromPlace: "", 
-          toPlace: this.place.name,
+          toText: this.place.name,
           locationInfo: !this.$route.params.buildingId && !this.$route.params.floorId ? this.$route.params.locationInfo : null
-        } 
+        },
+        query
       })
-      this.$store.commit("direction/setGlobalToId", `${this.place.id}|${this.place.placeType}`)
+    },
+    onclickShare() {
+      const tag = document.createElement('input');
+      tag.setAttribute('id', 'cp_hgz_input');
+      tag.value = window.location.href;
+      document.getElementsByTagName('body')[0].appendChild(tag);
+      document.getElementById('cp_hgz_input').select();
+      document.execCommand('copy');
+      document.getElementById('cp_hgz_input').remove();
+
+      this.$alert({
+        message: "Link successfully added to the clipboard!",
+        time: 3000,
+        type: "primary"
+      })
     }
   },
-  mounted () {
+  mounted() {
     this.getPlaceInfo()
   }
 }
@@ -241,40 +285,34 @@ export default {
         height: 40px;
         border-radius: 20px;
         padding: 0;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         line-height: 1;
-      }
-    }
-
-    .indoor {
-      &-button {
-        font-size: 1.4rem;
       }
     }
 
     .direction {
       margin-left: 20px;
+    }
 
-      &-button {
-        font-size: 1.4rem;
-      }
+    .share {
+      margin-left: 20px;
     }
   }
 
   .basic {
     &-name {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       line-height: normal;
-      font-weight: 900;
+      font-weight: bold;
     }
 
     &-type {
       // position: relative;
       margin-top: 0.5rem;
-      color: #6E6E6E;
+      color: #888888;
 
       span {
-        font-size: 1.2rem;
+        font-size: 1rem;
         line-height: 1.5;
 
         pre {
@@ -288,26 +326,55 @@ export default {
       }
     }
 
-    &-location {
+    &-address {
       display: flex;
       margin-top: 0.5rem;
       align-items: center;
       /* clear: both; */
 
       &-icon {
-        width: 2rem;
-        height: 2rem;
+        width: 1.5rem;
+        height: 1.5rem;
         margin-right: 10px;
-        font-size: 2rem;
-        line-height: 2rem;
+        font-size: 1.5rem;
+        line-height: 1.5rem;
         text-align: center;
       }
 
       &-text {
         position: relative;
         display: inline-block;
-        font-size: 1.2rem;
+        font-size: 1rem;
         /* float: left; */
+      }
+    }
+  }
+
+  .function-button-group {
+    display: flex;
+    
+    .function-button-wrapper {
+      width: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .function-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 18px;
+        padding: 0;
+        margin: 0.5rem;
+        font-size: 1rem;
+        line-height: 1;
+      }
+      
+      .function-button-text {
+        display: block;
+        // padding: 0 5px;
+        text-align: center;
+        font-size: 0.8rem;
+        cursor: pointer;
       }
     }
   }
@@ -336,7 +403,7 @@ export default {
       &-text {
         position: relative;
         display: inline-block;
-        font-size: 1.2rem;
+        font-size: 1rem;
         /* float: left; */
       }
     }
@@ -344,7 +411,7 @@ export default {
 
   .allocation {
     &-detail {
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
   }
 
@@ -361,9 +428,9 @@ export default {
 
 .title {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .section {

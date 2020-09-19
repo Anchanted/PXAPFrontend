@@ -19,7 +19,7 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 0
+                "direction": 2
             },
             "geometry": {
                 "type": "LineString",

@@ -113,6 +113,19 @@
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
+                    [732, 806], 
+                    [802, 824]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "direction": 2
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [789, 496],
                     [776, 496]
                 ]

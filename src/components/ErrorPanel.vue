@@ -24,11 +24,12 @@ export default {
 
   span {
     display: block;
-    color: #000000;
     padding: 1rem;
+    color: #888888;
+    text-align: center;
     font-size: 1.5rem;
-    text-align: justify;
-    text-justify: inter-word;
+    // text-align: justify;
+    // text-justify: inter-word;
     // word-break: break-all;
   }
 }

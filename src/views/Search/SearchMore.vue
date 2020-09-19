@@ -14,51 +14,24 @@
     </loading-panel>
 
     <template v-else>
-      <div v-if="dataType === 'building'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
+      <div class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
         <place-card class="search-section-item"
-          v-for="building in itemList" :key="building.id"
-          :simple="false" 
-          :data-type="'building'"
-          :name-title="building.name"
-          :location-title="itemLocation(building, 'building')"
-          @click.native="onclick($event, building, dataType)">
-          <template #icon>{{building.code}}</template>
-          <template #name>{{building.name}}</template>
-          <template #location>{{itemLocation(building, 'building')}}</template>
-        </place-card>
-      </div>
-
-      <div v-else-if="dataType === 'room'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-        <place-card class="search-section-item"
-          v-for="room in itemList" :key="room.id"
-          :simple="false" 
-          :data-type="'room'"
-          :name-title="room.name"
-          :type-title="room.type && room.type.capitalize()"
-          :location-title="itemLocation(room, 'room')"
-          @click.native="onclick($event, room, dataType)">
-          <template #icon>{{room.building_code}}</template>
-          <template #name>{{room.name}}</template>
-          <template #type>{{room.type && room.type.capitalize()}}</template>
-          <template #location>{{itemLocation(room, 'room')}}</template>
-        </place-card>
-      </div>
-
-      <div v-else-if="dataType === 'facility'" class="search-section-items" :style="{ 'padding-top': ($route.query.q && $route.params.type) ? '50px' : 0 }">
-        <place-card class="search-section-item"
-          v-for="facility in itemList" :key="facility.id"
-          :simple="false" 
-          :data-type="'facility'"
-          :name-title="facility.name"
-          :type-title="facility.type && facility.type.capitalize()"
-          :location-title="itemLocation(facility, 'facility')"
-          @click.native="onclick($event, facility, dataType)">
-          <template #icon>
-            <span class="iconfont facility-icon" :class="`icon-${facility.icon_type || dataType}`"></span>
+          v-for="(item, index) in itemList" :key="index"
+          :data-type="item.dataType"
+          :name-title="item.name || item.content"
+          :location-title="placeAddress(item)"
+          @click.native="onclick($event, item)">
+          <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
+          <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
+          <template #icon v-else-if="item.dataType === 'query'">
+            <span class="iconfont" :class="`icon-search`"></span>
           </template>
-          <template #name>{{facility.name}}</template>
-          <template #type>{{facility.type && facility.type.capitalize()}}</template>
-          <template #location>{{itemLocation(facility, 'facility')}}</template>
+          <template #icon v-else>
+            <span class="iconfont" :class="`icon-${item.icon_type || item.dataType}`"></span>
+          </template>
+          <template #name>{{item.name || item.content}}</template>
+          <template #type v-if="item.dataType !== 'building' && item.dataType !== 'query'">{{item.type && item.type.capitalize()}}</template>
+          <template #address v-if="item.dataType !== 'query'">{{placeAddress(item)}}</template>
         </place-card>
       </div>
 
@@ -121,20 +94,27 @@ export default {
   },
   computed: {
     ...mapState(['modalScrollTop']),
-    searchTitle () {
+    searchTitle() {
       // return this.query && this.dataType ? `"${decodeURIComponent(this.query)}" in ${this.dataType.charAt(0).toUpperCase()}${this.dataType.slice(1)}` : ''
       return this.query && this.dataType ? this.$t('search.moreTopbar',{ query: decodeURIComponent(this.query), type: this.$t(`placeType.${this.dataType}`) }) : ''
     },
-    itemLocation () {
-      return (item, type) => {
-        if (type === 'building' || !(item.floor_name && item.building_name)) return item.zone
-        else return `${this.$t("place.floor." + item.floor_name)}, ${item.building_name}, ${item.zone}`
+    placeAddress() {
+      return place => {
+        let addressArr = []
+        const floor = place.floor_name
+        const building = place.building_name
+        const zone = place.zone || place.building_zone
+        if (floor) addressArr.push(this.$t("place.floor." + floor))
+        if (building) addressArr.push(building)
+        addressArr.push(zone || this.$t("place.zone.b"))
+        if (this.$t("place.address.reverse") === "true") addressArr = addressArr.reverse()
+        return addressArr.join(this.$t("place.address.conj"))
       }
     },
-    pageNum () {
+    pageNum() {
       return this.currentPageNo + 1
     },
-    navDisabledClass () {
+    navDisabledClass() {
       return type => {
         let flag = true
         switch (type) {
@@ -148,7 +128,7 @@ export default {
         return flag ? "" : "disabled"
       }
     },
-    displayedPages () {
+    displayedPages() {
       let firstDisplayedPageNum = 1;
       let displayedPagesLength = 1;
 
@@ -238,12 +218,12 @@ export default {
       })
     },
 
-    onclick (e, item, type) {
-      this.selectItem({ ...item, dataType: type })
+    onclick(e, item) {
+      this.selectItem({ ...item, dataType: item.placeType })
     }
   },
 
-  async mounted () {
+  async mounted() {
     // console.log('more mounted')
     this.$store.commit('setModalScrollTop', 0)
 
@@ -254,20 +234,20 @@ export default {
     this.initialSearch()
   },
 
-  // destroyed () {
+  // destroyed() {
   //   console.log('more destroyed')
   // },
-  beforeRouteEnter (to, from, next) {
+  beforeRouteEnter(to, from, next) {
     // console.log('more enter')
-    if (!to.query.q) next({ name: 'PageNotFound' })
+    if (!to.query.q) next({ name: "PageNotFound" })
     else next()
   },
-  beforeRouteUpdate (to, from, next) {
+  beforeRouteUpdate(to, from, next) {
     // console.log('more update')
-    if (!to.query.q) next({ name: 'PageNotFound' })
+    if (!to.query.q) next({ name: "PageNotFound" })
     else next()
   },
-  // beforeRouteLeave (to, from, next) {
+  // beforeRouteLeave(to, from, next) {
   //   // console.log('more leave')
   //   if (to.name === 'SearchTop') {
   //     to.meta.updateHeight = true
@@ -321,10 +301,10 @@ export default {
 
   &-info {
     width: auto;
-    height: 100%;
-    font-size: 1.5rem;
+    height: 50px;
+    font-size: 1.2rem;
     font-weight: bold;
-    line-height: 2;
+    line-height: 50px;
     flex-grow: 1;
     margin-right: 50px;
     text-align: center;

@@ -1,0 +1,66 @@
+[
+    {
+        "placeType": "path",
+        "name": {
+            "en": "Ren'ai Road",
+            "zh": "仁爱路",
+            "es": "Calle de Ren'ai"
+        },
+        "geometry": "LINESTRING(0 61,1310 6)"
+    },
+    {
+        "placeType": "path",
+        "name": {
+            "en": "Wenjing Road",
+            "zh": "文景路",
+            "es": "Calle de Wenjing"
+        },
+        "geometry": "LINESTRING(0 725,1310 671)"
+    },
+    {
+        "placeType": "path",
+        "name": {
+            "en": "Chongwen Road",
+            "zh": "崇文路",
+            "es": "Calle de Chongwen"
+        },
+        "geometry": "LINESTRING(496 1390,1300 1078)"
+    },
+    {
+        "placeType": "path",
+        "name": {
+            "en": "Songtao Street",
+            "zh": "松涛街",
+            "es": "Calle de Songtao"
+        },
+        "geometry": "LINESTRING(44 0,592 1390)"
+    },
+    {
+        "placeType": "path",
+        "name": {
+            "en": "Xuetang Street",
+            "zh": "雪堂街",
+            "es": "Calle de Xuetang"
+        },
+        "geometry": "LINESTRING(1162 650,1309 1176)"
+    },
+    {
+        "placeType": "area",
+        "name": {
+            "en": "North Campus",
+            "zh": "北校区",
+            "es": "Campus Norte"
+        },
+        // "geometry": "POLYGON((902 44,923 110,962 202,1014 292,1054 350,1102 406,1140 452,1160 478,1181 509,1197 538,1213 575,1220 612,1221 647,568 674,564 571,373 580,172 74,902 44))"
+        "geometry": "POLYGON((172 74,605 54,616 310,1018 297,1054 350,1102 406,1140 452,1160 478,1181 509,1197 538,1213 575,1220 612,1221 647,568 674,564 571,373 580,172 74))"
+    },
+    {
+        "placeType": "area",
+        "name": {
+            "en": "South Campus",
+            "zh": "南校区",
+            "es": "Campus Sur"
+        },
+        "geometry": "POLYGON((463 805,1172 772,1259 1076,660 1307,463 805))"
+    }
+]

@@ -14,15 +14,24 @@ module.exports = {
         "go": "前往"
     },
     placeType: {
+        "place": "地点",
         'building': '建筑',
         'room': '房间',
         'facility': '设施'
     },
     place: {
+        "marker": {
+            "place": "标记位置",
+            "search": "位置"
+        },
         'timetable': '课程表',
         'department': '院系部门分布',
+        "departmentNone": "无",
         'contact': '联系方式',
         'description': '简介',
+        "level": {
+            "underground": "地下"
+        },
         "floor": {
             "B2": "地下二层",
             "B1": "地下一层",
@@ -47,7 +56,11 @@ module.exports = {
         "zone": {
             "n": "北校区",
             "s": "南校区",
-            "b": "南北校区中间"
+            "b": "南北校区之间"
+        },
+        "address": {
+            "reverse": "true",
+            "conj": ""
         }
     },
     week: {
@@ -81,8 +94,11 @@ module.exports = {
         "direction": {
             "entrance": "路线",
             "close": "关闭路线",
-            "reverse": "对调出发地与目的地"
+            "reverse": "对调出发地与目的地",
+            "walking": "步行",
+            "driving": "驾车"
         },
+        "share": "分享",
         "menu": "菜单",
         "language": "变更成另一种语言",
         "help": "帮助",

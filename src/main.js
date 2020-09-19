@@ -22,6 +22,13 @@ String.prototype.capitalize = function() {
   return this.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
 };
 
+Vue.prototype.$isEmptyObject = function(object) {
+  for(var key in object) {
+      if(object.hasOwnProperty(key)) return false;
+  }
+  return true;
+};
+
 // const originalPush = Router.prototype.push
 // Router.prototype.push = function push(location, onResolve, onReject) {  
 //   if (onResolve || onReject) return originalPush.call(this, location, onResolve, onReject)  

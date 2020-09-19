@@ -1,28 +1,22 @@
 <template>
   <div v-if="itemList && itemList.length" class="history-container">
-    <template>
-      <div v-for="(item, index) in itemList" :key="index">
-        <place-card v-if="new RegExp(/^(building|facility|room)$/).test(item.dataType)"
-          :simple="true" 
-          :data-type="item.dataType"
-          :name-title="item.name"
-          :location-title="itemLocation(index, item.dataType)"
-          @mousedown.native="onmousedown($event, item)">
-          <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
-          <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
-          <template #icon v-else-if="item.dataType === 'facility'">
-            <span class="iconfont facility-icon" :class="`icon-${item.icon_type || item.dataType}`"></span>
-          </template>
-          <template #name>{{item.name}}</template>
-          <template #location>{{itemLocation(index, item.dataType)}}</template>
-        </place-card>
-
-        <div v-else-if="item.dataType  === 'query'" class="history-item"
-          @mousedown="onmousedown($event, item)">
-          <span class="history-item-query one-line" :title="item.content">{{item.content}}</span>
-        </div>
-      </div>
-    </template>
+    <place-card v-for="(item, index) in itemList" :key="index"
+      simple
+      :data-type="item.dataType"
+      :name-title="item.name || item.content"
+      :location-title="placeAddress(index)"
+      @mousedown.native="onmousedown($event, item)">
+      <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
+      <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
+      <template #icon v-else-if="item.dataType === 'query'">
+        <span class="iconfont icon-search"></span>
+      </template>
+      <template #icon v-else>
+        <span class="iconfont facility-icon" :class="`icon-${item.icon_type || item.dataType}`"></span>
+      </template>
+      <template #name>{{item.name || item.content}}</template>
+      <template #address v-if="item.dataType !== 'query'">{{placeAddress(item)}}</template>
+    </place-card>
   </div>
   <span v-else class="no-history">
     No Search History
@@ -38,7 +32,7 @@ export default {
   components: {
     PlaceCard
   },
-  data () {
+  data() {
     return {
     }
   },
@@ -46,23 +40,29 @@ export default {
     ...mapState({
       itemList: state => state.searchHistory.historyList
     }),
-    itemLocation () {
-      return (index, type) => {
-        const item = this.itemList[index]
-        if (type === 'building' || !(item.floor_name && item.building_name)) return item.zone
-        else return `${this.$t("place.floor." + item.floor_name)}, ${item.building_name}, ${item.zone}`
+    placeAddress() {
+      return place => {
+        let addressArr = []
+        const floor = place.floor_name
+        const building = place.building_name
+        const zone = place.zone || place.building_zone
+        if (floor) addressArr.push(this.$t("place.floor." + floor))
+        if (building) addressArr.push(building)
+        addressArr.push(zone || this.$t("place.zone.b"))
+        if (this.$t("place.address.reverse") === "true") addressArr = addressArr.reverse()
+        return addressArr.join(this.$t("place.address.conj"))
       }
     }
   },
   methods: {
-    onmousedown (e, item) {
+    onmousedown(e, item) {
       // console.log('onmousedown')
       if (item.dataType) {
         this.selectItem(item)
       }
     },
   },
-  mounted () {
+  mounted() {
     // localStorage.removeItem('historyList')
     // let historyList = JSON.parse(localStorage.getItem('historyList')) || []
     // if (!(historyList instanceof Array)) historyList = []
@@ -74,11 +74,12 @@ export default {
 
 <style lang="scss">
 .no-history {
+  display: block;
   position: relative;
   margin-top: 100px;
   text-align: center;
-  font-size: 1.5rem;
-  display: block;
+  font-size: 1.2rem;
+  color: #888888;
 }
 
 .history-container {
@@ -86,23 +87,6 @@ export default {
   height: auto;
   padding: 10px 0;
   position: relative;
-}
-
-.history-item {
-  width: 100%;
-  height: auto;
-  padding: 10px;
-  cursor: pointer;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.history-item:hover {
-  background-color: #E6E6E6;
-}
-
-.history-item-query {
-  font-size: 1.2rem;
 }
 
 .one-line {

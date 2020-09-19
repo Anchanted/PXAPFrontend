@@ -20,7 +20,9 @@ export default new Vuex.Store({
     displayDirectionButton: true,
     scale: 1,
     modalTransitionName: null,
-    modalRouterLeave: false
+    modalRouterLeave: false,
+    imageMap: new Map(),
+    geolocation: {}
   },
   mutations: {
     setScreenHeight (state, payload) {
@@ -59,6 +61,12 @@ export default new Vuex.Store({
     },
     setModalRouterLeave(state, payload) {
       state.modalRouterLeave = payload
+    },
+    setImageMap(state, payload) {
+      state.imageMap = payload
+    },
+    setGeolocation(state, payload) {
+      state.geolocation = payload instanceof Object ? payload : {}
     }
   },
   actions: {

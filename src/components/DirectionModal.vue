@@ -2,6 +2,15 @@
   <div class="shadow bg-white rounded direction-modal" :style="modalStyle" :class="{'panel-collapsed': panelCollapsed}">
     <div class="direction-box bg-primary">
       <div class="direction-box-header">
+        <div class="direction-box-header-transport-wrapper">
+          <div v-for="(transport, index) in transportList" :key="index" 
+            class="iconfont transport-button text-white" 
+            :class="[`icon-${transport.iconName}`]"
+            :style="{ 'background-color': currentTransportIndex === index ? '#185ABC' : '', 'opacity': currentTransportIndex === index ? 0.98 : 0.5 }"
+            data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t(`tooltip.direction.${transport.travelMode}`)"
+            @click="onclicktransport($event, index)"></div>
+        </div>
+
         <button 
           class="iconfont icon-close direction-box-header-close" 
           data-toggle="tooltip" data-placement="right" data-trigger="hover" :data-original-title="$t('tooltip.direction.close')"
@@ -14,18 +23,20 @@
             <input 
               v-model.trim="fromText" ref="fromInput"
               type="search" :placeholder="inputPlaceHolder(true)" aria-label="Search"
-              @focus="refreshPage"
-              @blur="refreshPage"
-              @keyup.enter="onsubmit($event, false)">
+              :title="inputPlaceHolder(true)"
+              @focus="onfocusinput($event, false)"
+              @blur="onblurinput"
+              @keyup.enter="onsubmitinput($event, false)">
           </div>
           <div class="direction-input-container">
             <span>终</span>
             <input 
               v-model.trim="toText" ref="toInput"
               type="search" :placeholder="inputPlaceHolder(false)" aria-label="Search"
-              @focus="refreshPage"
-              @blur="refreshPage"
-              @keyup.enter="onsubmit($event, true)">
+              :title="inputPlaceHolder(false)"
+              @focus="onfocusinput($event, true)"
+              @blur="onblurinput"
+              @keyup.enter="onsubmitinput($event, true)">
           </div>
         </div>
         <button 
@@ -34,18 +45,33 @@
           @click="reverseLocation"></button>
       </div>
     </div>
-    <router-view name="direction"></router-view>
+    <div class="direction-content-container">
+      <router-view name="direction"></router-view>
+      <div v-show="inputFocused && keywordQuery" class="shadow bg-white rounded keyword-wrapper">
+        <search-keyword outdoor :text="keywordQuery" :input-focused="inputFocused" ref="keywordSearch" @chooseitem="onChooseKeywordItem"></search-keyword>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import SearchKeyword from 'components/SearchKeyword'
+
 import { mapState } from 'vuex'
 
 export default {
-  data () {
+  components: {
+    SearchKeyword
+  },
+  data() {
     return {
       fromText: "",
-      toText: ""
+      toText: "",
+      isCurrentTo: false,
+      keywordQuery: "",
+      inputFocused: false,
+      saveFromText: false,
+      saveToText: false
     }
   },
   computed: {
@@ -54,7 +80,10 @@ export default {
       panelCollapsed: state => state.panelCollapsed,
       globalFromText: state => state.direction.globalFromText,
       globalToText: state => state.direction.globalToText,
-      cachedPlaceParams: state => state.direction.cachedPlaceParams
+      globalFromObj: state => state.direction.globalFromObj,
+      globalToObj: state => state.direction.globalToObj,
+      cachedPlaceInfo: state => state.direction.cachedPlaceInfo,
+      currentTransportIndex: state => state.direction.transportIndex
     }),
     modalStyle() {
       const computedHeight = this.screenHeight - 66 - 50
@@ -78,74 +107,203 @@ export default {
   },
   methods: {
     reverseLocation() {
+      if (!this.fromText && !this.toText) return
       const tmp = this.fromText
       this.fromText = this.toText
       this.toText = tmp
+
+      const fromTmp = JSON.parse(JSON.stringify(this.globalFromObj))
+      const toTmp = JSON.parse(JSON.stringify(this.globalToObj))
+      this.$store.commit("direction/setGlobalFromObj", toTmp)
+      this.$store.commit("direction/setGlobalToObj", fromTmp)
+      
+      if (!this.fromText) this.$refs.fromInput?.focus()
+      else if (!this.toText) this.$refs.toInput?.focus()
       this.refreshPage()
     },
     closeModal() {
-      if (this.cachedPlaceParams) {
+      if (!this.$isEmptyObject(this.cachedPlaceInfo)) {
         this.$router.push({
           name: "Place",
-          params: this.cachedPlaceParams
+          ...this.cachedPlaceInfo
         })
-        this.$store.commit("direction/setCachedPlaceParams", null)
-      }
-      else
+        this.$store.commit("direction/setCachedPlaceInfo", {})
+      } else {
         this.$router.push({
           name: "Map",
           params: this.$route.params,
         })
-    },
-    onsubmit(e, isTo = false) {
-      this.refreshPage()
-
-      if (!isTo) {
-        this.$refs.fromInput?.blur()
-      } else {
-        this.$refs.toInput?.blur()
       }
     },
+    onclicktransport(e, index) {
+      if (this.currentTransportIndex === index) return
+      this.$store.commit("direction/setTransportIndex", index)
+      this.$router.push({ 
+        name: "Direction",
+        params: this.$route.params,
+        query: {
+          ...this.$route.query,
+          mode: this.transportList[this.currentTransportIndex].iconName || this.transportList[0].iconName
+        }
+      })
+    },
+    onfocusinput(e, isTo = false) {
+      this.inputFocused = true
+      this.isCurrentTo = isTo
+    },
+    onblurinput() {
+      // console.log("blur")
+      this.inputFocused = false
+    },
+    onsubmitinput(e, isTo = false) {
+      if (!isTo) {
+        if (this.fromText) {
+          // this.$refs.fromInput?.blur()
+          if (!this.toText) this.$refs.toInput?.focus()
+        }
+      } else {
+        if (this.toText) {
+          // this.$refs.toInput?.blur()
+          if (!this.fromText) this.$refs.fromInput?.focus()
+        }
+      }
+      this.refreshPage()
+    },
     refreshPage() {
-      // console.log(this.$route.params.fromPlace, this.fromText, this.$route.params.toPlace, this.toText)
-      if (this.$route.params.fromPlace !== this.fromText || this.$route.params.toPlace !== this.toText) {
+      if (this.$route.name !== "Direction") return
+      const fromText = this.saveFromText ? "" : this.fromText
+      const toText = this.saveToText ? "" : this.toText
+      if (fromText && toText
+          && fromText.toLowerCase() === toText.toLowerCase() 
+          && this.globalObjKeyArr.every((key, i) => i === 0 ? true : this.globalFromObj[key] === this.globalToObj[key]) 
+          && this.globalFromObj.location?.x === this.globalToObj.location?.x 
+          && this.globalFromObj.location?.y === this.globalToObj.location?.y) {
+        this.$alert({
+          message: this.$t("direction.selector.same"),
+          time: 3000,
+          type: "warning"
+        })
+        return
+      }
+
+      // check if text changed after place selected
+      if (this.globalFromObj.name && fromText !== this.globalFromObj.name) {
+        this.$store.commit("direction/setGlobalFromObj", {})
+      }
+      if (this.globalToObj.name && toText !== this.globalToObj.name) {
+        this.$store.commit("direction/setGlobalToObj", {})
+      }
+
+      // check if place is marker
+      const query = {}
+      if (this.globalFromObj.id === 0) {
+        if (this.globalFromObj.location?.x != null && this.globalFromObj.location?.y != null) query["fromLocation"] = `${this.globalFromObj.location.x},${this.globalFromObj.location.y}` + (this.globalFromObj.level != null ? `,${this.globalFromObj.level}` : "")
+        if (this.globalFromObj.buildingId && this.globalFromObj.floorId) query["fromIndoor"] = `${this.globalFromObj.buildingId},${this.globalFromObj.floorId}`
+      }
+      if (this.globalToObj.id === 0) {
+        if (this.globalToObj.location?.x != null && this.globalToObj.location?.y != null) query["toLocation"] = `${this.globalToObj.location.x},${this.globalToObj.location.y}` + (this.globalToObj.level != null ? `,${this.globalToObj.level}` : "")
+        if (this.globalToObj.buildingId && this.globalToObj.floorId) query["toIndoor"] = `${this.globalToObj.buildingId},${this.globalToObj.floorId}`
+      }
+
+      if (this.$route.params.fromText !== fromText 
+          || this.$route.params.toText !== toText 
+          || JSON.stringify(this.$route.query, Object.keys(this.$route.query).sort()) !== JSON.stringify(query, Object.keys(query).sort())) {
         this.$router.push({ 
           name: "Direction",
           params: {
-            fromPlace: this.fromText || "",
-            toPlace: this.toText || "",
+            fromText: fromText || "",
+            toText: toText || "",
             buildingId: this.$route.params.buildingId,
             floorId: this.$route.params.floorId,
             locationInfo: this.$route.params.locationInfo
-          }
+          },
+          query
         })
       }
     },
+
+    onChooseKeywordItem(item) {
+      if (item.location && typeof(item.location) === "string") {
+        const locationStr = item.location
+        const locationArr = locationStr.substring(item.location.indexOf("(") + 1, item.location.indexOf(")")).split(" ")
+        item.location = {
+          x: parseInt(locationArr[0]),
+          y: parseInt(locationArr[1])
+        }
+      }
+
+      const oppositeGlobalObj = this.isCurrentTo ? this.globalFromObj : this.globalToObj
+      if (this.globalObjKeyArr.every((key, i) => i === 0 ? true : oppositeGlobalObj[key] === item[key]) && oppositeGlobalObj.location?.x === item.location?.x && oppositeGlobalObj.location?.y === item.location?.y) {
+        this.$alert({
+          message: this.$t("direction.selector.same"),
+          time: 3000,
+          type: "warning"
+        })
+      } else {
+        const obj = {}
+        this.globalObjKeyArr.forEach(key => obj[key] = item[key])
+        this.$store.commit(this.isCurrentTo ? "direction/setGlobalToObj" : "direction/setGlobalFromObj", obj)
+        this.$EventBus.$emit("setDirectionText", { isTo: this.isCurrentTo, text: obj.name })
+      }
+    }
   },
   mounted() {
     this.$EventBus.$on("setDirectionText", ({ isTo, text = "" }) => {
       if (!isTo) this.fromText = text
       else this.toText = text
-      this.onsubmit(null, isTo)
+
+      this.onsubmitinput(null, isTo)
     })
   },
   watch: {
-    fromText(val) {
-      if (!val && this.$route.name === "Direction") this.refreshPage()
+    isCurrentTo: {
+      immediate: true,
+      handler: function(val) {
+        console.log("isCurrentTo", val)
+        this.$store.commit("direction/setIsSelectorTo", val)
+        this.keywordQuery = val ? this.toText : this.fromText
+      }
     },
-    toText(val) {
-      if (!val && this.$route.name === "Direction") this.refreshPage()
+    fromText: {
+      // immediate: true,
+      handler(val) {
+        if (!this.isCurrentTo) this.keywordQuery = val
+        if (this.$route.name === "Direction") {
+          if (!val) {
+            this.refreshPage()
+          } else if (!this.$isEmptyObject(this.globalFromObj) && val !== this.globalFromObj.name) {
+            this.saveFromText = true
+            this.refreshPage()
+          }
+        }
+      }
+    },
+    toText: {
+      // immediate: true,
+      handler(val) {
+        if (this.isCurrentTo) this.keywordQuery = val
+        if (this.$route.name === "Direction") {
+          if (!val) {
+            this.refreshPage()
+          } else if (!this.$isEmptyObject(this.globalToObj) && val !== this.globalToObj.name) {
+            this.saveToText = true
+            this.refreshPage()
+          }
+        }
+      }
     },
     globalFromText: {
       immediate: true,
       handler: function(val) {
-        if (this.fromText !== val) this.fromText = val || ""
+        if (this.saveFromText) this.saveFromText = false
+        else if (this.fromText !== val) this.fromText = val || ""
       }
     },
     globalToText: {
       immediate: true,
       handler: function(val) {
-        if (this.toText !== val) this.toText = val || ""
+        if (this.saveToText) this.saveToText = false
+        else if (this.toText !== val) this.toText = val || ""
       }
     }
   }
@@ -169,12 +327,34 @@ export default {
 
     &-header {
       display: flex;
-      justify-content: flex-end;
-      margin-bottom: 15px;
+      justify-content: center;
+      margin-bottom: 10px;
+
+      &-transport-wrapper {
+        width: 100%;
+        height: auto;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+
+        .transport-button {
+          width: 36px;
+          height: 36px;
+          border-radius: 18px;
+          font-size: 1.2rem;
+          line-height: 36px;
+          color: #888888;
+          text-align: center;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+      }
 
       &-close {
         color: #ffffff;
         background: transparent;
+        position: absolute;
+        right: 30px;
       }
     }
 
@@ -228,6 +408,16 @@ export default {
         background: transparent;
         font-size: 20px;
       }
+    }
+  }
+
+  .direction-content-container {
+    position: relative;
+
+    .keyword-wrapper {
+      width: 100%;
+      position: absolute;
+      top: 0;
     }
   }
 }

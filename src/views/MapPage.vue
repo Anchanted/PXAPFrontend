@@ -1,19 +1,15 @@
 <template>
   <div style="overflow: hidden;">
     <canvas-map
+      ref="canvasMap"
       :place-list="placeList"
-      :map-url="mapUrl"
       :map-level="mapLevel"
       :occupied-room-list="occupiedRoomList"
       :gate-list="gateList"
-      :geolocation="geolocation"
-      @mapLoadingComplete="loadingComplete.image = true"
-      @mapLoadingError="loadingError = true"
     ></canvas-map>
 
-    <search-bar ref="searchBar"></search-bar>
     <modal ref="modal"></modal>
-    <search-history-modal v-show="displaySearchHistory"></search-history-modal>
+    <search-bar ref="searchBar"></search-bar>
     <direction-modal v-show="displayDirection" ref="directionModal"></direction-modal>
 
     <button-group
@@ -64,7 +60,6 @@
 import SearchBar from 'components/SearchBar'
 import ButtonGroup from 'components/ButtonGroup'
 import Modal from 'components/Modal'
-import SearchHistoryModal from 'components/SearchHistoryModal'
 import DirectionModal from "components/DirectionModal"
 import LoadingPanel from "components/LoadingPanel"
 import CanvasMap from "components/CanvasMap"
@@ -80,7 +75,6 @@ export default {
     SearchBar,
     ButtonGroup,
     Modal,
-    SearchHistoryModal,
     DirectionModal,
     LoadingPanel,
     CanvasMap
@@ -88,7 +82,6 @@ export default {
   data() {
     return {
       campusImage: require("assets/images/map/campus/map.png"),
-      mapUrl: null,
       mapType: null,
       selectedBuilding: {},
       selectedFloor: {},
@@ -99,18 +92,15 @@ export default {
       geolocation: {},
       geoWatchId: null,
       occupationTime: null,
+      loading: false,
       loadingError: false,
       occupationRequesting: false,
-      gateRequesting: false,
-      loadingComplete: {
-        image: false,
-        place: false
-      }
+      gateRequesting: false
     }
   },
   computed: {
     ...mapState({
-      displaySearchHistory: state => state.searchHistory.displaySearchHistory,
+      imageMap: state => state.imageMap,
       displayDirection: state => state.direction.displayDirection,
       displayVirtualButton: state => state.button.displayVirtualButton,
       gateActivated: state => state.button.gateActivated,
@@ -133,13 +123,20 @@ export default {
     },
     datetimeStyle() {
       return null
-    },
-    loading() {
-      return !(this.loadingComplete.place && this.loadingComplete.image)
     }
   },
   methods: {
-    async datetimeInput (dateStr) {
+    loadImage(url) {
+      return new Promise(function(resolve, reject) {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Could not load image at ' + url));
+        image.crossOrigin = ''
+        image.src = url
+      });
+    },
+
+    async datetimeInput(dateStr) {
       // console.log('datetime', dateStr)
       if (dateStr && dateStr != '') {
         const date = DateTime.fromISO(dateStr)
@@ -203,11 +200,11 @@ export default {
       }
     },
 
-    datetimeClose () {
+    datetimeClose() {
       if (!this.$refs.dt.datetime) this.$store.commit("button/setOccupationActivated", false)
     },
 
-    geolocationInfo (position) {
+    geolocationInfo(position) {
       const { longitude, latitude } = position?.coords
       // console.log(position);
 
@@ -219,7 +216,7 @@ export default {
       } else throw new Error("Error getting location.")
     },
 
-    geolocationError (error) {
+    geolocationError(error) {
       let errorMessage
       switch (error.code) {
         case error.PERMISSION_DENIED:
@@ -244,8 +241,24 @@ export default {
     },
 
   },
-  async mounted () {
+  async mounted() {
     // console.log('map mounted')
+    this.loading = true
+    this.$store.commit("setImageMap", new Map())
+
+    this.loadImage(require("assets/images/sprite/marker-sprite.png")).then(image => this.imageMap.set("markers", image))
+    this.loadImage(require("assets/images/icon/eye.png")).then(image => this.imageMap.set("eye", image))
+    this.loadImage(require("assets/images/sprite/icon-sprite.png")).then(image => this.imageMap.set("facilitySprite", image))
+
+    if (this.$route.params.buildingId) {
+      this.loadImage(require("assets/images/icon/group.png")).then(image => this.imageMap.set("group", image))
+      this.loadImage(require("assets/images/sprite/arrow-sprite.png")).then(image => this.imageMap.set("arrowSprite", image))
+    } else {
+      this.loadImage(require("assets/images/icon/location-marker.png")).then(image => this.imageMap.set("locationMarker", image))
+      this.loadImage(require("assets/images/icon/location-circle.png")).then(image => this.imageMap.set("locationCircle", image))
+      // this.imageMap["locationProbe"] = await this.loadImage(require("assets/images/icon/location-probe.png"))
+    }
+
     try {
       this.mapType = this.$route.params.buildingId ? 'floor' : 'campus'
 
@@ -255,25 +268,34 @@ export default {
         const floorId = parseInt(this.$route.params.floorId)
         data = await this.$api.floor.getFloorInfo(buildingId, floorId)
         console.log(data)
+        this.selectedBuilding = data.building || {}
         this.selectedFloor = data.selectedFloor || {}
         this.floorList = data.floorList || []
-        this.selectedBuilding = data.building || {}
       } else {
         data = await this.$api.floor.getCampusInfo()
         console.log(data)
       }
 
       this.placeList = this.placeList.concat(data.facilityList || [], data.roomList || [], data.buildingList || [])
-      this.mapUrl = this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage
-      this.loadingComplete.place = true
+      const mapUrl = this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage
+      const image = await this.loadImage(mapUrl)
+      this.imageMap.set("map", image)
+      this.$refs.canvasMap.initMap()
+
+      if (!this.loadingError) this.loading = false
     } catch (error) {
       console.log(error)
       this.loadingError = true
     }
   },
 
+  beforeDestroy() {
+    this.imageMap.clear()
+    navigator.geolocation.clearWatch(this.geoWatchId)
+  },
+
   watch: {
-    occupationActivated (val) {
+    occupationActivated(val) {
       if (val) {
         this.$refs.dt.datetime = null
         const input = document.querySelector('#datetime')
@@ -285,7 +307,7 @@ export default {
         this.occupationTime = null
       }
     },
-    async gateActivated (val) {
+    async gateActivated(val) {
       if (val) {
         if (!this.gateList) {
           try {
@@ -340,7 +362,7 @@ export default {
         }
       }
     },
-    locationActivated (val) {
+    locationActivated(val) {
       try {
         if (val) {
           if (navigator.geolocation) {
@@ -369,8 +391,6 @@ export default {
           }
         } else {
           navigator.geolocation.clearWatch(this.geoWatchId)
-          this.geoWatchId = null
-
           this.geolocation = {}
         }
       } catch (error) {
@@ -380,6 +400,13 @@ export default {
           time: 3000
         })
         this.$store.commit("button/setLocationActivated", false)
+      }
+    },
+    geolocation: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        this.$store.commit("setGeolocation", val)
       }
     }
   }

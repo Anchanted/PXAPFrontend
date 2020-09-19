@@ -79,7 +79,6 @@ export default {
 body {
   position: relative;
   overflow: hidden;
-
 }
 
 .tooltip .tooltip-inner{

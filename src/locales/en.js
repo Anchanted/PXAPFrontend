@@ -14,15 +14,24 @@ module.exports = {
         "go": "Go"
     },
     placeType: {
+        "place": "Place",
         'building': 'Building',
         'room': 'Room',
         'facility': 'Facility'
     },
     place: {
+        "marker": {
+            "place": "Marked Location",
+            "search": "Location"
+        },
         'timetable': 'Timetable',
         'department': 'Department Allocation',
+        "departmentNone": "None",
         'contact': 'Contact',
         'description': 'Description',
+        "level": {
+            "underground": "Underground"
+        },
         "floor": {
             "B2": "2nd Basement",
             "B1": "1st Basement",
@@ -48,6 +57,10 @@ module.exports = {
             "n": "North Campus",
             "s": "South Campus",
             "b": "Between North Campus and South Campus"
+        },
+        "address": {
+            "reverse": "false",
+            "conj": ", "
         }
     },
     week: {
@@ -81,8 +94,11 @@ module.exports = {
         "direction": {
             "entrance": "Directions",
             "close": "Close directions",
-            "reverse": "Reverse starting point and destination"
+            "reverse": "Reverse starting point and destination",
+            "walking": "Walking",
+            "driving": "Driving"
         },
+        "share": "Share",
         "menu": "Menu",
         "language": "Change to another language",
         "help": "Help",
