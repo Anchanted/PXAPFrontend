@@ -5,19 +5,17 @@
       <button
         class="iconfont icon-arrow-left panel-button"
         :class="{'panel-collapsed-button': panelCollapsed}"
-        :style="{top: $route.params.buildingCode.toUpperCase().charAt(0) === 'M' ? '300px' : ''}"
+        :style="{top: buildingCode && buildingCode.charAt(0) === 'M' ? '300px' : ''}"
         type="button"
         @mousedown.stop="(panelCollapsed = !panelCollapsed)"></button>
     </div>
     <!-- </div> -->
     <div class="shadow bg-white rounded panel-container" :style="{ height: `${screenHeight - 20 - 50}px` }" @mousedown.stop>
       <div class="panel-body">
-        <div>
+        <!-- <div>
           <div class="row"><label class="row-name">Building:</label>&nbsp;<span style="color: red">{{buildingCode}}</span></div>
-          <div class="row">
-            <label class="row-name">Floor:</label>&nbsp;{{floor}}
-          </div>
-          <div class="row"><label class="row-name">Room Name:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="roomName" :placeholder="`e.g. ${buildingCode}213`"></div>
+          <div class="row"><label class="row-name">Floor:</label>&nbsp;<span>{{floor}}</span></div>
+          <div class="row"><label class="row-name">Room Code:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="roomCode" :placeholder="`e.g. ${buildingCode}213`"></div>
           <div class="row">
             <label class="row-name">Room Type:</label>&nbsp;
             <select ref="type">
@@ -31,6 +29,16 @@
               <option v-for="n in 3" :key="n" :value="n">{{n}}</option>
             </select>
           </div>
+        </div> -->
+        <div>
+          <div v-if="buildingCode" class="row"><label class="row-name">Building:</label>&nbsp;<span style="color: red">{{buildingCode}}</span></div>
+          <div v-if="floorIndex" class="row"><label class="row-name">Floor:</label>&nbsp;<span>{{floor}}</span></div>
+          <div v-if="!buildingCode && !floor" class="row"><label class="row-name">Level:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityLevel"></div>
+          <div class="row"><label class="row-name">Code:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityCode"></div>
+          <div class="row"><label class="row-name">EN Name:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityNameEN"></div>
+          <div class="row"><label class="row-name">ZH Name:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityNameZH"></div>
+          <div class="row"><label class="row-name">Type:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityType"></div>
+          <div class="row"><label class="row-name">Icon Level:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="iconLevel"></div>
         </div>
         <div v-for="(point, index) in points" :key="index" style="padding: 10px 10px;">
           {{index + 1}}. x:<input type="text" :value="point.x" class="coordinate-input" @input="updateCoords(index, 'x', $event.target.value)">&nbsp;y:<input type="text" :value="point.y" class="coordinate-input" @input="updateCoords(index, 'y', $event.target.value)">
@@ -54,7 +62,6 @@ import pb from 'assets/json/roomType/PB.json'
 import ee from 'assets/json/roomType/EE.json'
 import s from 'assets/json/roomType/S.json'
 
-
 export default {
   props: {
     points: {
@@ -65,19 +72,26 @@ export default {
     return {
       screenHeight: 0,
       panelCollapsed: false,
-      roomName: "FB123",
+      roomCode: "FB123",
       buildingCode: null,
       floorIndex: null,
       roomTypeArr: null,
+      facilityLevel: null,
+      facilityCode: null,
+      facilityNameEN: null,
+      facilityNameZH: null,
+      facilityType: null,
+      iconLevel: null
     }
   },
   computed: {
-    key () {
+    key() {
       const route = this.$route
       return route.fullPath
     },
-    floor () {
-      if (this.floorIndex === 0) return "GF"
+    floor() {
+      if (this.floorIndex == null) return ""
+      else if (this.floorIndex === 0) return "GF"
       else if (this.floorIndex === -1) return "BF/B1/0F"
       else return this.floorIndex + "F"
     }
@@ -117,43 +131,60 @@ export default {
       this.$emit('deletePoints')
     },
     getData () {
-      const typeAttr = this.$refs.type.options[this.$refs.type.selectedIndex].value
-      const level = parseInt(this.$refs.level.options[this.$refs.level.selectedIndex].value) || 1
+      // const typeAttr = this.$refs.type.options[this.$refs.type.selectedIndex].value
+      // const level = parseInt(this.$refs.level.options[this.$refs.level.selectedIndex].value) || 1
 
-      if (!this.roomName) {
-        alert('Room name not filled!')
-        return
+      // if (!this.roomCode) {
+      //   alert('Room code not filled!')
+      //   return
+      // }
+
+      // if (this.points.length < 3) {
+      //   alert('Point number is less than 3!')
+      //   return
+      // }
+
+      // const roomObj = {
+      //   code: this.roomCode.toUpperCase(),
+      //   type: [typeAttr],
+      //   roomLevel: level,
+      //   buildingCode: this.buildingCode,
+      //   floorIndex: this.floorIndex,
+      //   areaCoords: this.points,
+      //   // location: this.getCentroid(),
+      // }
+
+      // // console.log(JSON.stringify(roomObj))
+
+      // let areaCoords = ""
+      // this.points.forEach(e => areaCoords += `${e.x},${e.y};`)
+      // console.log(areaCoords)
+      // let { x, y } = this.getCentroid()
+      // console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
+
+      // const pointArr = this.points.map(e => [e.x, e.y])
+
+      const roomObj = {}
+      if (this.facilityCode) roomObj["code"] = this.facilityCode.toUpperCase()
+      roomObj["name"] = {
+        "en": this.facilityNameEN,
+        "zh": this.facilityNameZH
       }
-
-      if (this.points.length < 3) {
-        alert('Point number is less than 3!')
-        return
+      roomObj["type"] = [this.facilityType.toLowerCase()]
+      roomObj["iconType"] = this.facilityType.toLowerCase()
+      roomObj["iconLevel"] = parseFloat(this.iconLevel)
+      if (this.buildingCode && this.floor) {
+        roomObj["buildingCode"] = this.buildingCode
+        roomObj["floorIndex"] = this.floorIndex
+      } else {
+        roomObj["level"] = parseInt(this.facilityLevel)
       }
-
-      const roomObj = {
-        name: this.roomName.toUpperCase(),
-        type: [typeAttr],
-        level,
-        buildingCode: this.buildingCode,
-        floorIndex: this.floorIndex,
-        areaCoords: this.points,
-        // location: this.getCentroid(),
-      }
-
-      // console.log(JSON.stringify(roomObj))
-
-      let areaCoords = ""
-      this.points.forEach(e => areaCoords += `${e.x},${e.y};`)
-      console.log(areaCoords)
-      let { x, y } = this.getCentroid()
-      console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
-
-      const pointArr = this.points.map(e => [e.x, e.y])
+      roomObj["location"] = { x: this.points[0].x, y: this.points[0].y }
 
       var tag = document.createElement('input');
       tag.setAttribute('id', 'cp_hgz_input');
-      // tag.value = JSON.stringify(roomObj)+',';
-      tag.value = JSON.stringify(pointArr).replace(/,/g, ", ");
+      tag.value = JSON.stringify(roomObj)+',';
+      // tag.value = JSON.stringify(pointArr).replace(/,/g, ", ");
       document.getElementsByTagName('body')[0].appendChild(tag);
       document.getElementById('cp_hgz_input').select();
       document.execCommand('copy');
@@ -174,8 +205,8 @@ export default {
     typeBuildingDict['EE'] = ee
     typeBuildingDict['S'] = s
 
-    this.buildingCode = this.$route.params.buildingCode.toUpperCase()
-    this.floorIndex = parseInt(this.$route.params.floorIndex)
+    this.buildingCode = this.$route.params.buildingCode ? this.$route.params.buildingCode.toUpperCase() : ""
+    this.floorIndex = this.$route.params.floorIndex ? parseInt(this.$route.params.floorIndex) : null
 
     if (this.buildingCode.charAt(0) === 'S') this.roomTypeArr = typeBuildingDict["S"] || []
     else this.roomTypeArr = typeBuildingDict[this.buildingCode] || []

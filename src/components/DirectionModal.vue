@@ -138,14 +138,6 @@ export default {
     onclicktransport(e, index) {
       if (this.currentTransportIndex === index) return
       this.$store.commit("direction/setTransportIndex", index)
-      this.$router.push({ 
-        name: "Direction",
-        params: this.$route.params,
-        query: {
-          ...this.$route.query,
-          mode: this.transportList[this.currentTransportIndex].iconName || this.transportList[0].iconName
-        }
-      })
     },
     onfocusinput(e, isTo = false) {
       this.inputFocused = true
@@ -193,7 +185,6 @@ export default {
       if (this.globalToObj.name && toText !== this.globalToObj.name) {
         this.$store.commit("direction/setGlobalToObj", {})
       }
-
       // check if place is marker
       const query = {}
       if (this.globalFromObj.id === 0) {
@@ -203,6 +194,10 @@ export default {
       if (this.globalToObj.id === 0) {
         if (this.globalToObj.location?.x != null && this.globalToObj.location?.y != null) query["toLocation"] = `${this.globalToObj.location.x},${this.globalToObj.location.y}` + (this.globalToObj.level != null ? `,${this.globalToObj.level}` : "")
         if (this.globalToObj.buildingId && this.globalToObj.floorId) query["toIndoor"] = `${this.globalToObj.buildingId},${this.globalToObj.floorId}`
+      }
+      // check travel mode
+      if (this.$route.query.mode) {
+        query["mode"] = this.$route.query.mode
       }
 
       if (this.$route.params.fromText !== fromText 
@@ -258,7 +253,7 @@ export default {
   watch: {
     isCurrentTo: {
       immediate: true,
-      handler: function(val) {
+      handler: function (val) {
         console.log("isCurrentTo", val)
         this.$store.commit("direction/setIsSelectorTo", val)
         this.keywordQuery = val ? this.toText : this.fromText
@@ -294,17 +289,28 @@ export default {
     },
     globalFromText: {
       immediate: true,
-      handler: function(val) {
+      handler: function (val) {
         if (this.saveFromText) this.saveFromText = false
         else if (this.fromText !== val) this.fromText = val || ""
       }
     },
     globalToText: {
       immediate: true,
-      handler: function(val) {
+      handler: function (val) {
         if (this.saveToText) this.saveToText = false
         else if (this.toText !== val) this.toText = val || ""
       }
+    },
+    currentTransportIndex(val) {
+      if (val == null) return
+      this.$router.replace({ 
+        name: "Direction",
+        params: this.$route.params,
+        query: {
+          ...this.$route.query,
+          mode: this.transportList[val]?.travelMode || this.transportList[0].travelMode
+        }
+      })
     }
   }
 }

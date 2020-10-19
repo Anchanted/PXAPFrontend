@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import roomList from '@/assets/json/checkRoomList'
+import roomList from '@/assets/json/checkRoomList.json5'
 
 export default {
   data () {
@@ -23,14 +23,14 @@ export default {
   },
   methods: {
     loadImage: function (url) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         var image = new Image()
 
-        image.onload = function() {
+        image.onload = function () {
           resolve(image)
         };
 
-        image.onerror = function() {
+        image.onerror = function () {
           // reject(new Error('Could not load image at ' + url))
           reject(new Error('Could not load image'))
         };
@@ -44,7 +44,7 @@ export default {
       roomList.forEach(room => {
         if (room['floorIndex'] === parseInt(this.$route.params.floorIndex)) {
           const pointArr = room['areaCoords']
-          const level = room['level']
+          const level = room['roomLevel']
 
           if (pointArr.length) {
             this.context.lineWidth = 3

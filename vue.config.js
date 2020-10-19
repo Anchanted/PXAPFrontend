@@ -59,8 +59,8 @@ module.exports = {
       enableInSFC: true
     }
   },
-  // publicPath: process.env.NODE_ENV === "production" ? "/mxap/" : "/",
-  publicPath: "/",
+  publicPath: process.env.NODE_ENV === "production" ? "/d/" : "/",
+  // publicPath: "/",
   // assetsPublicPath: process.env.NODE_ENV === 'production' ? "/xap/" : "/",
   outputDir: "dist", // 打包的目录
   lintOnSave: false, // 在保存时校验格式

@@ -183,7 +183,7 @@ export default {
         ...this.item,
         dataType: type
       }
-      this.$nextTick(function(){
+      this.$nextTick(function (){
         this.modalHeight = this.$refs.modalContainer.clientHeight
       })
     },

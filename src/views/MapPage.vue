@@ -127,7 +127,7 @@ export default {
   },
   methods: {
     loadImage(url) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         const image = new Image();
         image.onload = () => resolve(image);
         image.onerror = () => reject(new Error('Could not load image at ' + url));
@@ -158,7 +158,7 @@ export default {
                   type: "primary"
                 })
                 this.occupationRequesting = true
-                const data = await this.$api.room.getOccupiedRoom(this.selectedFloor.id, {
+                const data = await this.$api.place.getOccupiedRoom(this.selectedFloor.id, {
                   week: weekObj["number"],
                   day: date.weekday,
                   hour: date.minute >= 30 ? date.hour + 0.5 : date.hour
@@ -276,7 +276,7 @@ export default {
         console.log(data)
       }
 
-      this.placeList = this.placeList.concat(data.facilityList || [], data.roomList || [], data.buildingList || [])
+      this.placeList = data.placeList || []
       const mapUrl = this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage
       const image = await this.loadImage(mapUrl)
       this.imageMap.set("map", image)

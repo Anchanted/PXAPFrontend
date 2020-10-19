@@ -2,8 +2,9 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import PageNotFound from 'views/404'
 import Place from 'views/Place'
-import SearchTop from 'views/Search/SearchTop'
-import SearchMore from 'views/Search/SearchMore'
+// import SearchTop from 'views/Search/SearchTop'
+// import SearchMore from 'views/Search/SearchMore'
+import Search from 'views/Search'
 import Direction from 'views/Direction'
 import OriginalMap from 'views/OriginalMap'
 import CheckMap from 'views/deprecated/CheckMap'
@@ -54,22 +55,22 @@ const routes = [
       {
         path: "/:buildingId(\\d+)?/:floorId(\\d+)?/search/@:locationInfo?",
         alias: "search",
-        component: SearchTop,
-        name: "SearchTop",
+        component: Search,
+        name: "Search",
         meta: {
           keepAlive: true
         },
       },
-      {
-        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/search/:type(building|room|facility)/@:locationInfo?",
-        alias: "search/:type(building|room|facility)",
-        component: SearchMore,
-        name: "SearchMore",
-        meta: {
-          keepAlive: false,
-          display: true
-        },
-      },
+      // {
+      //   path: "/:buildingId(\\d+)?/:floorId(\\d+)?/search/:type(building|room|facility)/@:locationInfo?",
+      //   alias: "search/:type(building|room|facility)",
+      //   component: SearchMore,
+      //   name: "SearchMore",
+      //   meta: {
+      //     keepAlive: false,
+      //     display: true
+      //   },
+      // },
       {
         path: "/:buildingId(\\d+)?/:floorId(\\d+)?/place/@:locationInfo?",
         alias: "place",
@@ -97,11 +98,12 @@ const routes = [
 const router = new Router({
   routes,
   mode: 'history',
-  base: '/'
+  base: process.env.NODE_ENV === "production" ? "/d/" : "/"
 })
 
 router.beforeEach((to, from, next) => {
   if (to.params.buildingId && !to.params.floorId) next({ name: "PageNotFound" })
+  else if (to.name === "Search" && !to.query.q) next({ name: 'PageNotFound' })
   else if (to.name === "Direction" && (to.params.buildingId || to.params.floorId)) next({ name: "Map", params: to.params })
   else {
     if (to.matched?.[0]?.name === "Map" 

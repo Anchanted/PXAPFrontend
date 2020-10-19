@@ -396,7 +396,7 @@ table thead th {
   left: 10px;
   top: 5px;
   background: #E6E3DF;
-  color: #8E8E93;
+  color: #888888;
   font-size: 15px;
   height: 30px;
   width: 30px;

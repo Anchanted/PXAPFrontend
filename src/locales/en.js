@@ -6,6 +6,7 @@ module.exports = {
         'moreTopbar': '\"{query}\" in {type}',
         'noMore': 'No More Results',
         'noResult': 'Your search returned no results.',
+        "result": "{n} results found | {n} result found | {n} results found"
     },
     direction: {
         "fromInput": "Choose a starting point",
@@ -23,6 +24,10 @@ module.exports = {
         "marker": {
             "place": "Marked Location",
             "search": "Location"
+        },
+        "openHour": {
+            "name": "Open Hours",
+            "24": "Open 24 hours"
         },
         'timetable': 'Timetable',
         'department': 'Department Allocation',

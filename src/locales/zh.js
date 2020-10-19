@@ -6,6 +6,7 @@ module.exports = {
         'moreTopbar': '{type}中搜索\"{query}\"',
         'noMore': '没有更多搜索结果了',
         'noResult': '没有找到搜索结果。',
+        "result": "找到{n}条结果"
     },
     direction: {
         "fromInput": "选择起点",
@@ -23,6 +24,10 @@ module.exports = {
         "marker": {
             "place": "标记位置",
             "search": "位置"
+        },
+        "openHour": {
+            "name": "开放时间",
+            "24": "24小时开放"
         },
         'timetable': '课程表',
         'department': '院系部门分布',

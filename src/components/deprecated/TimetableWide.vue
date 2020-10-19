@@ -292,7 +292,7 @@ export default {
       const tb = document.getElementById('tableBody');    // table 的 id
       const rows = tb.rows;                           // 获取表格所有行
 
-      this.lessonList.forEach(function(e){
+      this.lessonList.forEach(function (e){
         const day = e.day;
         const startTime = e.startTime;
         const endTime = e.endTime;
@@ -310,7 +310,7 @@ export default {
   },
 
   watch: {
-    lessons: function(newVal,oldVal) {
+    lessons: function (newVal,oldVal) {
       this.lessonList = newVal;
       this.renderLessons()
     }

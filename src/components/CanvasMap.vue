@@ -18,9 +18,8 @@ export default {
     placeList: {
       type: Array,
       default: () => []
-    },
-
-mapLevel: Number,
+    },  
+    mapLevel: Number,
     occupiedRoomList: {
       type: Array,
       default: () => []
@@ -161,6 +160,8 @@ mapLevel: Number,
       this.setInitialMapLocation()
 
       this.setLocationUrl()
+
+      if (!this.pathListComplete.map) this.pathListComplete.map = true
     },
 
     animate () {
@@ -323,10 +324,10 @@ mapLevel: Number,
       }
 
       if (this.occupationActivated && this.occupiedRoomList) {
-        const size = parseInt(this.iconSize * 2)
+        const size = this.iconSize
         this.occupiedRoomList.forEach(room => {
           const centroid = room.location
-          this.drawImage(this.imageMap.get('group'), centroid.x, centroid.y, size, size, size/2, size/2, false, true)
+          this.drawImage(this.imageMap.get('group'), centroid.x, centroid.y, size, size, size/2, size/2, true, true)
         })
       }
 
@@ -598,16 +599,6 @@ mapLevel: Number,
       const selfRotate = false
       if (this.$route.name !== "Direction") {
         if (!this.$isEmptyObject(this.selectedPlace)) {
-          if (this.selectedPlace.areaCoords) {
-            ctx.beginPath()
-            this.selectedPlace.areaCoords[0].forEach((e, index) => {
-              const { x, y } = this.getImageToCanvasPoint(e)
-              if (index == 0) ctx.moveTo(x, y)
-              else ctx.lineTo(x, y)
-            })
-            if (ctx.isPointInPath(px, py)) return 1
-          }
-
           const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.currentMarkerAnimation.x, y: this.currentMarkerAnimation.y })
           ctx.beginPath()
           if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - size/2), parseInt(canvasY - size), size, size)
@@ -635,7 +626,7 @@ mapLevel: Number,
 
       // click on places
       ({ x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }));
-      return this.placeList.find(place => {
+      const place = this.placeList.filter(place => place.id !== this.selectedPlace.id).find(place => {
         if (!place.areaCoords) {
           if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
           const { x, y } = this.getImageToCanvasPoint(place.location)
@@ -652,6 +643,18 @@ mapLevel: Number,
         }
         if (ctx.isPointInPath(px, py)) return true
       })
+      if (place) return place
+
+      // click on selected area 
+      if (this.$route.name !== "Direction" && this.selectedPlace?.areaCoords) {
+        ctx.beginPath()
+        this.selectedPlace.areaCoords[0].forEach((e, index) => {
+          const { x, y } = this.getImageToCanvasPoint(e)
+          if (index == 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        })
+        if (ctx.isPointInPath(px, py)) return 1
+      }
     },
 
     onmousewheel(e) {
@@ -1173,16 +1176,11 @@ mapLevel: Number,
           this.mousedownActivated = false
         }
 
-        let query
+        let query = {}
         if (val.id) {
-          query = {
-            id: `${val.id}`,
-            type: val.placeType
-          }
+          query["id"] = `${val.id}`
         } else {
-          query = {
-            location: `${val.x},${val.y}`
-          }
+          query["location"] = `${val.x},${val.y}`
         }
 
         if (!(this.$route.name === "Place" && JSON.stringify(this.$route.query, Object.keys(this.$route.query).sort()) === JSON.stringify(query, Object.keys(query).sort()))) {
@@ -1216,12 +1214,12 @@ mapLevel: Number,
     },
     placeList: {
       immediate: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!val?.length) return
         if (this.$route.name === 'Place') {
           let place
-          if (this.$route.query.id && this.$route.query.type) {
-            place = this.placeList.find(e => e.id === parseInt(this.$route.query.id) && e.placeType === this.$route.query.type)
+          if (this.$route.query.id) {
+            place = this.placeList.find(e => e.id === parseInt(this.$route.query.id))
           } else if (this.$route.query.location?.match(/^(\d+),(\d+)$/i)) {
             place = {
               ...this.markerObj,
@@ -1247,7 +1245,7 @@ mapLevel: Number,
     fromDirectionMarkerComplete: {
       immediate: true,
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!(val.map && val.direction)) return
         if (!this.$isEmptyObject(this.globalFromObj) && this.$isEmptyObject(this.fromDirectionMarker)) {
           const { id, placeType, location } = this.globalFromObj
@@ -1276,7 +1274,7 @@ mapLevel: Number,
     toDirectionMarkerComplete: {
       immediate: true,
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!(val.map && val.direction)) return
         if (!this.$isEmptyObject(this.globalToObj) && this.$isEmptyObject(this.toDirectionMarker)) {
           const { id, placeType, location } = this.globalToObj
@@ -1305,7 +1303,7 @@ mapLevel: Number,
     pathListComplete: {
       immediate: true,
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         if (val.map && val.direction) this.adjustMapPosition("direction")
       }
     },
@@ -1358,7 +1356,7 @@ mapLevel: Number,
     globalFromObj: {
       immediate: true,
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!this.$isEmptyObject(val)) {
           if (!this.fromDirectionMarkerComplete.direction) this.fromDirectionMarkerComplete.direction = true
           const { id, placeType, location } = val
@@ -1388,7 +1386,7 @@ mapLevel: Number,
     },
     globalToObj: {
       immediate: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!this.$isEmptyObject(val)) {
           if (!this.toDirectionMarkerComplete.direction) this.toDirectionMarkerComplete.direction = true
           const { id, placeType, location } = val
@@ -1425,7 +1423,7 @@ mapLevel: Number,
     },
     scale: {
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!(val.x && val.y)) return
         if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
         this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
@@ -1434,7 +1432,7 @@ mapLevel: Number,
     },
     position: {
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!(val.x != null && val.y != null)) return
         if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
         this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
@@ -1442,7 +1440,7 @@ mapLevel: Number,
     },
     $route: {
       immediate: true,
-      handler: function(to, from) {
+      handler: function (to, from) {
         if (!(to && from)) return
         if (this.checkRouterChange(to.fullPath, from.fullPath)) {
           const fromBuildingId = from.params.buildingId || ""
@@ -1454,8 +1452,8 @@ mapLevel: Number,
             if (to.name !== 'Place') this.setSelectedPlace()
             if (to.name === 'Place') {
               let place
-              if (to.query.id && to.query.type) {
-                place = this.placeList.find(e => e.id === parseInt(to.query.id) && e.placeType === to.query.type)
+              if (to.query.id) {
+                place = this.placeList.find(e => e.id === parseInt(to.query.id))
               } else if (to.query.location?.match(/^(\d+),(\d+)$/i)) {
                 const px = parseInt(RegExp.$1)
                 const py = parseInt(RegExp.$2)

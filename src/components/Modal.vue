@@ -20,7 +20,6 @@ export default {
     ...mapState(["screenHeight", 'scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', "modalRouterLeave"]),
     key() {
       const fullPath = this.$route.fullPath || ""
-      // console.log(fullPath.split(this.urlLocationReg).join(""))
       return decodeURIComponent(fullPath.split(this.urlLocationReg).join(""))
     },
     modalStyle() {
@@ -79,7 +78,7 @@ export default {
   width: 424px;
   position: absolute;
   top: 0;
-  z-index: 1000;
+  z-index: 1;
   background: #ffffff;
 }
 
@@ -97,7 +96,7 @@ export default {
 .modal-window {
   height: 100%;
   width: 100%;
-  // position: relative;
+  position: relative;
   overflow-x: hidden;
   overflow-y: auto;
 

@@ -18,11 +18,11 @@ import 'bootstrap/dist/js/bootstrap.min.js'
 
 import alert from '@/plugins/AlertMessage'
 
-String.prototype.capitalize = function() {
-  return this.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+String.prototype.capitalize = function () {
+  return this.toLowerCase().replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
 };
 
-Vue.prototype.$isEmptyObject = function(object) {
+Vue.prototype.$isEmptyObject = function (object) {
   for(var key in object) {
       if(object.hasOwnProperty(key)) return false;
   }

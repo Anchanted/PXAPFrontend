@@ -4,7 +4,7 @@
       simple
       :data-type="item.dataType"
       :name-title="item.name || item.content"
-      :location-title="placeAddress(index)"
+      :address-title="placeAddress(index)"
       @mousedown.native="onmousedown($event, item)">
       <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
       <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>

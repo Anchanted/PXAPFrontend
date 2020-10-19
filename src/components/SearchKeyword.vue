@@ -44,11 +44,12 @@ export default {
         const floor = place.floor_name
         const building = place.building_name
         const zone = place.zone || place.building_zone
-        if (floor) addressArr.push(this.$t("place.floor." + floor))
+        const locale = place.languageCode || this.$i18n.fallbackLocale
+        if (floor) addressArr.push(this.$t("place.floor." + floor, locale))
         if (building) addressArr.push(building)
         addressArr.push(zone || this.$t("place.zone.b"))
-        if (this.$t("place.address.reverse") === "true") addressArr = addressArr.reverse()
-        return addressArr.join(this.$t("place.address.conj"))
+        if (this.$t("place.address.reverse", locale) === "true") addressArr = addressArr.reverse()
+        return addressArr.join(this.$t("place.address.conj", locale))
       }
     }
   },

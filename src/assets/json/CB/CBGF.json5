@@ -13,6 +13,7 @@
                 "coordinates": [
                     [689, 324],
                     [634, 324],
+                    [616, 324],
                     [527, 324],
                     [527, 226],
                     [517, 226],
@@ -50,6 +51,23 @@
                 "coordinates": [
                     [685, 293],
                     [634, 293]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", "CB"], 
+                "floorIndex": [0, 0]
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [475, 499],
+                    [475, 446],
+                    [616, 446],
+                    [616, 324]
                 ]
             }
         },
@@ -103,6 +121,22 @@
                 "coordinates": [
                     [517, 188],
                     [470, 402]
+                ]
+            }
+        },
+        {
+            "type": "Feature", 
+            "properties": {
+                "walk": 2, 
+                "buildingCode": ["CB", null], 
+                "floorIndex": [0, 0],
+                "portal": 1
+            }, 
+            "geometry": {
+                "type": "LineString", 
+                "coordinates": [
+                    [475, 499], 
+                    [454, 510]
                 ]
             }
         },

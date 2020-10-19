@@ -6,6 +6,7 @@ module.exports = {
         'moreTopbar': '\"{query}\" en {type}',
         'noMore': 'No Hay Más Resultados',
         'noResult': 'No Hay Resultados.',
+        "result": "{n} resultados encontrados | {n} resultado encontrado | {n} resultados encontrados"
     },
     direction: {
         "fromInput": "Elige un punto de partida",
@@ -23,6 +24,10 @@ module.exports = {
         "marker": {
             "place": "Ubicación Marcada",
             "search": "Ubicación"
+        },
+        "openHour": {
+            "name": "Horario de atención",
+            "24": "Abierto las 24 horas"
         },
         'timetable': 'Horario',
         'department': 'Asignación de Departamento',

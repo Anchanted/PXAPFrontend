@@ -59,7 +59,7 @@
 </template>
 
 <script>
-import SearchHistory from 'views/Search/SearchHistory'
+import SearchHistory from 'components/SearchHistory'
 import SearchKeyword from 'components/SearchKeyword'
 
 import { mapState, mapActions } from 'vuex'
@@ -105,9 +105,12 @@ export default {
     submit() {
       if (this.text) {
         // console.log(this.text)
+        this.$refs.input.blur()
         this.selectItem({ content: this.text, dataType: 'query' })
         this["searchHistory/commitDisplaySearchHistory"](false)
-      } else console.log('invalid')
+      } else {
+        console.log('invalid')
+      }
     },
     onfocus() {
       // console.log('onfocus')
@@ -134,6 +137,9 @@ export default {
           buildingId: this.$route.params.buildingId,
           floorId: this.$route.params.floorId,
           locationInfo: this.$route.params.locationInfo
+        },
+        query: {
+          mode: this.transportList[0].travelMode
         }
       })
     },

@@ -147,14 +147,14 @@ export default {
       return { 'x': x, 'y': y };
     },
     loadImage (url) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         var image = new Image()
 
-        image.onload = function() {
+        image.onload = function () {
           resolve(image)
         };
 
-        image.onerror = function() {
+        image.onerror = function () {
           // reject(new Error('Could not load image at ' + url))
           reject(new Error('Could not load image'))
         };
@@ -355,10 +355,10 @@ export default {
       this.context.fill()
 
       if (this.pointArr.length) {
-        this.context.fillStyle = "yellow"
+        this.context.fillStyle = "blue"
         this.pointArr.forEach(point => {
           this.context.beginPath()
-          this.context.arc(point.x, point.y, 2, 0, 2*Math.PI)
+          this.context.arc(point.x, point.y, 10, 0, 2*Math.PI)
           this.context.fill()
         })
 
@@ -376,7 +376,7 @@ export default {
         this.context.closePath()
         this.context.fill("evenodd")
         this.context.globalAlpha = 1
-        this.context.stroke()
+        // this.context.stroke()
         this.context.lineWidth = 1
       }
 
@@ -399,35 +399,35 @@ export default {
       //   this.context.lineWidth = 1
       // }
 
-      if (this.groundPolygon.length) {
-        this.context.lineCap = 'round';
-        this.context.lineJoin = 'round';
-        this.context.fillStyle = 'yellow'
-        this.context.strokeStyle = 'rgb(255, 0, 0)'
-        this.context.lineWidth = 2
-        this.context.globalAlpha = 0.5
-        this.context.beginPath()
-        // for (let i = 0; i < this.groundPolygon.length; i ++) {
-        //   if (i == 0) this.context.moveTo(this.groundPolygon[i].x, this.groundPolygon[i].y)
-        //   else this.context.lineTo(this.groundPolygon[i].x, this.groundPolygon[i].y)
-        // }
-        this.groundPolygon.forEach((pointList, i) => {
-          // const tmp = i === 1 ? pointList : pointList.reverse()
-          pointList.forEach((point, j) => {
-            if (j === 0) this.context.moveTo(point.x, point.y)
-            else this.context.lineTo(point.x, point.y)
-          })
-        })
-        // this.groundPolygon.forEach((pointList, i) => {
-        //   this.context.lineTo(pointList[pointList.length-1].x, pointList[pointList.length-1].y)
-        // })
-        this.context.closePath()
-        this.context.fill("evenodd")
-        // this.context.fill()
-        this.context.globalAlpha = 1
-        this.context.stroke()
-        this.context.lineWidth = 1
-      }
+      // if (this.groundPolygon.length) {
+      //   this.context.lineCap = 'round';
+      //   this.context.lineJoin = 'round';
+      //   this.context.fillStyle = 'yellow'
+      //   this.context.strokeStyle = 'rgb(255, 0, 0)'
+      //   this.context.lineWidth = 2
+      //   this.context.globalAlpha = 0.5
+      //   this.context.beginPath()
+      //   // for (let i = 0; i < this.groundPolygon.length; i ++) {
+      //   //   if (i == 0) this.context.moveTo(this.groundPolygon[i].x, this.groundPolygon[i].y)
+      //   //   else this.context.lineTo(this.groundPolygon[i].x, this.groundPolygon[i].y)
+      //   // }
+      //   this.groundPolygon.forEach((pointList, i) => {
+      //     // const tmp = i === 1 ? pointList : pointList.reverse()
+      //     pointList.forEach((point, j) => {
+      //       if (j === 0) this.context.moveTo(point.x, point.y)
+      //       else this.context.lineTo(point.x, point.y)
+      //     })
+      //   })
+      //   // this.groundPolygon.forEach((pointList, i) => {
+      //   //   this.context.lineTo(pointList[pointList.length-1].x, pointList[pointList.length-1].y)
+      //   // })
+      //   this.context.closePath()
+      //   this.context.fill("evenodd")
+      //   // this.context.fill()
+      //   this.context.globalAlpha = 1
+      //   this.context.stroke()
+      //   this.context.lineWidth = 1
+      // }
 
       // this.context.fillStyle = 'red'
       // this.singlePointArr.forEach(e => {
@@ -646,32 +646,34 @@ export default {
         // this.context.closePath()
         // console.log(i, this.context.isPointInPath(e.pageX, e.pageY))
       })
-        console.log(this.context.isPointInPath(e.pageX, e.pageY))
     }
   },
-  async mounted () {
-    const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB", "IA", "IR", "GM"]
-    this.buildingCode = this.$route.params.buildingCode.toUpperCase()
+  async mounted() {
+    const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB", "IA", "IR", "GM", "AS"]
+    this.buildingCode = this.$route.params.buildingCode?.toUpperCase()
     this.floorIndex = parseInt(this.$route.params.floorIndex)
 
     try {
-      const result = buildingArr.find(code => code === this.buildingCode)
-      if (!result) throw new Error('Building not found.')
+      // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/EMPBF.png`)
+      if (!this.$route.params.floorIndex) {
+        this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
+      } else {
+        const result = buildingArr.find(code => code === this.buildingCode)
+        if (!result) throw new Error('Building not found.')
 
-      const codeInitChar = this.buildingCode.charAt(0)
-      const imageCode = codeInitChar === 'S' || codeInitChar === 'M' ? codeInitChar : this.buildingCode
+        const codeInitChar = this.buildingCode.charAt(0)
+        const imageCode = codeInitChar === 'S' || codeInitChar === 'M' ? codeInitChar : this.buildingCode
 
-      let floorName
-      if (this.floorIndex > 0) floorName = this.floorIndex
-      else if (this.floorIndex === 0) floorName = 'G'
-      else if (this.floorIndex === -1) floorName = 'B'
+        let floorName
+        if (this.floorIndex > 0) floorName = this.floorIndex
+        else if (this.floorIndex === 0) floorName = 'G'
+        else if (this.floorIndex === -1) floorName = 'B'
 
-      // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/EMPBF.png`)
-      if (!this.$route.params.floorIndex) this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
-      else this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
-
-      const changeFloorList = ["FB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE"]
-      if (changeFloorList.indexOf(this.buildingCode) > -1 && this.floorIndex > 0) this.floorIndex -= 1 
+        this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
+        
+        const changeFloorList = ["FB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE"]
+        if (changeFloorList.indexOf(this.buildingCode) > -1 && this.floorIndex > 0) this.floorIndex -= 1 
+      }
     } catch (error) {
       alert(error.message)
       return
