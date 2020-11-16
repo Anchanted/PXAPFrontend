@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-container pb-3" ref="page">
+  <div class="place-page pb-3" ref="page">
     <loading-panel
       v-if="loading"
       :has-error="loadingError"
@@ -8,86 +8,86 @@
     </loading-panel>
 
     <template v-else>
-      <div class="picture-area">
-        <div class="picture-container" :style="{'background-image': `url(${place.imgUrl ? baseUrl + place.imgUrl : defaultPic})`}">
+      <div class="place-picture">
+        <div class="place-picture-container" :style="{'background-image': `url(${place.imgUrl ? baseUrl + place.imgUrl : defaultPic})`}" @click="viewImage">
         </div>
       </div>
 
-      <div class="additional-button-container">
-        <div v-if="place.baseFloorId" class="additional indoor">
+      <div class="place-additional-group">
+        <div v-if="place.baseFloorId" class="additional-wrapper indoor">
           <button type="button" class="iconfont icon-indoor btn btn-primary additional-button indoor-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.indoor')"
             @click="$router.push({ name: 'Map', params: { buildingId: place.id, floorId: place.baseFloorId } })"></button>
         </div>
-        <!-- <div v-if="!place.buildingId && !place.floorId" class="additional direction">
+        <!-- <div v-if="!place.buildingId && !place.floorId" class="additional-wrapper direction">
           <button type="button" class="iconfont icon-direction btn btn-primary additional-button direction-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.direction.entrance')"
             @click="onclickDirection"></button>
         </div> -->
-        <!-- <div v-if="place.id != null" class="additional share">
+        <!-- <div v-if="place.id != null" class="additional-wrapper share">
           <button type="button" class="iconfont icon-share btn btn-primary additional-button share-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.share')"
             @click="onclickShare"></button>
         </div> -->
       </div>
 
-      <div class="section basic p-3" style="border: none">
-        <span class="basic-name">{{place.name}}</span>
-        <div class="basic-secondary">
-          <span v-if="place.code" class="basic-secondary-code">{{place.code}}</span><span class="basic-secondary-type"><pre v-if="place.code"> · </pre>{{place.type ? place.type.join(", ").capitalize() : ""}}</span>
+      <div class="place-section place-basic p-3" style="border: none">
+        <span class="place-basic-name">{{place.name}}</span>
+        <div class="place-basic-secondary">
+          <span v-if="place.code" class="place-basic-secondary-code">{{place.code}}</span><span class="place-basic-secondary-type"><pre v-if="place.code"> · </pre>{{place.type ? place.type.join(", ").capitalize() : ""}}</span>
         </div>
-        <div v-if="timeInfo" class="basic-time">
-          <span class="iconfont icon-clock basic-time-icon"></span>
-          <span class="basic-time-text" :class="{ 'text-success': place.extraInfo && place.extraInfo.endTime - place.extraInfo.startTime === 24 }">{{timeInfo}}</span>
+        <div v-if="timeInfo" class="place-basic-time">
+          <span class="iconfont icon-clock place-basic-time-icon"></span>
+          <span class="place-basic-time-text" :class="{ 'text-success': place.extraInfo && place.extraInfo.endTime - place.extraInfo.startTime === 24 }">{{timeInfo}}</span>
         </div>
-        <div class="basic-address">
-          <div class="iconfont icon-marker basic-address-icon text-secondary"></div>
-          <div class="basic-address-text">{{placeAddress}}</div>
+        <div class="place-basic-address">
+          <div class="iconfont icon-marker place-basic-address-icon text-secondary"></div>
+          <div class="place-basic-address-text">{{placeAddress}}</div>
         </div>
       </div>
 
-      <div class="section function-button-group px-3 py-2">
+      <div class="place-section place-function-group px-3 py-2">
         <template v-if="floorList.length">
-          <div v-for="(placeFloor, index) in floorList" :key="index" class="function-button-wrapper direction">
-            <button type="button" class="iconfont icon-direction btn btn-primary function-button direction-button" @click="onclickDirection($event, placeFloor)"></button>
-            <span class="text-primary function-button-text" @click="onclickDirection($event, placeFloor)">{{directionName(placeFloor)}}</span>
+          <div v-for="(placeFloor, index) in floorList" :key="index" class="place-function-button-wrapper direction">
+            <button type="button" class="iconfont icon-direction btn btn-primary place-function-button direction-button" @click="onclickDirection($event, placeFloor)"></button>
+            <span class="text-primary place-function-button-text" @click="onclickDirection($event, placeFloor)">{{directionName(placeFloor)}}</span>
           </div>
         </template>
-        <div v-if="place.id != null" class="function-button-wrapper share">
-          <button type="button" class="iconfont icon-share btn btn-primary function-button share-button" @click="onclickShare"></button>
-          <span class="text-primary function-button-text" @click="onclickShare">{{$t('tooltip.share')}}</span>
+        <div v-if="place.id != null" class="place-function-button-wrapper share">
+          <button type="button" class="iconfont icon-share btn btn-primary place-function-button share-button" @click="onclickShare"></button>
+          <span class="text-primary place-function-button-text" @click="onclickShare">{{$t('tooltip.share')}}</span>
         </div>
       </div>
 
-      <div v-if="place.contact" class="section contact px-3 py-2">
-        <span class="title">{{$t('place.contact')}}</span>
-        <div v-if="place.contact.phone" class="contact-section contact-phone">
-          <div class="iconfont icon-phone contact-section-icon"></div>
-          <div class="contact-section-text">
+      <div v-if="place.contact" class="place-section place-contact px-3 py-2">
+        <span class="place-section-title">{{$t('place.contact')}}</span>
+        <div v-if="place.contact.phone" class="place-contact-section place-contact-phone">
+          <div class="iconfont icon-phone place-contact-section-icon"></div>
+          <div class="place-contact-section-text">
             <span v-for="(e, index) in place.contact.phone" :key="index" style="display: block;">+86&nbsp;{{e}}</span>
           </div>
         </div>
-        <div v-if="place.contact.email" class="contact-section contact-email">
-          <div class="iconfont icon-mail contact-section-icon"></div>
-          <div class="contact-section-text">
+        <div v-if="place.contact.email" class="place-contact-section place-contact-email">
+          <div class="iconfont icon-mail place-contact-section-icon"></div>
+          <div class="place-contact-section-text">
             <a v-for="(e, index) in place.contact.email" :key="index" :href="`mailto:${e}`" style="display: block;">{{e}}</a>
           </div>
         </div>
       </div>
 
-      <div v-if="place.placeType === 'room' && lessonList.length > 0" class="section px-3 py-2">
-        <span class="title">{{$t('place.timetable')}}</span>
+      <div v-if="place.placeType === 'room' && lessonList.length > 0" class="place-section px-3 py-2">
+        <span class="place-section-title">{{$t('place.timetable')}}</span>
         <timetable ref="timetable" :lessons="lessonList"></timetable>
       </div>
 
-      <div v-if="place.department" class="section department px-3 py-2">
-        <span class="title">{{$t('place.department')}}</span>
-        <div class="department-text">{{place.department.length ? place.department.join('\n') : $t("place.departmentNone")}}</div>
+      <div v-if="place.department" class="place-section place-department px-3 py-2">
+        <span class="place-section-title">{{$t('place.department')}}</span>
+        <div class="place-department-text">{{place.department.length ? place.department.join('\n') : $t("place.departmentNone")}}</div>
       </div>
 
-      <div v-if="place.description" class="section description px-3 py-2">
-        <div class="title">{{$t('place.description')}}</div>
-        <div class="description-text">{{place.description}}</div>
+      <div v-if="place.description" class="place-section place-description px-3 py-2">
+        <div class="place-section-title">{{$t('place.description')}}</div>
+        <div class="place-description-text">{{place.description}}</div>
       </div>
     </template>
   </div>
@@ -177,8 +177,8 @@ export default {
         this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
       })
 
-      const {id, location} = this.$route.query
-      const {buildingId, floorId} = this.$route.params
+      const { id, location } = this.$route.query
+      const { buildingId, floorId } = this.$route.params
 
       const params = {
         id: id,
@@ -231,19 +231,11 @@ export default {
       })
     },
     onclickShare() {
-      const tag = document.createElement('input');
-      tag.setAttribute('id', 'cp_hgz_input');
-      tag.value = window.location.href;
-      document.getElementsByTagName('body')[0].appendChild(tag);
-      document.getElementById('cp_hgz_input').select();
-      document.execCommand('copy');
-      document.getElementById('cp_hgz_input').remove();
-
-      this.$alert({
-        message: "Link successfully added to the clipboard!",
-        time: 3000,
-        type: "primary"
-      })
+      this.copyText(window.location.href)
+    },
+    viewImage() {
+      if (!this.place?.imgUrl) return
+      this.$EventBus.$emit("viewImage", this.baseUrl + this.place.imgUrl)
     }
   },
   mounted() {
@@ -253,34 +245,34 @@ export default {
 </script>
 
 <style lang="scss">
-.place-loading-panel {
-  width: 100%;
-  height: 300px;
-  position: relative;
-  background-color: #ffffff;
-
-  .refresh {
-    span {
-      font-size: 1.2rem;
-    }
-  }
-
-  button {
-    font-size: 1rem;
-  }
-}
-
-.modal-container {
+.place-page {
   height: auto;
   width: 424px;
   position: relative;
 
-  .picture-area {
+  .place-loading-panel {
+    width: 100%;
+    height: 300px;
+    position: relative;
+    background-color: #ffffff;
+
+    .refresh {
+      span {
+        font-size: 1.2rem;
+      }
+    }
+
+    button {
+      font-size: 1rem;
+    }
+  }
+
+  .place-picture {
     width: 100%;
     height: 240px;
     flex-shrink: 0;
 
-    .picture-container {
+    &-container {
       width: 100%;
       height: 100%;
       background-repeat: no-repeat;
@@ -289,7 +281,7 @@ export default {
     }
   }
 
-  .additional-button-container {
+  .place-additional-group {
     position: absolute;
     top: 215px;
     right: 20px;
@@ -298,11 +290,11 @@ export default {
     justify-content: flex-end;
     align-items: center;
 
-    .additional {
+    .additional-wrapper {
       width: auto;
       height: auto;
 
-      &-button {
+      .additional-button {
         width: 40px;
         height: 40px;
         border-radius: 20px;
@@ -321,7 +313,7 @@ export default {
     }
   }
 
-  .basic {
+  .place-basic {
     &-name {
       font-size: 1.5rem;
       line-height: normal;
@@ -386,16 +378,16 @@ export default {
     }
   }
 
-  .function-button-group {
+  .place-function-group {
     display: flex;
     
-    .function-button-wrapper {
+    .place-function-button-wrapper {
       width: 90px;
       display: flex;
       flex-direction: column;
       align-items: center;
 
-      .function-button {
+      .place-function-button {
         width: 36px;
         height: 36px;
         border-radius: 18px;
@@ -405,7 +397,7 @@ export default {
         line-height: 1;
       }
       
-      .function-button-text {
+      .place-function-button-text {
         display: block;
         // padding: 0 5px;
         text-align: center;
@@ -415,7 +407,20 @@ export default {
     }
   }
 
-  .contact {
+  .place-section {
+    height: auto;
+    background: white;
+    border-top: 1px #C6C6C6 solid;
+
+    &-title {
+      display: block;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+  }
+
+  .place-contact {
     &-section {
       display: flex;
       align-items: center;
@@ -423,7 +428,7 @@ export default {
       text-align: center;
       vertical-align: middle;
 
-      &.contact-email {
+      &.place-contact-email {
         margin-top: 0.5rem;
       }
 
@@ -445,14 +450,14 @@ export default {
     }
   }
 
-  .department {
+  .place-department {
     &-text {
       font-size: 1rem;
       white-space: pre-line
     }
   }
 
-  .description {
+  .place-description {
     &-text {
       font-size: 1rem;
       line-height: 1.5;
@@ -461,24 +466,5 @@ export default {
       // word-break: normal;
     }
   }
-}
-
-.title {
-  display: block;
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 0.3rem;
-}
-
-.section {
-  height: auto;
-  background: white;
-  border-top: 1px #C6C6C6 solid;
-}
-
-.section-divider {
-  width: 100%;
-  height: 0;
-  border-bottom: 1px #C6C6C6 solid;
 }
 </style>

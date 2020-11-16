@@ -18,6 +18,8 @@ import 'bootstrap/dist/js/bootstrap.min.js'
 
 import alert from '@/plugins/AlertMessage'
 
+import '@vant/touch-emulator';
+
 String.prototype.capitalize = function () {
   return this.toLowerCase().replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
 };

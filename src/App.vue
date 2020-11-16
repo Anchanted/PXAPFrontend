@@ -10,19 +10,25 @@
 
 <script>
 import { Settings } from 'luxon'
+import { ImagePreview } from 'vant'
 
 export default {
   components: {
   },
+  data() {
+    return {
+      imagePreviewInstance: null
+    }
+  },
   computed: {
-    key () {
+    key() {
       const buildingId = this.$route.params.buildingId || ''
       const floorId = this.$route.params.floorId || ''
       return `b${buildingId}f${floorId}`
     }
   },
   methods: {
-    getScrollbarWidth () {
+    getScrollbarWidth() {
       const odiv = document.createElement('div')//创建一个div
       const styles = {
         width: '100px',
@@ -36,9 +42,23 @@ export default {
       scrollbarWidth = odiv.offsetWidth - odiv.clientWidth;//相减
       odiv.remove();//移除创建的div
       return scrollbarWidth;//返回滚动条宽度
+    },
+    viewImage(imgUrl) {
+      if (!imgUrl) return
+      console.log("here")
+      const _this = this
+      this.imagePreviewInstance = ImagePreview({
+        images: [
+          imgUrl
+        ],
+        showIndex: false,
+        onClose: function () {
+          _this.imagePreviewInstance = null
+        }
+      })
     }
   },
-  created () {
+  created() {
     let lang = localStorage.getItem('language')
     if (!lang) {
       lang = navigator.language || ''
@@ -65,6 +85,16 @@ export default {
     console.log('scrollBarWidth', scrollBarWidth)
     this.$store.commit('setScrollBarWidth', scrollBarWidth)
     this.$store.dispatch('searchHistory/refreshHistoryList', this.unifySearchItem)
+
+    this.$EventBus.$on("viewImage", this.viewImage)
+  },
+  watch: {
+    "$i18n.locale": {
+      immediate: true,
+      handler: function (val) {
+        document.title = this.$t("title", val)
+      }
+    }
   }
 }
 </script>

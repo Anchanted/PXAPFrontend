@@ -139,6 +139,7 @@ export default {
       globalFromObj: state => state.direction.globalFromObj,
       globalToObj: state => state.direction.globalToObj,
       globalPathList: state => state.direction.globalPathList,
+      globalPathListIndex: state => state.direction.globalPathListIndex,
       displayVirtualButton: state => state.button.displayVirtualButton,
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
@@ -252,40 +253,58 @@ export default {
         }
 
         if (this.globalPathList?.length) {
-          ctx.lineWidth = 8
-          this.globalPathList.forEach(path => {
-            const pointList = path.pointList || []
-            ctx.strokeStyle = "#5298FF"
-            if (path.startLevel !== this.mapLevel || path.endLevel !== this.mapLevel) {
-              if (path.startLevel > this.mapLevel || path.endLevel > this.mapLevel) {
-                ctx.strokeStyle = "green"
-              } else if (path.startLevel < this.mapLevel || path.endLevel < this.mapLevel) {
-                ctx.strokeStyle = "brown"
-              }
-            } 
-            ctx.lineCap = 'round'
-            ctx.lineJoin = 'round'
-            ctx.beginPath()
-            pointList.forEach((point, j) => {
-              const { x, y } = this.getImageToCanvasPoint(point)
-              if (j === 0) ctx.moveTo(x, y)
-              else ctx.lineTo(x, y)
-            })
-            ctx.stroke()
-          })
-          ctx.lineWidth = 1
+          ctx.lineCap = 'round'
+          ctx.lineJoin = 'round'
 
-          // ctx.fillStyle = "white"
-          // this.globalPathList.forEach((path, i) => {
-          //   if (i > 0) {
-          //     const pointList = path.pointList || []
-          //     const point = pointList.length ? pointList[0] : null
-          //     const { x, y } = this.getImageToCanvasPoint(point)
-          //     ctx.beginPath()
-          //     ctx.arc(x, y, 2, 0, 2*Math.PI)
-          //     ctx.fill()
-          //   }
-          // })
+          for (let index = this.globalPathList.length - 1; index >= 0; index--) {
+            if (index === this.globalPathListIndex) continue
+            const route = this.globalPathList[index];
+            if (!route?.length) continue
+
+            this.drawPath(route, 8, "#929497")
+            this.drawPath(route, 6, "#bbbdbf")
+          }
+
+          const route = this.globalPathList[this.globalPathListIndex];
+          if (route?.length) {
+            this.drawPath(route, 8, "#3075d6")
+
+            ctx.lineWidth = 6
+            route.forEach((path, i) => {
+              const pointList = path.pointList || []
+              // ctx.strokeStyle = "#5298FF"
+              ctx.strokeStyle = "#01DF4D"
+              if (path.startLevel !== this.mapLevel || path.endLevel !== this.mapLevel) {
+                if (path.startLevel > this.mapLevel || path.endLevel > this.mapLevel) {
+                  ctx.strokeStyle = "#DE1D16"
+                } else if (path.startLevel < this.mapLevel || path.endLevel < this.mapLevel) {
+                  ctx.strokeStyle = "#161BDE"
+                }
+              } 
+
+              ctx.beginPath()
+              pointList.forEach((point, j) => {
+                const { x, y } = this.getImageToCanvasPoint(point)
+                if (j === 0) ctx.moveTo(x, y)
+                else ctx.lineTo(x, y)
+              })
+              ctx.stroke()
+            })
+  
+            // ctx.fillStyle = "white"
+            // route.forEach((path, i) => {
+            //   if (i > 0) {
+            //     const pointList = path.pointList || []
+            //     const point = pointList.length ? pointList[0] : null
+            //     const { x, y } = this.getImageToCanvasPoint(point)
+            //     ctx.beginPath()
+            //     ctx.arc(x, y, 2, 0, 2*Math.PI)
+            //     ctx.fill()
+            //   }
+            // })
+          }
+
+          ctx.lineWidth = 1
         }
 
         if (this.placeList.length) {
@@ -492,6 +511,25 @@ export default {
       ctx.shadowBlur = 0
     },
 
+    drawPath(route, lineWidth, strokeStyle) {
+      const ctx = this.context
+      ctx.strokeStyle = strokeStyle
+      ctx.lineWidth = lineWidth
+      ctx.beginPath()
+      route.forEach((path, i) => {
+        const pointList = path.pointList || []
+        pointList.forEach((point, j) => {
+          const { x, y } = this.getImageToCanvasPoint(point)
+          if (j === 0) {
+            if (i === 0) ctx.moveTo(x, y)
+          } else {
+            ctx.lineTo(x, y)
+          }
+        })
+      })
+      ctx.stroke()
+    },
+
     getMousePoint({ x, y }, followRotation = true) {
       return {
         x: (!this.rotate || !followRotation) ? x - this.canvas.getBoundingClientRect().left : y - this.canvas.getBoundingClientRect().top,
@@ -645,6 +683,30 @@ export default {
       })
       if (place) return place
 
+      // click on paths
+      if (this.$route.name === "Direction" && this.globalPathList.length) {
+        ctx.lineWidth = 16
+        for (let index = -1; index < this.globalPathList.length; index++) {
+          if (index === this.globalPathListIndex) continue
+          const route = this.globalPathList[index === -1 ? this.globalPathListIndex : index]
+          if (!route?.length) continue
+          ctx.beginPath()
+          route.forEach((path, i) => {
+            const pointList = path.pointList || []
+            pointList.forEach((point, j) => {
+              const { x, y } = this.getImageToCanvasPoint(point)
+              if (j === 0) {
+                if (i === 0) ctx.moveTo(x, y)
+              } else {
+                ctx.lineTo(x, y)
+              }
+            })
+          })
+          if (ctx.isPointInStroke(px, py)) return 10 + (index === -1 ? this.globalPathListIndex : index)
+        }
+        ctx.lineWidth = 1
+      }
+
       // click on selected area 
       if (this.$route.name !== "Direction" && this.selectedPlace?.areaCoords) {
         ctx.beginPath()
@@ -791,8 +853,7 @@ export default {
           // route is not direction
           if (element) {
             if (typeof element === "number" && element === 1) {
-              this.$store.commit('setPanelCollapsed', false)
-              this.$store.commit('setModalCollapsed', false)
+              this.$EventBus.$emit("showModal")
               this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaCoords)
             } else if (typeof element === "object") {
               this.mousedownActivated = true
@@ -814,30 +875,38 @@ export default {
           }
         } else {
           // route is direction
-          const place = element && typeof element === "object" ? element : marker
-          if (!place) return
-          if (!this.$isEmptyObject(this.fromDirectionMarker) && !this.$isEmptyObject(this.toDirectionMarker)) {
-            // Exit Direction
-            console.log("third point")
-            this.mousedownActivated = true
-            this.$store.commit("direction/setCachedPlaceInfo", {})
-            this.setSelectedPlace(place)
+          if (typeof element === "number" && element >= 10) {
+            const index = element - 10
+            if (index !== this.globalPathListIndex) this.$store.commit("direction/setGlobalPathListIndex", index)
+            this.$EventBus.$emit("showPanel")
+            this.adjustMapPosition("direction")
+            return
           } else {
-            // const oppositeGlobalText = this.isSelectorTo ? this.globalFromText : this.globalToText
-            const oppositeGlobalObj = this.isSelectorTo ? this.globalFromObj : this.globalToObj
-
-            if (this.globalObjKeyArr.every((key, i) => i === 0 ? true : oppositeGlobalObj[key] === place[key]) && oppositeGlobalObj.location?.x === place.location?.x && oppositeGlobalObj.location?.y === place.location?.y) {
-              // same item
-              this.$alert({
-                message: this.$t("direction.selector.same"),
-                time: 3000,
-                type: "warning"
-              })
+            const place = element && typeof element === "object" ? element : marker
+            if (!place) return
+            if (!this.$isEmptyObject(this.fromDirectionMarker) && !this.$isEmptyObject(this.toDirectionMarker)) {
+              // Exit Direction
+              console.log("third point")
+              this.mousedownActivated = true
+              this.$store.commit("direction/setCachedPlaceInfo", {})
+              this.setSelectedPlace(place)
             } else {
-              const obj = {}
-              this.globalObjKeyArr.forEach(key => obj[key] = place[key])
-              this.$store.commit(this.isSelectorTo ? "direction/setGlobalToObj" : "direction/setGlobalFromObj", obj)
-              this.$EventBus.$emit("setDirectionText", { isTo: this.isSelectorTo, text: obj.name })
+              // const oppositeGlobalText = this.isSelectorTo ? this.globalFromText : this.globalToText
+              const oppositeGlobalObj = this.isSelectorTo ? this.globalFromObj : this.globalToObj
+  
+              if (this.globalObjKeyArr.every((key, i) => i === 0 ? true : oppositeGlobalObj[key] === place[key]) && oppositeGlobalObj.location?.x === place.location?.x && oppositeGlobalObj.location?.y === place.location?.y) {
+                // same item
+                this.$alert({
+                  message: this.$t("direction.selector.same"),
+                  time: 3000,
+                  type: "warning"
+                })
+              } else {
+                const obj = {}
+                this.globalObjKeyArr.forEach(key => obj[key] = place[key])
+                this.$store.commit(this.isSelectorTo ? "direction/setGlobalToObj" : "direction/setGlobalFromObj", obj)
+                this.$EventBus.$emit("setDirectionText", { isTo: this.isSelectorTo, text: obj.name })
+              }
             }
           }
         }
@@ -872,11 +941,13 @@ export default {
       if (type === "middle" || type === "direction") {
         if (type === "direction") {
           const pathPointList = []
-          this.globalPathList.forEach((path, i) => {
-            const pointList = path.pointList || []
-            pointList.forEach((point, j) => {
-              if (i === 0 && j === 0) pathPointList.push(point)
-              if (j > 0) pathPointList.push(point)
+          this.globalPathList.forEach(route => {
+            route.forEach((path, i) => {
+              const pointList = path.pointList || []
+              pointList.forEach((point, j) => {
+                if (i === 0 && j === 0) pathPointList.push(point)
+                if (j > 0) pathPointList.push(point)
+              })
             })
           })
 
@@ -928,25 +999,23 @@ export default {
             }
           }
 
+          let flag = false
           let currentScale = this.scale.x
           let { width: groupWidth, height: groupHeight } = getGroupSize(currentScale)
-          let flag = false
           if (this.canvasWidth < groupWidth || this.canvasHeight < groupHeight) {
-            currentScale = Math.floor(this.scale.x * 2) / 2;
-            ({ width: groupWidth, height: groupHeight } = getGroupSize(currentScale));
-            while ((this.canvasWidth < groupWidth || this.canvasHeight < groupHeight) && currentScale > 1) {
-              flag = true
+            currentScale = Math.ceil(this.scale.x * 2) / 2;
+            do {
+              if (currentScale < this.scale.x) flag = true
               currentScale = (currentScale - 0.5 < 1) ? 1 : (currentScale - 0.5);
               ({ width: groupWidth, height: groupHeight } = getGroupSize(currentScale));
-            }
+            } while ((this.canvasWidth < groupWidth || this.canvasHeight < groupHeight) && currentScale > 1);
           } else if (this.canvasWidth > groupWidth && this.canvasHeight > groupHeight) {
-            currentScale = Math.ceil(this.scale.x * 2) / 2;
-            ({ width: groupWidth, height: groupHeight } = getGroupSize((currentScale + 0.5 > 4) ? 4 : (currentScale + 0.5)));
-            while ((this.canvasWidth > groupWidth && this.canvasHeight > groupHeight) && currentScale < 4) {
-              flag = true
+            currentScale = Math.floor(this.scale.x * 2) / 2;
+            do {
+              if (currentScale > this.scale.x) flag = true
               currentScale = (currentScale + 0.5 > 4) ? 4 : (currentScale + 0.5);
-              ({ width: groupWidth, height: groupHeight } = getGroupSize((currentScale + 0.5 > 4) ? 4 : (currentScale + 0.5)));
-            }
+              ({ width: groupWidth, height: groupHeight } = getGroupSize(currentScale));
+            } while ((this.canvasWidth > groupWidth && this.canvasHeight > groupHeight) && currentScale < 4);
           }
           if (!flag) currentScale = this.scale.x;
 
@@ -1070,14 +1139,7 @@ export default {
 
       const re = /^([+-]?\d+),([+-]?\d+),(\d+(\.\d*)?)z$/
       const matchArr = this.$route.params.locationInfo?.match(re)
-      if (matchArr?.[1] && matchArr?.[2] && matchArr?.[3]) {
-        const routerX = parseInt(matchArr[1])
-        const routerY = parseInt(matchArr[2])
-        const routerZoom = Math.floor(parseFloat(matchArr[3]) * 100) / 100
-        const standardRouterLocationInfo = `${routerX},${routerY},${routerZoom}z`
-        // If router location info is the same as current location info, no need to change
-        if (currentLocationInfo === standardRouterLocationInfo) return
-      }
+      if (matchArr?.[0] === currentLocationInfo) return
 
       this.$router.replace({
         name: this.$route.name,
@@ -1140,6 +1202,8 @@ export default {
         duration: 0.1
       }
     })
+
+    this.$EventBus.$on("displayPath", () => this.adjustMapPosition("direction"))
 
     this.canvas = this.$refs.canvas;
     this.context = this.canvas.getContext("2d");
@@ -1414,7 +1478,7 @@ export default {
         }
       }
     },
-    globalPathList(val, oldVal) {
+    globalPathList(val) {
       if (!val.length) return
       if (this.scaleAdaption != null && this.positionAdaption.x != null && this.positionAdaption.y != null) {
         if (this.pathListComplete.direction) this.adjustMapPosition("direction")

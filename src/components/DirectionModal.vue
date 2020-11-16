@@ -300,17 +300,6 @@ export default {
         if (this.saveToText) this.saveToText = false
         else if (this.toText !== val) this.toText = val || ""
       }
-    },
-    currentTransportIndex(val) {
-      if (val == null) return
-      this.$router.replace({ 
-        name: "Direction",
-        params: this.$route.params,
-        query: {
-          ...this.$route.query,
-          mode: this.transportList[val]?.travelMode || this.transportList[0].travelMode
-        }
-      })
     }
   }
 }

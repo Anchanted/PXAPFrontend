@@ -108,7 +108,7 @@ export default {
       locationActivated: state => state.button.locationActivated
     }),
     buttonList() {
-      const buttonList = this.mapType === "floor" ? ["floor","home"] : ["location"]
+      const buttonList = this.mapType === "floor" ? ["floor", "home", "compass"] : ["location"]
       if (this.mapType === "floor") {
         if (this.selectedFloor.hasGate) buttonList.push("gate")
         if (this.selectedFloor.hasOccupation) buttonList.push("occupation")
@@ -175,8 +175,8 @@ export default {
                 } else {
                   this.occupiedRoomList = data.occupiedRoomList
                 }
-              } catch (err) {
-                console.log(err)
+              } catch (error) {
+                console.log(error)
                 this.occupationRequesting = false
                 this.$alert({
                   message: 'Failed to get occupied rooms.\nPlease try again.',
@@ -344,8 +344,8 @@ export default {
               }
             })
             console.log(this.gateList)
-          } catch (err) {
-            console.log(err)
+          } catch (error) {
+            console.log(error)
             this.gateRequesting = false
             this.$alert({
               message: 'Failed to get gates.\nPlease try again.',

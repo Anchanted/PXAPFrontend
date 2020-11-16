@@ -51,6 +51,7 @@ export default {
       this.$store.commit('setPanelCollapsed', false)
       this.$store.commit('setModalCollapsed', false)
     })
+    this.$EventBus.$on("showPanel", () => this.$store.commit('setPanelCollapsed', false))
   },
   watch: {
     modalRouterLeave(val) {

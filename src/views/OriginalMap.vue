@@ -6,7 +6,7 @@
     <div class="point-coords-area" @mousemove.stop @mousedown.stop>
       x:<input type="input" v-model.trim="focusPointX">&nbsp;y:<input type="input" v-model.trim="focusPointY">
     </div>
-    <panel :points="pointArr" @updateCoords="changeCoords" @deletePoint="removePoint" @deletePoints="removePoints"></panel>
+    <panel :points="pointArr" @updateCoords="changeCoords" @deletePoint="removePoint" @deletePoints="removePoints" @updatePlace="updatePlace"></panel>
     <canvas style="display: block;" ref="map" @click="clickMap"></canvas>
   </div>
 </template>
@@ -14,14 +14,16 @@
 <script>
 import OriginalMapPanel from '@/components/OriginalMapPanel'
 
+import iconSpriteInfo from "assets/json/iconSpriteInfo.json"
+
 // import RoadPath from "assets/json/campus/roadPath.json5"
 // import NorthPath from "assets/json/campus/northPath.json5"
 // import SouthPath from "assets/json/campus/southPath.json5"
 // import UnderPath from "assets/json/campus/underPath.json5"
 import FilteredPath from "assets/json/campus/filteredPath.json5"
-import SPath from "assets/json/S/filteredPath.json"
-import BSPath from "assets/json/BS/filteredPath.json"
-import CBPath from "assets/json/CB/filteredPath.json"
+// import SPath from "assets/json/S/filteredPath.json"
+// import BSPath from "assets/json/BS/filteredPath.json"
+// import CBPath from "assets/json/CB/filteredPath.json"
 // import BSBFPath from "assets/json/BS/BSBF.json5"
 // import BSGFPath from "assets/json/BS/BSGF.json5"
 // import BS1FPath from "assets/json/BS/BS1F.json5"
@@ -63,7 +65,7 @@ export default {
       mapHeight: 0,
       context: null,
       pointArr: [],
-      image: {},
+      image: null,
       displayMap: true,
       buildingCode: null,
       floorIndex: null,
@@ -88,7 +90,9 @@ export default {
         }
       },
       groundPolygon: string2collection(groundArea),
-      underPolygon: string2collection(underArea)
+      underPolygon: string2collection(underArea),
+      placeList: [],
+      iconSprite: null
     }
   },
   methods: {
@@ -107,6 +111,7 @@ export default {
             if ((properties.buildingCode[0] !== this.buildingCode && properties.buildingCode[1] !== this.buildingCode)
               || (Math.abs(properties.floorIndex[0] - this.floorIndex) >= 1 && Math.abs(properties.floorIndex[1] - this.floorIndex) >= 1)) return
 
+          this.context.lineWidth = 10
           this.context.beginPath()
           for (let i = 0; i < lineString.length; i ++) {
             const point = lineString[i] || lineString[0]
@@ -116,6 +121,7 @@ export default {
           this.context.stroke()
           properties["selected"] = this.context.isPointInStroke(this.mouseX, this.mouseY)
           if (properties["selected"]) this.selectedPath = JSON.stringify(lineString)
+          this.context.lineWidth = 1
         })
       }
     },
@@ -125,12 +131,14 @@ export default {
       let mousePos
       if (ev.button === 0) {
         mousePos = this.getMousePos(ev)
-        this.pointArr.push(mousePos)
+        // this.pointArr.push(mousePos)
+        this.pointArr.pop()
+        if (!this.pointArr.length) this.pointArr.push(mousePos)
       } else if (ev.button === 1) {
         this.pointArr.pop()
       }
-      let pointStr = ''
-      for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
+      // let pointStr = ''
+      // for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
       // console.log(pointStr)
       // if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
       // console.log(mousePos.x + ',' + mousePos.y);
@@ -232,6 +240,15 @@ export default {
     animate () {
       this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
       if (this.displayMap) this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
+
+      if (this.placeList.length) {
+        const size = 30
+          this.placeList.forEach(place => {
+            if (this.buildingCode !== place.buildingCode || this.floorIndex !== place.floorIndex) return
+            this.context.drawImage(this.iconSprite, (iconSpriteInfo[place.iconType]["column"] - 1) * iconSpriteInfo[place.iconType]["width"], (iconSpriteInfo[place.iconType]["row"] - 1) * iconSpriteInfo[place.iconType]["height"], iconSpriteInfo[place.iconType]["width"], iconSpriteInfo[place.iconType]["height"],
+              parseInt(place.location.x - size/2), parseInt(place.location.y - size/2), size, size)
+          })
+        }
 
       if (this.pathArr.length) {
         this.pathArr.forEach(feature => {
@@ -646,6 +663,9 @@ export default {
         // this.context.closePath()
         // console.log(i, this.context.isPointInPath(e.pageX, e.pageY))
       })
+    },
+    updatePlace(placeArray) {
+      this.placeList = placeArray
     }
   },
   async mounted() {
@@ -655,6 +675,8 @@ export default {
 
     try {
       // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/EMPBF.png`)
+      this.iconSprite = await this.loadImage(require("assets/images/sprite/icon-sprite.png"))
+
       if (!this.$route.params.floorIndex) {
         this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
       } else {
@@ -670,7 +692,7 @@ export default {
         else if (this.floorIndex === -1) floorName = 'B'
 
         this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
-        
+
         const changeFloorList = ["FB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE"]
         if (changeFloorList.indexOf(this.buildingCode) > -1 && this.floorIndex > 0) this.floorIndex -= 1 
       }
@@ -687,24 +709,24 @@ export default {
       FilteredPath?.features?.forEach(e => this.pathArr.push(e))
     } else {
       const buildingSet = new Set()
-      SPath?.features?.forEach(e => {
-        this.pathArr.push(e)
-        e.properties.buildingCode.forEach(code => {
-          if (code) buildingSet.add(code.toUpperCase())
-        })
-      })
-      BSPath?.features?.forEach(e => {
-        this.pathArr.push(e)
-        e.properties.buildingCode.forEach(code => {
-          if (code) buildingSet.add(code.toUpperCase())
-        })
-      })
-      CBPath?.features?.forEach(e => {
-        this.pathArr.push(e)
-        e.properties.buildingCode.forEach(code => {
-          if (code) buildingSet.add(code.toUpperCase())
-        })
-      })
+      // SPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // BSPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
+      // CBPath?.features?.forEach(e => {
+      //   this.pathArr.push(e)
+      //   e.properties.buildingCode.forEach(code => {
+      //     if (code) buildingSet.add(code.toUpperCase())
+      //   })
+      // })
       // BSBFPath?.features?.forEach(e => {
       //   this.pathArr.push(e)
       //   e.properties.buildingCode.forEach(code => {

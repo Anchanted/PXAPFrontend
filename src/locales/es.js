@@ -1,4 +1,5 @@
 module.exports = {
+    title: "¡Bienvenido a XAP!",
     search: {
         'search': 'Buscar',
         'cancel': 'Cancelar',
@@ -12,7 +13,9 @@ module.exports = {
         "fromInput": "Elige un punto de partida",
         "toInput": "Elige un destino",
         "clickMap": " o haz clic en el mapa",
-        "go": "Ir"
+        "go": "Ir",
+        "route": "Ruta {number}",
+        "shortest": "La ruta más rápida"
     },
     placeType: {
         "place": "Sitio",
@@ -140,5 +143,9 @@ module.exports = {
             text: 'Falló en cargar los datos, actualice la página por favor.',
             button: 'Actualizar'
         }
+    },
+    pageNotFound: {
+        text: "¿Se pierde? ",
+        link: "Vuelva a la mapa del campus"
     }
 }

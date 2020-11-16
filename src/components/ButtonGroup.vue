@@ -50,6 +50,12 @@
     </div>
 
     <div v-show="!loading" class="bottom-button-group">
+      <!-- Compass -->
+      <div v-if="buttonList.includes('compass')" class="compass button-container">
+        <img class="compass-img" :src="require('assets/images/icon/compass.svg')" alt="compass"
+          :style="{ transform: `rotate(${currentFloor.direction || 0}deg)` }">
+      </div>
+
       <!-- Gate Button -->
       <div v-if="buttonList.includes('gate')" class="gate button-container" :style="{ 'z-index': gateRequesting ? 1 : null }">
         <button class="btn btn-light d-flex flex-column justify-content-around align-items-center gate-button button iconfont icon-entrance" :style="{ color : gateActivated ? '#007bff' : '#555555' }"
@@ -130,12 +136,12 @@ export default {
       locationActivated: state => state.button.locationActivated,
       scale: state => state.scale
     }),
-    containerStyle () {
+    containerStyle() {
       return {
         "z-index": this.loading ? 1 : 0
       }
     },
-    floorName () {
+    floorName() {
       if (!this.currentFloor) {
         if (!this.floorList) return ''
         if (this.floorList.find(floor => floor.name === 'GF')) {
@@ -146,7 +152,7 @@ export default {
       } else
         return this.currentFloor.name;
     },
-    langAbbr () {
+    langAbbr() {
       const locale = this.$i18n.locale || 'en'
       let abbr
       if (locale.length >= 2) {
@@ -161,13 +167,13 @@ export default {
     }
   },
   methods: {
-    helpButton () {
+    helpButton() {
       window.open("/static/html/guide.html", '_blank')
     },
-    hideButton () {
+    hideButton() {
       this.$store.commit("button/setDisplayVirtualButton", true)
     },
-    refreshZoomBtn (scale = 1) {
+    refreshZoomBtn(scale = 1) {
       if (this.$refs.zinbtn && this.$refs.zinbtn) {
         if (scale >= 4) {
           $(this.$refs.zinbtn).tooltip('dispose')
@@ -187,20 +193,20 @@ export default {
         }
       }
     },
-    zoomIn () {
+    zoomIn() {
       if (!this.$refs.zinbtn.disabled) {
         this.$EventBus.$emit("buttonZoom", 0.5)
       }
     },
-    zoomOut () {
+    zoomOut() {
       if (!this.$refs.zoutbtn.disabled) {
         this.$EventBus.$emit("buttonZoom", -0.5)
       }
     },
-    clickGate () {
+    clickGate() {
       this.$store.commit("button/reverseGateActivated")
     },
-    clickOccupation () {
+    clickOccupation() {
       this.$store.commit("button/reverseOccupationActivated")
     },
     chooseOtherFloor(e, floor) {
@@ -217,7 +223,7 @@ export default {
         // this.$router.go(0);
       }
     },
-    changeLanguage () {
+    changeLanguage() {
       const langArr = ['EN', 'ZH', 'ES']
       const index = langArr.indexOf(this.langAbbr)
       if (index > -1) {
@@ -227,11 +233,11 @@ export default {
         this.$router.go(0)
       }
     },
-    clickLocation () {
+    clickLocation() {
       this.$store.commit("button/reverseLocationActivated")
     }
   },
-  mounted () {
+  mounted() {
     this.$store.commit("button/setGateActivated", false)
     this.$store.commit("button/setOccupationActivated", false)
     this.$store.commit("button/setLocationActivated", false)
@@ -243,10 +249,10 @@ export default {
   },
 
   watch: {
-    scale (val) {
+    scale(val) {
       this.refreshZoomBtn(val)
     },
-    loading (val) {
+    loading(val) {
       if (val === false) {
         this.$nextTick(() => {
           $('[data-toggle="tooltip"]').tooltip();
@@ -254,7 +260,7 @@ export default {
         })
       }
     },
-    buttonList (val) {
+    buttonList(val) {
       if (val && val instanceof Array) {
         if (val.find(e => e === "gate" || e === "occupation")) {
           this.$nextTick(() => {
@@ -269,8 +275,7 @@ export default {
 </script>
 
 <style lang="scss">
-img
-{
+img {
   height: 30px;
   width: 30px;
 }
@@ -455,6 +460,16 @@ img
 
   >div {
     margin-top: 10px;
+  }
+
+  .compass {
+    box-shadow: none;
+
+    &-img {
+      width: 40px;
+      height: 40px;
+      opacity: 0.9;
+    }
   }
 
   .occupation {

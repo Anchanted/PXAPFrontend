@@ -30,23 +30,36 @@
             </select>
           </div>
         </div> -->
+        <!-- {"name":{"en":null,"zh":null},"type":["book collection"],"iconType":"culture","iconLevel":1,"buildingCode":"CB","floorIndex":4,"location":{"x":513,"y":298}},
+        LINESTRING(513 298,472 298,431 298,390 298,349 298,308 298,267 298,226 298,185 298,144 298,216 387,192 387,168 387,144 387) -->
         <div>
           <div v-if="buildingCode" class="row"><label class="row-name">Building:</label>&nbsp;<span style="color: red">{{buildingCode}}</span></div>
           <div v-if="floorIndex" class="row"><label class="row-name">Floor:</label>&nbsp;<span>{{floor}}</span></div>
-          <div v-if="!buildingCode && !floor" class="row"><label class="row-name">Level:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityLevel"></div>
-          <div class="row"><label class="row-name">Code:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityCode"></div>
-          <div class="row"><label class="row-name">EN Name:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityNameEN"></div>
-          <div class="row"><label class="row-name">ZH Name:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityNameZH"></div>
-          <div class="row"><label class="row-name">Type:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="facilityType"></div>
-          <div class="row"><label class="row-name">Icon Level:</label>&nbsp;<input style="width: 150px" type="input" v-model.trim="iconLevel"></div>
+          <div v-if="!buildingCode && !floor" class="row"><label class="row-name">Level:</label>&nbsp;<input type="input" v-model.trim="level"></div>
+          <!-- <div class="row"><label class="row-name">Code:</label>&nbsp;<input type="input" v-model.trim="code"></div> -->
+          <!-- <div class="row"><label class="row-name">EN Name:</label>&nbsp;<input type="input" v-model.trim="nameEN"></div>
+          <div class="row"><label class="row-name">ZH Name:</label>&nbsp;<input type="input" v-model.trim="nameZH"></div> -->
+          <div class="row"><label class="row-name">EN Name:</label>&nbsp;<span>{{nameEN}}</span></div>
+          <div class="row"><label class="row-name">ZH Name:</label>&nbsp;<span>{{nameZH}}</span></div>
+          <div class="row">
+            <label class="row-name">Type:</label>&nbsp;
+            <select ref="type" @change="ontypechange">
+              <option value="" disabled selected hidden>Choose a Type</option>
+              <option v-for="(type, index) in typeArr" :key="index" :value="type.type.en">{{type.type.en}} - {{type.type.zh}}</option>
+            </select>
+          </div>
+          <!-- <div class="row"><label class="row-name">Icon Type:</label>&nbsp;<span>{{iconType}}</span></div>
+          <div class="row"><label class="row-name">Icon Level:</label>&nbsp;<span>{{iconLevel}}</span></div> -->
         </div>
+        <textarea style="display: block; width: 300px; height: 200px; font-size: 14px;" v-model.trim="testPlacesStr"></textarea>
         <div v-for="(point, index) in points" :key="index" style="padding: 10px 10px;">
           {{index + 1}}. x:<input type="text" :value="point.x" class="coordinate-input" @input="updateCoords(index, 'x', $event.target.value)">&nbsp;y:<input type="text" :value="point.y" class="coordinate-input" @input="updateCoords(index, 'y', $event.target.value)">
           <button class="panel-body-delete" @click="deleteCoords(index)">X</button>
         </div>
         <div>
           <button v-show="points.length" @click="clearData">{{`Clear Point${points.length > 1 ? 's' : ''}`}}</button>
-          <button v-show="points.length >= 3" class="duplicate-button" @click="getData">Generate Data</button>
+          <!-- <button v-show="points.length >= 3" class="duplicate-button" @click="getData">Generate Data</button> -->
+          <button v-show="points.length > 0" class="duplicate-button" @click="getData">Generate Data</button>
         </div>
       </div>
     </div>
@@ -76,12 +89,44 @@ export default {
       buildingCode: null,
       floorIndex: null,
       roomTypeArr: null,
-      facilityLevel: null,
-      facilityCode: null,
-      facilityNameEN: null,
-      facilityNameZH: null,
-      facilityType: null,
-      iconLevel: null
+      level: null,
+      code: null,
+      nameEN: null,
+      nameZH: null,
+      type: null,
+      iconType: null,
+      iconLevel: 1.0,
+      typeArr: [
+        {
+          type: {
+            en: "Water Dispenser",
+            zh: "饮水机"
+          },
+          iconType: "water"
+        },
+        {
+          type: {
+            "en": "Locker",
+            "zh": "储物柜"
+          },
+          iconType: "locker"
+        },
+        {
+          type: {
+            "en": "Drink Vending Machine",
+            "zh": "饮料售货机"
+          },
+          iconType: "vending"
+        },
+        {
+          type: {
+            "en": "Coffee Vending Machine",
+            "zh": "咖啡售货机"
+          },
+          iconType: "vending"
+        }
+      ],
+      testPlacesStr: ""
     }
   },
   computed: {
@@ -121,14 +166,20 @@ export default {
         y: 	subCentroidYSum/subAreaSum,
       }
     },
-    updateCoords (index, dim, value) {
+    updateCoords(index, dim, value) {
       this.$emit('updateCoords', index, dim, value)
     },
-    deleteCoords (index) {
+    deleteCoords(index) {
       this.$emit('deletePoint', index)
     },
-    clearData () {
+    clearData() {
       this.$emit('deletePoints')
+    },
+    ontypechange(e) {
+      this.type = this.typeArr[this.$refs.type.selectedIndex - 1].type.en
+      this.nameEN = this.typeArr[this.$refs.type.selectedIndex - 1].type.en
+      this.nameZH = this.typeArr[this.$refs.type.selectedIndex - 1].type.zh
+      this.iconType = this.typeArr[this.$refs.type.selectedIndex - 1].iconType
     },
     getData () {
       // const typeAttr = this.$refs.type.options[this.$refs.type.selectedIndex].value
@@ -164,26 +215,36 @@ export default {
 
       // const pointArr = this.points.map(e => [e.x, e.y])
 
-      const roomObj = {}
-      if (this.facilityCode) roomObj["code"] = this.facilityCode.toUpperCase()
-      roomObj["name"] = {
-        "en": this.facilityNameEN,
-        "zh": this.facilityNameZH
+      if (!this.type) {
+        alert('Place info not filled!')
+        return
       }
-      roomObj["type"] = [this.facilityType.toLowerCase()]
-      roomObj["iconType"] = this.facilityType.toLowerCase()
-      roomObj["iconLevel"] = parseFloat(this.iconLevel)
+
+      if (!this.points.length) {
+        alert('Place location not marked!')
+        return
+      }
+
+      const placeObj = {}
+      if (this.code) placeObj["code"] = this.code.toUpperCase()
+      placeObj["name"] = {
+        "en": this.nameEN,
+        "zh": this.nameZH
+      }
+      placeObj["type"] = [this.type.toLowerCase()]
+      placeObj["iconType"] = this.iconType.toLowerCase()
+      placeObj["iconLevel"] = parseFloat(this.iconLevel)
       if (this.buildingCode && this.floor) {
-        roomObj["buildingCode"] = this.buildingCode
-        roomObj["floorIndex"] = this.floorIndex
+        placeObj["buildingCode"] = this.buildingCode
+        placeObj["floorIndex"] = this.floorIndex
       } else {
-        roomObj["level"] = parseInt(this.facilityLevel)
+        placeObj["level"] = parseInt(this.level)
       }
-      roomObj["location"] = { x: this.points[0].x, y: this.points[0].y }
+      placeObj["location"] = { x: this.points[0].x, y: this.points[0].y }
 
       var tag = document.createElement('input');
       tag.setAttribute('id', 'cp_hgz_input');
-      tag.value = JSON.stringify(roomObj)+',';
+      tag.value = JSON.stringify(placeObj)+',';
       // tag.value = JSON.stringify(pointArr).replace(/,/g, ", ");
       document.getElementsByTagName('body')[0].appendChild(tag);
       document.getElementById('cp_hgz_input').select();
@@ -215,6 +276,19 @@ export default {
       this.screenHeight = window.innerHeight
     }
   },
+  watch: {
+    testPlacesStr(val) {
+      if (!val) return
+      if (val.charAt(val.length - 1) === ",") val = val.substr(0, val.length - 1)
+      try {
+        const placeArray = JSON.parse(`[${val}]`)
+        this.$emit("updatePlace", placeArray)
+      } catch (error) {
+        this.$emit("updatePlace", [])
+        console.log(error)
+      }
+    }
+  }
 }
 </script>
 
@@ -249,13 +323,13 @@ export default {
       .row {
         margin: 10px 0;
 
-        select {
+        input, select {
           width: 150px;
         }
 
         .row-name {
           display: inline-block;
-          width: 130px;
+          width: 80px;
           text-align: right;
           margin-bottom: 0px;
         }

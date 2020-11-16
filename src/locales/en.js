@@ -1,4 +1,5 @@
 module.exports = {
+    title: "Welcome to XAP!",
     search: {
         'search': 'Search',
         'cancel': 'Cancel',
@@ -12,7 +13,9 @@ module.exports = {
         "fromInput": "Choose a starting point",
         "toInput": "Choose a destination",
         "clickMap": " or click on the map",
-        "go": "Go"
+        "go": "Go",
+        "route": "Route {number}",
+        "shortest": "Fastest route"
     },
     placeType: {
         "place": "Place",
@@ -140,5 +143,9 @@ module.exports = {
             text: 'Failed to load data, please refresh the page.',
             button: 'Refresh'
         }
+    },
+    pageNotFound: {
+        text: "Lose your way? ",
+        link: "Go back to campus map"
     }
 }
