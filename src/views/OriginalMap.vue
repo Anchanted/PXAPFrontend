@@ -4,6 +4,7 @@
     <div class="mouse-coords-area">{{`${mouseX},${mouseY}`}}</div>
     <div class="path-area">{{selectedPath || ""}}</div>
     <div class="point-coords-area" @mousemove.stop @mousedown.stop>
+      <button v-if="!$route.params.floorIndex" @click="toggleSatButton">Satellite</button>
       x:<input type="input" v-model.trim="focusPointX">&nbsp;y:<input type="input" v-model.trim="focusPointY">
     </div>
     <panel ref="panel" @updatePlace="updatePlace" @changeIsRoom="updatePointArr"></panel>
@@ -63,10 +64,11 @@ export default {
     return {
       mapWidth: 0,
       mapHeight: 0,
+      displaySat: false,
       context: null,
       pointArr: [],
       image: null,
-      displayMap: true,
+      satelliteImage: null,
       buildingCode: null,
       floorIndex: null,
       mouseX: 0,
@@ -111,7 +113,7 @@ export default {
             if ((properties.buildingCode[0] !== this.buildingCode && properties.buildingCode[1] !== this.buildingCode)
               || (Math.abs(properties.floorIndex[0] - this.floorIndex) >= 1 && Math.abs(properties.floorIndex[1] - this.floorIndex) >= 1)) return
 
-          this.context.lineWidth = 10
+          this.context.lineWidth = 1
           this.context.beginPath()
           for (let i = 0; i < lineString.length; i ++) {
             const point = lineString[i] || lineString[0]
@@ -207,7 +209,11 @@ export default {
     },
     animate () {
       this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
-      if (this.displayMap) this.context.drawImage(this.image, -5, -12, this.mapWidth, this.mapHeight)
+      if (this.displaySat) {
+        this.context.drawImage(this.satelliteImage, 3, 6, this.satelliteImage.width, this.satelliteImage.height)
+      } else {
+        this.context.drawImage(this.image, -4, -5, this.mapWidth, this.mapHeight)
+      }
 
       if (this.placeList.length) {
         const size = 30
@@ -324,7 +330,13 @@ export default {
           // }
 
           this.context.globalAlpha = 0.5
-          this.context.fillStyle = properties.portal != null ? "orange" :"green"
+          if (properties.selected) {
+            this.context.fillStyle = "red"
+          } else if (properties.portal) {
+            this.context.fillStyle = "orange"
+          } else {
+            this.context.fillStyle = "green"
+          }
           const radius = properties.portal != null ? 6 : 3
           lineString.forEach(point => {
             this.context.beginPath()
@@ -352,17 +364,17 @@ export default {
         this.context.lineJoin = 'round';
         this.context.fillStyle = 'red'
         this.context.strokeStyle = 'rgb(255, 0, 0)'
-        this.context.lineWidth = 2
+        this.context.lineWidth = 4
         this.context.globalAlpha = 0.5
         this.context.beginPath()
         for (let i = 0; i < this.pointArr.length; i ++) {
           if (i == 0) this.context.moveTo(this.pointArr[i].x, this.pointArr[i].y)
           else this.context.lineTo(this.pointArr[i].x, this.pointArr[i].y)
         }
-        this.context.closePath()
-        this.context.fill("evenodd")
-        this.context.globalAlpha = 1
+        // this.context.closePath()
+        // this.context.fill("evenodd")
         this.context.stroke()
+        this.context.globalAlpha = 1
         this.context.lineWidth = 1
       }
 
@@ -624,6 +636,9 @@ export default {
     },
     updatePlace(placeArray) {
       this.placeList = placeArray
+    },
+    toggleSatButton() {
+      this.displaySat = !this.displaySat
     }
   },
   beforeDestroy() {
@@ -637,11 +652,11 @@ export default {
     this.floorIndex = parseInt(this.$route.params.floorIndex)
 
     try {
-      // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/EMPBF.png`)
       this.iconSprite = await this.loadImage(require("assets/images/sprite/icon_sprite.png"))
 
       if (!this.$route.params.floorIndex) {
-        this.image  = await this.loadImage(require('@/assets/images/map/campus/campus-01.png'))
+        this.image  = await this.loadImage(require('@/assets/images/map/campus/mapp.png'))
+        this.satelliteImage  = await this.loadImage(require('@/assets/images/map/campus/mapsat.png'))
       } else {
         const result = buildingArr.find(code => code === this.buildingCode)
         if (!result) throw new Error('Building not found.')
@@ -666,7 +681,7 @@ export default {
       RoadPath?.features?.forEach(e => this.pathArr.push(e))
       NorthPath?.features?.forEach(e => this.pathArr.push(e))
       SouthPath?.features?.forEach(e => this.pathArr.push(e))
-      UnderPath?.features?.forEach(e => this.pathArr.push(e))
+      // UnderPath?.features?.forEach(e => this.pathArr.push(e))
       // FilteredPath?.features?.forEach(e => this.pathArr.push(e))
     } else {
       const buildingSet = new Set()
@@ -779,14 +794,14 @@ export default {
     })
     console.log(this.singlePointArr.length)
 
-    const sortedMap = new Map()
-    for (let i = 0; i < 7; i ++) {
-      this.pointMap.forEach((value, key) => {
-        if (value.length === i) sortedMap.set(key, value)
-      })
-    }
-    this.pointMap = sortedMap
-    console.log(this.pointMap)
+    // const sortedMap = new Map()
+    // for (let i = 0; i < 7; i ++) {
+    //   this.pointMap.forEach((value, key) => {
+    //     if (value.length === i) sortedMap.set(key, value)
+    //   })
+    // }
+    // this.pointMap = sortedMap
+    // console.log(this.pointMap)
 
     // this.pathRecursion(0, this.pointMap.get([...this.pointMap.keys()][0])[0].geometry.coordinates[0])
     // console.log(this.ftdPathArr.length)

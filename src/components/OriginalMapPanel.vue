@@ -92,7 +92,7 @@ import s from 'assets/json/roomType/S.json'
 export default {
   data() {
     return {
-      isRoom: false,
+      isRoom: true,
       screenHeight: 0,
       panelCollapsed: false,
       locationPoint: null,
@@ -265,53 +265,53 @@ export default {
     getData () {
       // const level = parseInt(this.$refs.level.options[this.$refs.level.selectedIndex].value) || 1
 
-      if (!this.type) {
-        alert('Place info not filled!')
-        return
-      }
+      // if (!this.type) {
+      //   alert('Place info not filled!')
+      //   return
+      // }
 
-      if (this.isRoom) {
-        if (!this.code) {
-          alert('Code not filled!')
-          return
-        }
+      // if (this.isRoom) {
+      //   if (!this.code) {
+      //     alert('Code not filled!')
+      //     return
+      //   }
 
-        if (!this.displayLevel) {
-          alert('Display level not selected!')
-          return
-        }
+      //   if (!this.displayLevel) {
+      //     alert('Display level not selected!')
+      //     return
+      //   }
 
-        if (this.areaPoints.length < 3) {
-          alert('Point number is less than 3!')
-          return
-        }
-      } else {
-        if (!this.locationPoint) {
-          alert('Place location not marked!')
-          return
-        }
-      }
+      //   if (this.areaPoints.length < 3) {
+      //     alert('Point number is less than 3!')
+      //     return
+      //   }
+      // } else {
+      //   if (!this.locationPoint) {
+      //     alert('Place location not marked!')
+      //     return
+      //   }
+      // }
 
       const placeObj = {}
-      if (this.code) placeObj["code"] = this.code.toUpperCase()
-      if (!this.isRoom) {
-        placeObj["name"] = {
-          "en": this.nameEN,
-          "zh": this.nameZH
-        }
-        placeObj["shortName"] = {
-          "en": this.nameEN,
-          "zh": this.nameZH
-        }
-      }
-      placeObj["type"] = [this.type.toLowerCase()]
-      if (this.isRoom) placeObj["displayLevel"] = this.displayLevel
-      if (this.buildingCode && this.floor) {
-        placeObj["buildingCode"] = this.buildingCode
-        placeObj["floorIndex"] = this.floorIndex
-      } else {
-        placeObj["level"] = parseInt(this.level)
-      }
+      // if (this.code) placeObj["code"] = this.code.toUpperCase()
+      // if (!this.isRoom) {
+      //   placeObj["name"] = {
+      //     "en": this.nameEN,
+      //     "zh": this.nameZH
+      //   }
+      //   placeObj["shortName"] = {
+      //     "en": this.nameEN,
+      //     "zh": this.nameZH
+      //   }
+      // }
+      // placeObj["type"] = [this.type.toLowerCase()]
+      // if (this.isRoom) placeObj["displayLevel"] = this.displayLevel
+      // if (this.buildingCode && this.floor) {
+      //   placeObj["buildingCode"] = this.buildingCode
+      //   placeObj["floorIndex"] = this.floorIndex
+      // } else {
+      //   placeObj["level"] = parseInt(this.level)
+      // }
       if (this.isRoom) {
         // let areaCoords = ""
         // this.areaPoints.forEach(e => areaCoords += `${e.x},${e.y};`)
@@ -319,7 +319,8 @@ export default {
         // let { x, y } = this.getCentroid()
         // console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
 
-        // const areaPoints = this.areaPoints.map(e => [e.x, e.y])
+        const areaPoints = this.areaPoints.map(e => [e.x, e.y])
+        console.log(JSON.stringify(areaPoints))
         placeObj["areaCoords"] = this.areaPoints
       } else {
         placeObj["iconType"] = this.iconType.toLowerCase()
@@ -327,19 +328,21 @@ export default {
         placeObj["location"] = { x: this.areaPoints[0].x, y: this.areaPoints[0].y }
       }
 
-      var tag = document.createElement('input');
-      tag.setAttribute('id', 'cp_hgz_input');
-      tag.value = JSON.stringify(placeObj)+',';
-      // tag.value = JSON.stringify(areaPoints).replace(/,/g, ", ");
-      document.getElementsByTagName('body')[0].appendChild(tag);
-      document.getElementById('cp_hgz_input').select();
-      document.execCommand('copy');
-      document.getElementById('cp_hgz_input').remove();
+      // var tag = document.createElement('input');
+      // tag.setAttribute('id', 'cp_hgz_input');
+      // tag.value = JSON.stringify(placeObj)+',';
+      // // tag.value = JSON.stringify(areaPoints).replace(/,/g, ", ");
+      // document.getElementsByTagName('body')[0].appendChild(tag);
+      // document.getElementById('cp_hgz_input').select();
+      // document.execCommand('copy');
+      // document.getElementById('cp_hgz_input').remove();
 
-      alert('Data successfully added to the clipboard!')
+      // alert('Data successfully added to the clipboard!')
     }
   },
   mounted () {
+    this.$emit("changeIsRoom", this.isRoom)
+
     this.screenHeight = window.innerHeight
 
     const typeBuildingDict = {}
@@ -364,7 +367,6 @@ export default {
   },
   watch: {
     isRoom: {
-      immediate: true,
       handler: function (val) {
         this.$emit("changeIsRoom", val)
         if (this.$refs.type) {

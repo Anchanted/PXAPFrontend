@@ -81,7 +81,7 @@ export default {
   },
   data() {
     return {
-      campusImage: require("assets/images/map/campus/campus-01.png"),
+      campusImage: require("assets/images/map/campus/mapp.png"),
       mapType: null,
       selectedBuilding: {},
       selectedFloor: {},
