@@ -32,6 +32,7 @@ module.exports = {
             "name": "Horario de atención",
             "24": "Abierto las 24 horas"
         },
+        'indoor': 'Ir Adentro',
         'timetable': 'Horario',
         'department': 'Asignación de Departamento',
         "departmentNone": "Nada",

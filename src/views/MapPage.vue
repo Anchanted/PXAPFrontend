@@ -81,7 +81,7 @@ export default {
   },
   data() {
     return {
-      campusImage: require("assets/images/map/campus/map.png"),
+      campusImage: require("assets/images/map/campus/campus-01.png"),
       mapType: null,
       selectedBuilding: {},
       selectedFloor: {},
@@ -246,13 +246,13 @@ export default {
     this.loading = true
     this.$store.commit("setImageMap", new Map())
 
-    this.loadImage(require("assets/images/sprite/marker-sprite.png")).then(image => this.imageMap.set("markers", image))
+    this.loadImage(require("assets/images/sprite/marker_sprite.png")).then(image => this.imageMap.set("marker", image))
     this.loadImage(require("assets/images/icon/eye.png")).then(image => this.imageMap.set("eye", image))
-    this.loadImage(require("assets/images/sprite/icon-sprite.png")).then(image => this.imageMap.set("facilitySprite", image))
+    this.loadImage(require("assets/images/sprite/icon_sprite.png")).then(image => this.imageMap.set("icon", image))
 
     if (this.$route.params.buildingId) {
       this.loadImage(require("assets/images/icon/group.png")).then(image => this.imageMap.set("group", image))
-      this.loadImage(require("assets/images/sprite/arrow-sprite.png")).then(image => this.imageMap.set("arrowSprite", image))
+      this.loadImage(require("assets/images/sprite/arrow-sprite.png")).then(image => this.imageMap.set("arrow", image))
     } else {
       this.loadImage(require("assets/images/icon/location-marker.png")).then(image => this.imageMap.set("locationMarker", image))
       this.loadImage(require("assets/images/icon/location-circle.png")).then(image => this.imageMap.set("locationCircle", image))
@@ -276,6 +276,13 @@ export default {
         console.log(data)
       }
 
+      const offsetX = 5, offsetY = 12;
+      data.placeList.forEach(p => {
+        p.location = { x: p.location.x + offsetX, y: p.location.y + offsetY }
+        p.areaCoords?.forEach(pointList => pointList.forEach(point => {
+          point = { x: point.x + offsetX, y: point.y + offsetY }
+        }))
+      })
       this.placeList = data.placeList || []
       const mapUrl = this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage
       const image = await this.loadImage(mapUrl)

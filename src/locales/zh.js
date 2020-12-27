@@ -32,6 +32,7 @@ module.exports = {
             "name": "开放时间",
             "24": "24小时开放"
         },
+        'indoor': '进入室内',
         'timetable': '课程表',
         'department': '院系部门分布',
         "departmentNone": "无",

@@ -43,14 +43,12 @@ export default {
       odiv.remove();//移除创建的div
       return scrollbarWidth;//返回滚动条宽度
     },
-    viewImage(imgUrl) {
-      if (!imgUrl) return
+    viewImage(imgUrlArr) {
+      if (!imgUrlArr?.length) return
       console.log("here")
       const _this = this
       this.imagePreviewInstance = ImagePreview({
-        images: [
-          imgUrl
-        ],
+        images: imgUrlArr,
         showIndex: false,
         onClose: function () {
           _this.imagePreviewInstance = null

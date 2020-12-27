@@ -6,7 +6,7 @@
     <div class="point-coords-area" @mousemove.stop @mousedown.stop>
       x:<input type="input" v-model.trim="focusPointX">&nbsp;y:<input type="input" v-model.trim="focusPointY">
     </div>
-    <panel :points="pointArr" @updateCoords="changeCoords" @deletePoint="removePoint" @deletePoints="removePoints" @updatePlace="updatePlace"></panel>
+    <panel ref="panel" @updatePlace="updatePlace" @changeIsRoom="updatePointArr"></panel>
     <canvas style="display: block;" ref="map" @click="clickMap"></canvas>
   </div>
 </template>
@@ -16,10 +16,10 @@ import OriginalMapPanel from '@/components/OriginalMapPanel'
 
 import iconSpriteInfo from "assets/json/iconSpriteInfo.json"
 
-// import RoadPath from "assets/json/campus/roadPath.json5"
-// import NorthPath from "assets/json/campus/northPath.json5"
-// import SouthPath from "assets/json/campus/southPath.json5"
-// import UnderPath from "assets/json/campus/underPath.json5"
+import RoadPath from "assets/json/campus/roadPath.json5"
+import NorthPath from "assets/json/campus/northPath.json5"
+import SouthPath from "assets/json/campus/southPath.json5"
+import UnderPath from "assets/json/campus/underPath.json5"
 import FilteredPath from "assets/json/campus/filteredPath.json5"
 // import SPath from "assets/json/S/filteredPath.json"
 // import BSPath from "assets/json/BS/filteredPath.json"
@@ -92,7 +92,7 @@ export default {
       groundPolygon: string2collection(groundArea),
       underPolygon: string2collection(underArea),
       placeList: [],
-      iconSprite: null
+      iconSprite: null,
     }
   },
   methods: {
@@ -131,11 +131,9 @@ export default {
       let mousePos
       if (ev.button === 0) {
         mousePos = this.getMousePos(ev)
-        // this.pointArr.push(mousePos)
-        this.pointArr.pop()
-        if (!this.pointArr.length) this.pointArr.push(mousePos)
+        this.$refs.panel.addPoint(mousePos)
       } else if (ev.button === 1) {
-        this.pointArr.pop()
+        this.$refs.panel.deletePoint(-1)
       }
       // let pointStr = ''
       // for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
@@ -207,39 +205,9 @@ export default {
         y: 	subCentroidYSum/subAreaSum,
       }
     },
-    // animate () {
-    //   this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
-    //   if (this.displayMap) this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
-
-    //   if (this.pointArr.length) {
-    //     this.pointArr.forEach(point => {
-    //       this.context.beginPath()
-    //       this.context.arc(point.x, point.y, 2, 0, 2*Math.PI)
-    //       this.context.fillStyle="yellow"
-    //       this.context.fill()
-    //     })
-
-    //     this.context.fillStyle = 'red'
-    //     this.context.strokeStyle = 'rgb(255, 0, 0)'
-    //     this.context.lineWidth = 2
-    //     this.context.globalAlpha = 0.5
-    //     this.context.beginPath()
-    //     for (let i = 0; i < this.pointArr.length; i ++) {
-    //       if (i == 0) this.context.moveTo(this.pointArr[i].x, this.pointArr[i].y)
-    //       else this.context.lineTo(this.pointArr[i].x, this.pointArr[i].y)
-    //     }
-    //     this.context.closePath()
-    //     this.context.fill()
-    //     this.context.globalAlpha = 1
-    //     this.context.stroke()
-    //     this.context.lineWidth = 1
-    //   }
-
-    //   requestAnimationFrame(this.animate)
-    // },
     animate () {
       this.context.clearRect(0, 0, this.mapWidth, this.mapHeight)
-      if (this.displayMap) this.context.drawImage(this.image, 0, 0, this.mapWidth, this.mapHeight)
+      if (this.displayMap) this.context.drawImage(this.image, -5, -12, this.mapWidth, this.mapHeight)
 
       if (this.placeList.length) {
         const size = 30
@@ -258,25 +226,26 @@ export default {
           this.context.lineWidth = properties.selected ? 6 : 4
 
           if (!this.$route.params.floorIndex) {
-            // if (properties.selected) {
-            //   this.context.strokeStyle = "yellow"
-            // } else {
-            //   this.context.globalAlpha = 0.5
-            //   this.context.strokeStyle = "purple"
-            //   if (properties.walk != null && properties.car != null) this.context.strokeStyle = "orangered"
-            //   else if (properties.walk != null) this.context.strokeStyle = "purple"
-            //   else if (properties.car != null) this.context.strokeStyle = "cyan"
-            // }
             if (properties.selected) {
               this.context.strokeStyle = "yellow"
             } else {
               this.context.globalAlpha = 0.5
-              if (properties.level[0] === 0 && properties.level[1] === 0) this.context.strokeStyle = "purple"
-              else if (properties.level[0] > 0 && properties.level[1] > 0) this.context.strokeStyle = "red"
-              else if (properties.level[0] < 0 && properties.level[1] < 0) this.context.strokeStyle = "teal"
-              else if ((properties.level[0] === 0 && properties.level[1] > 0) || (properties.level[1] === 0 && properties.level[0] > 0)) this.context.strokeStyle = "orange"
-              else if ((properties.level[0] === 0 && properties.level[1] < 0) || (properties.level[1] === 0 && properties.level[0] < 0)) this.context.strokeStyle = "lime"
+              this.context.strokeStyle = "purple"
+              // if (properties.walk != null && properties.car != null) this.context.strokeStyle = "orangered"
+              // else if (properties.walk != null) this.context.strokeStyle = "purple"
+              // else if (properties.car != null) this.context.strokeStyle = "cyan"
+              if (properties.current) this.context.strokeStyle = "red"
             }
+            // if (properties.selected) {
+            //   this.context.strokeStyle = "yellow"
+            // } else {
+            //   this.context.globalAlpha = 0.5
+            //   if (properties.level[0] === 0 && properties.level[1] === 0) this.context.strokeStyle = "purple"
+            //   else if (properties.level[0] > 0 && properties.level[1] > 0) this.context.strokeStyle = "red"
+            //   else if (properties.level[0] < 0 && properties.level[1] < 0) this.context.strokeStyle = "teal"
+            //   else if ((properties.level[0] === 0 && properties.level[1] > 0) || (properties.level[1] === 0 && properties.level[0] > 0)) this.context.strokeStyle = "orange"
+            //   else if ((properties.level[0] === 0 && properties.level[1] < 0) || (properties.level[1] === 0 && properties.level[0] < 0)) this.context.strokeStyle = "lime"
+            // }
           } else {
             if ((properties.buildingCode[0] !== this.buildingCode && properties.buildingCode[1] !== this.buildingCode)
               || (Math.abs(properties.floorIndex[0] - this.floorIndex) >= 1 && Math.abs(properties.floorIndex[1] - this.floorIndex) >= 1)) return
@@ -321,38 +290,38 @@ export default {
           }
           this.context.stroke()
 
-          this.context.lineWidth = 1
-          this.context.globalAlpha = 1
+          // this.context.lineWidth = 1
+          // this.context.globalAlpha = 1
 
-          if (!this.$route.params.floorIndex) {
-            if (properties.car === 0) {
-              this.context.strokeStyle = "green"
-              drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, 0)
-            }
-            if (properties.car === 1) {
-              this.context.strokeStyle = "red"
-              drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], 2, 0)
-            }
-            if (properties.level[0] !== properties.level[1]) {
-              if ((properties.level[0] === 0 && properties.level[1] > 0) || (properties.level[1] === 0 && properties.level[0] > 0)) {
-                this.context.strokeStyle = "orange"
-              } else if ((properties.level[0] === 0 && properties.level[1] < 0) || (properties.level[1] === 0 && properties.level[0] < 0)) {
-                this.context.strokeStyle = "lime"
-              }
-              drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, properties.level[0] !== 0 ? 0 : 1)
-            }  
-          } else {
-            if ((properties.floorIndex[0] === this.floorIndex && Math.abs(properties.floorIndex[1] - this.floorIndex) > 0)  
-                || (properties.floorIndex[1] === this.floorIndex && Math.abs(properties.floorIndex[0] - this.floorIndex) > 0)) {
-              let style = 1
-              this.context.strokeStyle = "black"
-              this.context.fillStyle = "black"
-              if (properties.floorIndex[0] > this.floorIndex || properties.floorIndex[1] > this.floorIndex) style = 3
-              if (properties.floorIndex[0] < this.floorIndex || properties.floorIndex[1] < this.floorIndex) style = 2
-              drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], style, 0)
-              drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], style, 0)
-            }
-          }
+          // if (!this.$route.params.floorIndex) {
+          //   if (properties.car === 0) {
+          //     this.context.strokeStyle = "green"
+          //     drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, 0)
+          //   }
+          //   if (properties.car === 1) {
+          //     this.context.strokeStyle = "red"
+          //     drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], 2, 0)
+          //   }
+          //   if (properties.level[0] !== properties.level[1]) {
+          //     if ((properties.level[0] === 0 && properties.level[1] > 0) || (properties.level[1] === 0 && properties.level[0] > 0)) {
+          //       this.context.strokeStyle = "orange"
+          //     } else if ((properties.level[0] === 0 && properties.level[1] < 0) || (properties.level[1] === 0 && properties.level[0] < 0)) {
+          //       this.context.strokeStyle = "lime"
+          //     }
+          //     drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], 2, properties.level[0] !== 0 ? 0 : 1)
+          //   }  
+          // } else {
+          //   if ((properties.floorIndex[0] === this.floorIndex && Math.abs(properties.floorIndex[1] - this.floorIndex) > 0)  
+          //       || (properties.floorIndex[1] === this.floorIndex && Math.abs(properties.floorIndex[0] - this.floorIndex) > 0)) {
+          //     let style = 1
+          //     this.context.strokeStyle = "black"
+          //     this.context.fillStyle = "black"
+          //     if (properties.floorIndex[0] > this.floorIndex || properties.floorIndex[1] > this.floorIndex) style = 3
+          //     if (properties.floorIndex[0] < this.floorIndex || properties.floorIndex[1] < this.floorIndex) style = 2
+          //     drawArrow(this.context, lineString[0][0], lineString[0][1], lineString[1][0], lineString[1][1], style, 0)
+          //     drawArrow(this.context, lineString[lineString.length-1][0], lineString[lineString.length-1][1], lineString[lineString.length-2][0], lineString[lineString.length-2][1], style, 0)
+          //   }
+          // }
 
           this.context.globalAlpha = 0.5
           this.context.fillStyle = properties.portal != null ? "orange" :"green"
@@ -375,7 +344,7 @@ export default {
         this.context.fillStyle = "blue"
         this.pointArr.forEach(point => {
           this.context.beginPath()
-          this.context.arc(point.x, point.y, 10, 0, 2*Math.PI)
+          this.context.arc(point.x, point.y, this.pointArr.length > 1 ? 2 : 10, 0, 2*Math.PI)
           this.context.fill()
         })
 
@@ -393,7 +362,7 @@ export default {
         this.context.closePath()
         this.context.fill("evenodd")
         this.context.globalAlpha = 1
-        // this.context.stroke()
+        this.context.stroke()
         this.context.lineWidth = 1
       }
 
@@ -488,25 +457,6 @@ export default {
       }
 
       requestAnimationFrame(this.animate)
-    },
-    changeCoords (index, dim, value) {
-      // console.log(index, dim, value)
-      if (/^\d+$/.test(value)) {
-        this.pointArr[index][dim] = parseInt(value)
-        // let pointStr = ''
-        // for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
-        // console.log(pointStr)
-        // if (this.pointArr.length >= 3) console.log(this.getCentroid(pointStr))
-
-        // console.log(this.pointArr.map(point => `[${point.x}, ${point.y}]`).join(","))
-        console.log(`LINESTRING(${this.pointArr.map(point => point.x + " " + point.y).join(",")})`)
-      }
-    },
-    removePoint (index) {
-      this.pointArr.splice(index, 1)
-    },
-    removePoints () {
-      this.pointArr = []
     },
     pathRecursion (p, curPoint) {
       const curKey = `${curPoint[0]},${curPoint[1]}`
@@ -653,7 +603,7 @@ export default {
       // this.context.fill("evenodd")
       // console.log(this.context.isPointInPath(e.pageX, e.pageY))
 
-        this.context.beginPath()
+      this.context.beginPath()
       this.groundPolygon.forEach((pointList, i) => {
         // this.context.beginPath()
         pointList.forEach((point, j) => {
@@ -664,21 +614,34 @@ export default {
         // console.log(i, this.context.isPointInPath(e.pageX, e.pageY))
       })
     },
+    updatePointArr(drawArea) {
+      if (!this.$refs.panel) return
+      if (drawArea) {
+        this.pointArr = this.$refs.panel.$data.areaPoints
+      } else {
+        this.pointArr = this.$refs.panel.$data.locationPoint ? [this.$refs.panel.$data.locationPoint] : []
+      }
+    },
     updatePlace(placeArray) {
       this.placeList = placeArray
     }
   },
+  beforeDestroy() {
+    document.body.style.overflow = "hidden" 
+  },
   async mounted() {
+    document.body.style.overflow = "scroll" 
+
     const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB", "IA", "IR", "GM", "AS"]
     this.buildingCode = this.$route.params.buildingCode?.toUpperCase()
     this.floorIndex = parseInt(this.$route.params.floorIndex)
 
     try {
       // this.image  = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/EMPBF.png`)
-      this.iconSprite = await this.loadImage(require("assets/images/sprite/icon-sprite.png"))
+      this.iconSprite = await this.loadImage(require("assets/images/sprite/icon_sprite.png"))
 
       if (!this.$route.params.floorIndex) {
-        this.image  = await this.loadImage(require('@/assets/images/map/campus/map.png'))
+        this.image  = await this.loadImage(require('@/assets/images/map/campus/campus-01.png'))
       } else {
         const result = buildingArr.find(code => code === this.buildingCode)
         if (!result) throw new Error('Building not found.')
@@ -686,15 +649,13 @@ export default {
         const codeInitChar = this.buildingCode.charAt(0)
         const imageCode = codeInitChar === 'S' || codeInitChar === 'M' ? codeInitChar : this.buildingCode
 
+        const changeFloorList = ["FB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE"]
         let floorName
-        if (this.floorIndex > 0) floorName = this.floorIndex
-        else if (this.floorIndex === 0) floorName = 'G'
+        if (this.floorIndex > 0) floorName = this.floorIndex + (changeFloorList.indexOf(this.buildingCode) > -1 ? 1 : 0)
+        else if (this.floorIndex === 0) floorName = changeFloorList.indexOf(this.buildingCode) > -1 ? 1 : 'G'
         else if (this.floorIndex === -1) floorName = 'B'
 
         this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
-
-        const changeFloorList = ["FB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE"]
-        if (changeFloorList.indexOf(this.buildingCode) > -1 && this.floorIndex > 0) this.floorIndex -= 1 
       }
     } catch (error) {
       alert(error.message)
@@ -702,11 +663,11 @@ export default {
     }
 
     if (!this.$route.params.floorIndex) {
-      // RoadPath?.features?.forEach(e => this.pathArr.push(e))
-      // NorthPath?.features?.forEach(e => this.pathArr.push(e))
-      // SouthPath?.features?.forEach(e => this.pathArr.push(e))
-      // UnderPath?.features?.forEach(e => this.pathArr.push(e))
-      FilteredPath?.features?.forEach(e => this.pathArr.push(e))
+      RoadPath?.features?.forEach(e => this.pathArr.push(e))
+      NorthPath?.features?.forEach(e => this.pathArr.push(e))
+      SouthPath?.features?.forEach(e => this.pathArr.push(e))
+      UnderPath?.features?.forEach(e => this.pathArr.push(e))
+      // FilteredPath?.features?.forEach(e => this.pathArr.push(e))
     } else {
       const buildingSet = new Set()
       // SPath?.features?.forEach(e => {
@@ -818,14 +779,14 @@ export default {
     })
     console.log(this.singlePointArr.length)
 
-    // const sortedMap = new Map()
-    // for (let i = 0; i < 7; i ++) {
-    //   this.pointMap.forEach((value, key) => {
-    //     if (value.length === i) sortedMap.set(key, value)
-    //   })
-    // }
-    // this.pointMap = sortedMap
-    // console.log(this.pointMap)
+    const sortedMap = new Map()
+    for (let i = 0; i < 7; i ++) {
+      this.pointMap.forEach((value, key) => {
+        if (value.length === i) sortedMap.set(key, value)
+      })
+    }
+    this.pointMap = sortedMap
+    console.log(this.pointMap)
 
     // this.pathRecursion(0, this.pointMap.get([...this.pointMap.keys()][0])[0].geometry.coordinates[0])
     // console.log(this.ftdPathArr.length)

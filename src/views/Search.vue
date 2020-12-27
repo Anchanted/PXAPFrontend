@@ -201,7 +201,7 @@ export default {
     },
 
     onclick(e, item) {
-      this.selectItem({ ...item, dataType: item.placeType })
+      this.selectItem({ ...item, dataType: item.placeType || "place" })
     }
   },
 

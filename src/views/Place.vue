@@ -9,16 +9,16 @@
 
     <template v-else>
       <div class="place-picture">
-        <div class="place-picture-container" :style="{'background-image': `url(${place.imgUrl ? baseUrl + place.imgUrl : defaultPic})`}" @click="viewImage">
+        <div class="place-picture-container" :style="{ 'background-image': `url(${place.imgUrl && place.imgUrl[0] ? baseUrl + place.imgUrl[0] : defaultPic})` }" @click="viewImage">
         </div>
       </div>
 
-      <div class="place-additional-group">
-        <div v-if="place.baseFloorId" class="additional-wrapper indoor">
+      <!-- <div class="place-additional-group"> -->
+        <!-- <div v-if="place.baseFloorId" class="additional-wrapper indoor">
           <button type="button" class="iconfont icon-indoor btn btn-primary additional-button indoor-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.indoor')"
             @click="$router.push({ name: 'Map', params: { buildingId: place.id, floorId: place.baseFloorId } })"></button>
-        </div>
+        </div> -->
         <!-- <div v-if="!place.buildingId && !place.floorId" class="additional-wrapper direction">
           <button type="button" class="iconfont icon-direction btn btn-primary additional-button direction-button"
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.direction.entrance')"
@@ -29,7 +29,7 @@
             data-toggle="tooltip" data-placement="top" :title="$t('tooltip.share')"
             @click="onclickShare"></button>
         </div> -->
-      </div>
+      <!-- </div> -->
 
       <div class="place-section place-basic p-3" style="border: none">
         <span class="place-basic-name">{{place.name}}</span>
@@ -56,6 +56,15 @@
         <div v-if="place.id != null" class="place-function-button-wrapper share">
           <button type="button" class="iconfont icon-share btn btn-primary place-function-button share-button" @click="onclickShare"></button>
           <span class="text-primary place-function-button-text" @click="onclickShare">{{$t('tooltip.share')}}</span>
+        </div>
+      </div>
+
+      <div v-if="place.placeType === 'building' && place.extraInfo && place.extraInfo.floorList && place.extraInfo.floorList.length" class="place-section place-indoor px-3 py-2">
+        <span class="place-section-title" style="font-weight: normal;">{{$t('place.indoor')}}</span>
+        <div class="place-indoor-content">
+          <router-link v-for="(floor, index) in place.extraInfo.floorList" :key="index" 
+            class="place-indoor-content-cell btn btn-outline-primary" role="button"
+            :to="{ name: 'Map', params: { buildingId: place.id, floorId: floor.id }}" tag="a">{{floor.name}}</router-link>
         </div>
       </div>
 
@@ -105,7 +114,7 @@ export default {
   },
   data() {
     return {
-      baseUrl: process.env.VUE_APP_BASE_API + '/static',
+      baseUrl: process.env.VUE_APP_BASE_API,
       lessonList: [],
       place: {},
       loading: true,
@@ -234,8 +243,9 @@ export default {
       this.copyText(window.location.href)
     },
     viewImage() {
-      if (!this.place?.imgUrl) return
-      this.$EventBus.$emit("viewImage", this.baseUrl + this.place.imgUrl)
+      const filteredArr = this.place?.imgUrl?.filter(url => !!url).map(url => this.baseUrl + url)
+      if (!filteredArr?.length) return
+      this.$EventBus.$emit("viewImage", filteredArr)
     }
   },
   mounted() {
@@ -417,6 +427,26 @@ export default {
       font-size: 1.2rem;
       font-weight: bold;
       margin-bottom: 0.3rem;
+    }
+  }
+
+  .place-indoor {
+    &-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-row-gap: 0.5rem;
+      grid-column-gap: 0.5rem;
+
+      &-cell {
+        font-size: 0.8rem;
+        // padding: 0.8rem 0;
+        // border-radius: 0.5rem;
+        // text-align: center;
+
+        // &:hover {
+        //   background: #cce5ff;
+        // }
+      }
     }
   }
 

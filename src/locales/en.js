@@ -32,6 +32,7 @@ module.exports = {
             "name": "Open Hours",
             "24": "Open 24 hours"
         },
+        'indoor': 'Go Indoor',
         'timetable': 'Timetable',
         'department': 'Department Allocation',
         "departmentNone": "None",

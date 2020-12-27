@@ -107,9 +107,6 @@ export default {
       locationUrlTimeout: null,
       mousedownActivated: false,
       mapAnimation: {
-        x: null,
-        y: null,
-        initialScale: 1,
         deltaX: 0,
         deltaY: 0,
         deltaScale: 0,
@@ -168,12 +165,7 @@ export default {
     animate () {
       // set scale such as image cover all the canvas
       if (!this.init) {
-        let scaleRatio
-        if (this.canvasWidth > this.canvasHeight) {
-          scaleRatio = this.scale.x;
-        } else {
-          scaleRatio = this.scale.y;
-        }
+        const scaleRatio = this.canvasWidth > this.canvasHeight ? this.scale.x : this.scale.y
         this.scale.x = scaleRatio;
         this.scale.y = scaleRatio;
         this.init = true;
@@ -188,7 +180,6 @@ export default {
         // const deltaX = (nt - t) / this.mapAnimation.duration * this.mapAnimation.deltaX
         // const deltaY = (nt - t) / this.mapAnimation.duration * this.mapAnimation.deltaY 
         // const deltaScale = (nt - t) / this.mapAnimation.duration * this.mapAnimation.deltaScale 
-        if (this.mapAnimation.x != null && this.mapAnimation.y != null) this.focusedPoint = { ...this.getImageToCanvasPoint({ x: this.mapAnimation.x, y: this.mapAnimation.y }) }
         this.manipulateMap(deltaX, deltaY, deltaScale)
         this.mapAnimation.timer += 0.016
       }
@@ -218,26 +209,12 @@ export default {
 
       this.drawImage(this.imageMap.get("map"), 0, 0, this.imgWidth, this.imgHeight, 0, 0, false, false)
 
-      // const { x: px, y: py } = this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 }, false)
-      // ctx.moveTo(px - 10, py)
-      // ctx.lineTo(px + 10, py)
-      // ctx.stroke()
-      // ctx.moveTo(px, py - 10)
-      // ctx.lineTo(px, py + 10)
-      // ctx.stroke()
-      // if (this.mapAnimation.x != null && this.mapAnimation.y != null) {
-      //   const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.mapAnimation.x, y: this.mapAnimation.y })
-      //   ctx.moveTo(px, py)
-      //   ctx.lineTo(canvasX, canvasY)
-      //   ctx.stroke()
-      // }
-
       // Gate arrow
       if (this.gateActivated && this.gateList) {
         const augY = arrowAnimation(this.arrowAnimation.timer, -20, this.arrowAnimation.duration)
         const size = 30
         this.gateList.forEach((e) => {
-          this.drawImage(this.imageMap.get("arrowSprite"), e.location.x, e.location.y, size, size, size/2, 0, true, false, 
+          this.drawImage(this.imageMap.get("arrow"), e.location.x, e.location.y, size, size, size/2, 0, true, false, 
           (arrowSpriteInfo[e.arrow]["column"] - 1) * arrowSpriteInfo[e.arrow]["width"], (arrowSpriteInfo[e.arrow]["row"] - 1) * arrowSpriteInfo[e.arrow]["height"], arrowSpriteInfo[e.arrow]["width"], arrowSpriteInfo[e.arrow]["height"],
           e.direction, 0, (this.currentHour >= e.startTime && this.currentHour < e.endTime ? augY : 0) + 20)
         })
@@ -317,7 +294,7 @@ export default {
             if (!this.$isEmptyObject(this.toDirectionMarker) && this.toDirectionMarker.id === place.id && this.toDirectionMarker.placeType === place.placeType) return
             // place not to display
             if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
-            this.drawImage(this.imageMap.get("facilitySprite"), place.location.x, place.location.y, size, size, size/2, size/2, true, true, 
+            this.drawImage(this.imageMap.get("icon"), place.location.x, place.location.y, size, size, size/2, size/2, true, true, 
               (iconSpriteInfo[place.iconType]["column"] - 1) * iconSpriteInfo[place.iconType]["width"], (iconSpriteInfo[place.iconType]["row"] - 1) * iconSpriteInfo[place.iconType]["height"], iconSpriteInfo[place.iconType]["width"], iconSpriteInfo[place.iconType]["height"])
           })
         }
@@ -453,8 +430,7 @@ export default {
           const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: x - imgOffsetY, y: y + imgOffsetX })
           if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - canvasY), parseInt(canvasX), sizeX * scaleY, sizeY * scaleX)
           else ctx.drawImage(image, parseInt(this.canvasHeight - canvasY), parseInt(canvasX), sizeX * scaleY, sizeY * scaleX)
-        }
-        else {
+        } else {
           const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x, y })
           if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - (canvasY + imgOffsetX)), parseInt(canvasX - imgOffsetY), sizeX, sizeY)
           else ctx.drawImage(image, parseInt(this.canvasHeight - (canvasY + imgOffsetX)), parseInt(canvasX - imgOffsetY), sizeX, sizeY)
@@ -506,7 +482,7 @@ export default {
       const ctx = this.context
       ctx.shadowBlur = 10
       ctx.shadowColor = "#ffffff"
-      this.drawImage(this.imageMap.get('markers'), x, y, size, size, size/2, size, true, true,
+      this.drawImage(this.imageMap.get("marker"), x, y, size, size, size/2, size, true, true,
         (markerSpriteInfo[iconType]["column"] - 1) * markerSpriteInfo[iconType]["width"], (markerSpriteInfo[iconType]["row"] - 1) * markerSpriteInfo[iconType]["height"], markerSpriteInfo[iconType]["width"], markerSpriteInfo[iconType]["height"])
       ctx.shadowBlur = 0
     },
@@ -796,8 +772,6 @@ export default {
               this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
               // this.manipulateMap(0.5)
               this.mapAnimation = {
-                x: null,
-                y: null,
                 deltaX: 0,
                 deltaY: 0,
                 deltaScale: 0.5,
@@ -1026,9 +1000,8 @@ export default {
         const { x: placeX, y: placeY } = this.getImageToCanvasPoint({ x: posX, y: posY })
         const { x: centerX, y: centerY }  = this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })
         // const { x: centerX, y: centerY }  = this.getMousePoint({ x: ((this.rotate ? this.canvasHeight : this.canvasWidth) + 424 + 10) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })
+        this.focusedPoint = { ...this.getImageToCanvasPoint({ x: posX, y: posY }) }
         this.mapAnimation = {
-          x: posX,
-          y: posY,
           deltaX: parseInt(centerX - placeX),
           deltaY: parseInt(centerY - placeY),
           deltaScale: parseInt((scale - this.scale.x) * 10000) / 10000,
@@ -1076,8 +1049,6 @@ export default {
         if (bottom - this.canvasHeight > 0) deltaY = this.canvasHeight - bottom
 
         this.mapAnimation = {
-          x: null,
-          y: null,
           deltaX: deltaX,
           deltaY: deltaY,
           deltaScale: 0,
@@ -1193,8 +1164,6 @@ export default {
       this.focusedPoint = {...this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })}
       // this.manipulateMap(mZoom / 400)
       this.mapAnimation = {
-        x: null,
-        y: null,
         deltaX: 0,
         deltaY: 0,
         deltaScale: zoom,
