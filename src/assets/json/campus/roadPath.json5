@@ -219,8 +219,7 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "walk": 2, 
-                "car": 2
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -231,12 +230,41 @@
                     [968, 202],
                     [999, 260],
                     [1030, 306],
+                    [1051, 338]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2,
+                "car": 2
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [1051, 338],
                     [1077, 370],
                     [1108, 406],
                     [1135, 439],
                     [1161, 472],
                     [1189, 512],
+                    [1211, 557]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [1211, 557],
                     [1219, 575],
                     [1226, 612],
@@ -339,7 +367,7 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 1
             },
             "geometry": {
                 "type": "LineString",
@@ -354,7 +382,7 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 1
             },
             "geometry": {
                 "type": "LineString",
@@ -369,7 +397,7 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 0
             },
             "geometry": {
                 "type": "LineString",
@@ -384,7 +412,7 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 1
             },
             "geometry": {
                 "type": "LineString",

@@ -92,7 +92,7 @@ import s from 'assets/json/roomType/S.json'
 export default {
   data() {
     return {
-      isRoom: true,
+      isRoom: false,
       screenHeight: 0,
       panelCollapsed: false,
       locationPoint: null,
@@ -231,7 +231,7 @@ export default {
         // if (this.areaPoints.length >= 3) console.log(this.getCentroid(pointStr))
 
         // console.log(this.areaPoints.map(point => `[${point.x}, ${point.y}]`).join(","))
-        console.log(`LINESTRING(${this.areaPoints.map(point => point.x + " " + point.y).join(",")})`)
+        // console.log(`LINESTRING(${this.areaPoints.map(point => point.x + " " + point.y).join(",")})`)
       }
     },
     clearData() {
@@ -313,31 +313,33 @@ export default {
       //   placeObj["level"] = parseInt(this.level)
       // }
       if (this.isRoom) {
-        // let areaCoords = ""
-        // this.areaPoints.forEach(e => areaCoords += `${e.x},${e.y};`)
-        // console.log(areaCoords)
+        let areaCoords = ""
+        this.areaPoints.forEach((e, i) => areaCoords += `${e.x} ${e.y},`)
+        areaCoords += `${this.areaPoints[0].x} ${this.areaPoints[0].y}` 
+        areaCoords = "POLYGON((" + areaCoords + "))"
+        console.log(areaCoords)
         // let { x, y } = this.getCentroid()
         // console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
 
-        const areaPoints = this.areaPoints.map(e => [e.x, e.y])
-        console.log(JSON.stringify(areaPoints))
-        placeObj["areaCoords"] = this.areaPoints
+        // const areaPoints = this.areaPoints.map(e => [e.x, e.y])
+        // console.log(JSON.stringify(areaPoints))
+        // placeObj["areaCoords"] = this.areaPoints
       } else {
         placeObj["iconType"] = this.iconType.toLowerCase()
         placeObj["iconLevel"] = parseFloat(this.iconLevel)
-        placeObj["location"] = { x: this.areaPoints[0].x, y: this.areaPoints[0].y }
+        placeObj["location"] = { ...this.locationPoint }
       }
 
-      // var tag = document.createElement('input');
-      // tag.setAttribute('id', 'cp_hgz_input');
-      // tag.value = JSON.stringify(placeObj)+',';
-      // // tag.value = JSON.stringify(areaPoints).replace(/,/g, ", ");
-      // document.getElementsByTagName('body')[0].appendChild(tag);
-      // document.getElementById('cp_hgz_input').select();
-      // document.execCommand('copy');
-      // document.getElementById('cp_hgz_input').remove();
+      var tag = document.createElement('input');
+      tag.setAttribute('id', 'cp_hgz_input');
+      tag.value = JSON.stringify(placeObj)+',';
+      // tag.value = JSON.stringify(areaPoints).replace(/,/g, ", ");
+      document.getElementsByTagName('body')[0].appendChild(tag);
+      document.getElementById('cp_hgz_input').select();
+      document.execCommand('copy');
+      document.getElementById('cp_hgz_input').remove();
 
-      // alert('Data successfully added to the clipboard!')
+      alert('Data successfully added to the clipboard!')
     }
   },
   mounted () {
@@ -367,6 +369,7 @@ export default {
   },
   watch: {
     isRoom: {
+      immediate: true,
       handler: function (val) {
         this.$emit("changeIsRoom", val)
         if (this.$refs.type) {

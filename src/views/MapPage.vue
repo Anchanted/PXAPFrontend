@@ -81,7 +81,7 @@ export default {
   },
   data() {
     return {
-      campusImage: require("assets/images/map/campus/mapp.png"),
+      campusImage: require("assets/images/map/campus/map.png"),
       mapType: null,
       selectedBuilding: {},
       selectedFloor: {},
@@ -276,13 +276,6 @@ export default {
         console.log(data)
       }
 
-      const offsetX = 5, offsetY = 12;
-      data.placeList.forEach(p => {
-        p.location = { x: p.location.x + offsetX, y: p.location.y + offsetY }
-        p.areaCoords?.forEach(pointList => pointList.forEach(point => {
-          point = { x: point.x + offsetX, y: point.y + offsetY }
-        }))
-      })
       this.placeList = data.placeList || []
       const mapUrl = this.mapType === "floor" ? process.env.VUE_APP_BASE_API + this.selectedFloor.imgUrl : this.campusImage
       const image = await this.loadImage(mapUrl)

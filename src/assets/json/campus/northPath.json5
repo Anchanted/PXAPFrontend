@@ -4,7 +4,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -22,7 +24,10 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -33,8 +38,22 @@
                     [608, 215],
                     [609, 238],
                     [612, 317],
+                    [613, 351]
+                ]
+            }
+        },
+                {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [613, 351],
-                    [615, 380],
+                    [614, 380],
                     [617, 429],
                     [618, 453],
                     [619, 473],
@@ -47,7 +66,10 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2,
+                "car": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -71,7 +93,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -84,7 +108,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, -1], 
+                "car": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -97,7 +123,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -112,7 +140,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -128,7 +158,10 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2,
+                "car": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -141,12 +174,29 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [568, 353],
+                    [613, 351]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2,
+                "car": 2
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [613, 351],
                     [688, 349],
                     [767, 347],
@@ -160,7 +210,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -181,7 +233,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -192,6 +246,21 @@
                     [572, 446],
                     [572, 455],
                     [572, 468],
+                    [576, 560]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2,
+                "car": 2
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [576, 560],
                     [578, 627]
                 ]
@@ -200,7 +269,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -213,7 +284,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -229,7 +302,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -248,7 +323,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -258,6 +335,7 @@
                     [794, 403],
                     [795, 437],
                     [798, 506],
+                    [798, 518],
                     [799, 535],
                     [800, 567],
                     [801, 602], 
@@ -269,7 +347,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -290,7 +370,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -303,7 +385,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -319,7 +403,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -333,7 +419,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -351,7 +439,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -365,7 +455,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -378,12 +470,29 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [622, 558], 
+                    [576, 560]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2,
+                "car": 2
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [576, 560],
                     [496, 563],
                     [429, 566],
@@ -402,7 +511,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -418,7 +529,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -438,7 +551,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -451,7 +566,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -464,7 +581,10 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2,
+                "car": 2            
             },
             "geometry": {
                 "type": "LineString",
@@ -482,7 +602,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -495,7 +617,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -508,7 +632,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -521,7 +647,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 1], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -534,7 +662,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -547,7 +677,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 1], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -560,7 +692,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -574,7 +708,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -588,7 +724,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -602,7 +740,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -616,7 +756,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -630,7 +772,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -644,7 +788,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -660,7 +806,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -673,7 +821,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -686,7 +836,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -699,7 +851,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -712,7 +866,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -726,7 +882,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -739,7 +897,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -758,7 +918,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -773,7 +935,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -788,7 +952,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -802,7 +968,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -817,7 +985,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -831,12 +1001,14 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
-                    [615, 380], 
+                    [614, 380], 
                     [623, 380]
                 ]
             }
@@ -844,7 +1016,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -857,7 +1031,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -870,7 +1046,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -883,7 +1061,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [-1, 0], 
+                "car": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -896,7 +1076,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, -1], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -909,7 +1091,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 2], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -922,7 +1106,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 2], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -935,7 +1121,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 2], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -948,7 +1136,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 2], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -961,7 +1151,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 2
+                "buildingCode": [null, null], 
+                "level": [0, 1], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
@@ -974,7 +1166,9 @@
         {
             "type": "Feature",
             "properties": {
-                "direction": 1
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2
             },
             "geometry": {
                 "type": "LineString",
