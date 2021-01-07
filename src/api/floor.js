@@ -2,8 +2,8 @@ import api from './api'
 import { appendFile } from 'fs';
 
 const floor = {
-  getFloorInfo(buildingId, floorId) {
-    if (floorId) return api.get(`/floor/${buildingId}/${floorId}`)
+  getFloorInfo(floorId, buildingId) {
+    if (floorId) return api.get(`/floor/${floorId}/${buildingId}`)
     else return api.get(`/floor/${buildingId}`)
   },
 
