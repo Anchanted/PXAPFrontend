@@ -53,7 +53,7 @@
       <!-- Compass -->
       <div v-if="buttonList.includes('compass')" class="compass button-container">
         <img class="compass-img" :src="require('assets/images/icon/compass.svg')" alt="compass"
-          :style="{ transform: `rotate(${currentFloor.direction || 0}deg)` }">
+          :style="{ transform: `rotate(${(currentFloor.direction || 0) + (rotate ? 90 : 0)}deg)` }">
       </div>
 
       <!-- Gate Button -->
@@ -131,6 +131,7 @@ export default {
   },
   computed: {
     ...mapState({
+      rotate: state => state.imageRotation,
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
       locationActivated: state => state.button.locationActivated,
@@ -510,6 +511,7 @@ img {
   -webkit-box-shadow: 0px 0px 2px 1px rgba(142,142,142,.4);
   height: auto;
   width: auto;
+  border-radius: 3px;
   display: -webkit-box;
   box-sizing: border-box;
   -webkit-box-align: center;

@@ -22,6 +22,7 @@ export default new Vuex.Store({
     modalTransitionName: null,
     modalRouterLeave: false,
     imageMap: new Map(),
+    imageRotation: false,
     geolocation: {}
   },
   mutations: {
@@ -64,6 +65,9 @@ export default new Vuex.Store({
     },
     setImageMap(state, payload) {
       state.imageMap = payload
+    },
+    setImageRotation(state, payload) {
+      state.imageRotation = payload
     },
     setGeolocation(state, payload) {
       state.geolocation = payload instanceof Object ? payload : {}

@@ -9,7 +9,11 @@ const floor = {
 
   getCampusInfo() {
     return api.get(`/floor/campus`)
-  }
+  },
+
+  getFloorInfoPlain(floorIndex, buildingCode) {
+    return api.get(`/floor/plain/${floorIndex}/${buildingCode}`)
+  },
 }
 
 export default floor

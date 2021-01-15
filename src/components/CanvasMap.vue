@@ -27,11 +27,11 @@ export default {
     gateList: {
       type: Array,
       default: () => []
-    }
+    },
+    hoverPlace: Object
   },
   data() {
     return {
-      rotate: false,
       canvas: null,
       context: null,
       canvasWidth: null,
@@ -133,6 +133,7 @@ export default {
   computed: {
     ...mapState({
       imageMap: state => state.imageMap,
+      rotate: state => state.imageRotation,
       geolocation: state => state.geolocation,
       globalFromText: state => state.direction.globalFromText,
       globalToText: state => state.direction.globalToText,
@@ -289,6 +290,35 @@ export default {
 
         if (this.placeList.length) {
           const size = parseInt(this.iconSize * 1)
+
+          for (let i = this.placeList.length - 1; i >= 0; i--) {
+            const place = this.placeList[i];
+            if (!place.areaCoords) continue
+            ctx.globalAlpha = this.hoverPlace?.id === place.id ? 1 : 0.2
+            let color
+            if (place.displayLevel === 2) color = "rgb(0, 255, 0)"
+            else if (place.displayLevel === 3) color = "rgb(0, 0, 255)"
+            else color = "rgb(255, 0, 0)"
+            ctx.fillStyle = color
+            ctx.strokeStyle = color
+            ctx.lineWidth = 3
+            ctx.lineCap = 'round'
+            ctx.lineJoin = 'round'
+            ctx.beginPath()
+            place.areaCoords.forEach((pointList, i) => {
+              pointList.forEach((point, j) => {
+                const { x, y } = this.getImageToCanvasPoint(point)
+                if (j == 0) ctx.moveTo(x, y)
+                else ctx.lineTo(x, y)
+              })
+            })
+            ctx.closePath()
+            ctx.fill("evenodd")
+            ctx.globalAlpha = 1
+            ctx.stroke()
+            ctx.lineWidth = 1
+          }
+
           this.placeList.forEach(place => {
             // selected place
             if (!this.$isEmptyObject(this.selectedPlace) && this.selectedPlace.id === place.id && this.selectedPlace.placeType === place.placeType) return
@@ -357,10 +387,10 @@ export default {
         const size = this.virtualButton.size
         ctx.shadowBlur = 10
         ctx.shadowColor = "#555555"
-        ctx.fillStyle = "#f8f9fa"
-        ctx.fillRect(this.virtualButton.position.x, this.virtualButton.position.y, size, size)
+        // ctx.fillStyle = "#f8f9fa"
+        // ctx.fillRect(this.virtualButton.position.x, this.virtualButton.position.y, size, size)
+        ctx.drawImage(this.imageMap.get("displayButton"), this.virtualButton.position.x, this.virtualButton.position.y, size, size)
         ctx.shadowBlur = 0
-        ctx.drawImage(this.imageMap.get('eye'), this.virtualButton.position.x, this.virtualButton.position.y, size, size)
         ctx.restore()
         ctx.save()
         ctx.scale(2, 2)
@@ -460,7 +490,7 @@ export default {
       if (polygon) {
         const ctx = this.context
         ctx.globalAlpha = 0.2
-        ctx.fillStyle = 'red'
+        ctx.fillStyle = 'rgb(255, 0, 0)'
         ctx.strokeStyle = 'rgb(255, 0, 0)'
         ctx.lineWidth = 3
         ctx.lineCap = 'round'
@@ -600,7 +630,7 @@ export default {
       }
     },
 
-    isPointinItem(pointX, pointY) {
+    isPointInItem(pointX, pointY) {
       const ctx = this.context
       let { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }, false)
 
@@ -701,7 +731,7 @@ export default {
     onmousewheel(e) {
       this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
       this.manipulateMap(-e.deltaY / 5 / 400)
-      this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
+      this.canvas.style.cursor = this.isPointInItem(e.clientX, e.clientY) ? "pointer" : "default"
       // console.log(this.translate.x, this.translate.y, this.scale.x)
     },
 
@@ -714,7 +744,7 @@ export default {
 
       if (this.displayVirtualButton) {
         this.virtualButton.mselected = false
-        const element = this.isPointinItem(e.clientX, e.clientY)
+        const element = this.isPointInItem(e.clientX, e.clientY)
         if (element && typeof element === "number" && element === 4) this.virtualButton.mselected = true
       }
     },
@@ -729,10 +759,14 @@ export default {
           const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
           const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
           const offset = parseInt(this.virtualButton.size / 2)
-          this.virtualButton.position.x = (px + offset > canvasWidth) ? canvasWidth - offset * 2 : px - offset
-          this.virtualButton.position.y = (py + offset > canvasHeight) ? canvasHeight - offset * 2 : py - offset
-          if (this.virtualButton.position.x < 0) this.virtualButton.position.x = 0
-          if (this.virtualButton.position.y < 0) this.virtualButton.position.y = 0
+          let posX = px - offset
+          let posY = py - offset
+          if (px + offset > canvasWidth) posX = canvasWidth - this.virtualButton.size
+          else if (posX < 0) posX = 0
+          if (py + offset > canvasHeight) posY = canvasHeight - this.virtualButton.size
+          else if (posY < 0) posY = 0
+          this.virtualButton.position.x = posX
+          this.virtualButton.position.y = posY
         } else if (e.buttons === 1 && this.mdown) {
           this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
@@ -740,7 +774,19 @@ export default {
           this.lastMouseX = px
           this.lastMouseY = py
         } else {
-          this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
+          // this.canvas.style.cursor = this.isPointInItem(e.clientX, e.clientY) ? "pointer" : "default"
+          const element = this.isPointInItem(e.clientX, e.clientY)
+          if (element) {
+            this.canvas.style.cursor = "pointer"
+            if (typeof element === "object") {
+              this.$emit("updateHoverPlace", element)
+            } else {
+              this.$emit("updateHoverPlace", null)
+            }
+          } else {
+            this.canvas.style.cursor = "default"
+            this.$emit("updateHoverPlace", null)
+          }
         }
         // if (relativeX <= 0 || relativeX >= this.canvas.width || relativeY <= 0 || relativeY >= this.canvas.height) this.mdown = false;
       }
@@ -748,7 +794,7 @@ export default {
 
     onmouseup(e) {
       // console.log('mouseup')
-      this.canvas.style.cursor = this.isPointinItem(e.clientX, e.clientY) ? "pointer" : "default"
+      this.canvas.style.cursor = this.isPointInItem(e.clientX, e.clientY) ? "pointer" : "default"
 
       const mdown = this.mdown
       const mselected = this.virtualButton.mselected
@@ -825,7 +871,7 @@ export default {
             floorId: parseInt(this.$route.params.floorId)
           }
         }
-        const element = this.isPointinItem(e.clientX, e.clientY)
+        const element = this.isPointInItem(e.clientX, e.clientY)
         if (this.$route.name !== "Direction") {
           // route is not direction
           if (element) {
@@ -1075,15 +1121,9 @@ export default {
 
       if (this.imgWidth && this.imgHeight) {
         if (this.imgWidth <= this.imgHeight) {
-          this.rotate = false
+          this.$store.commit("setImageRotation", false)
         } else { // imgWidth > imgHeight
-          if (clientWidth >= clientHeight) {
-            // img: landscape  screen: landscape
-            this.rotate = false
-          } else { // clientWidth <= clientHeight
-            //img: landscape  screen: portrait
-            this.rotate = true
-          }
+          this.$store.commit("setImageRotation", clientWidth < clientHeight)
         }
 
         this.canvasWidth = this.rotate ? clientHeight : clientWidth
@@ -1152,6 +1192,10 @@ export default {
         this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
       }
     }
+  },
+
+  beforeCreate() {
+    this.$store.commit("setImageRotation", false)
   },
 
   mounted() {

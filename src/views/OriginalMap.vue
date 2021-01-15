@@ -212,7 +212,7 @@ export default {
       if (this.displaySat) {
         this.context.drawImage(this.satelliteImage, 3, 6, this.satelliteImage.width, this.satelliteImage.height)
       } else {
-        this.context.drawImage(this.image, -4, -5, this.mapWidth, this.mapHeight)
+        this.context.drawImage(this.image, !this.$route.params.floorIndex ? -4 : 0, !this.$route.params.floorIndex ? -5 : 0, this.mapWidth, this.mapHeight)
       }
 
       if (this.placeList.length) {
@@ -224,7 +224,7 @@ export default {
           })
         }
 
-      if (!this.pathArr.length) {
+      if (this.pathArr.length) {
         this.pathArr.forEach(feature => {
           const lineString = feature.geometry.coordinates
           const properties = feature.properties
@@ -364,7 +364,7 @@ export default {
         this.context.lineJoin = 'round';
         this.context.fillStyle = 'red'
         this.context.strokeStyle = 'rgb(255, 0, 0)'
-        this.context.lineWidth = 4
+        this.context.lineWidth = 2
         this.context.globalAlpha = 0.5
         this.context.beginPath()
         for (let i = 0; i < this.pointArr.length; i ++) {
@@ -372,9 +372,9 @@ export default {
           else this.context.lineTo(this.pointArr[i].x, this.pointArr[i].y)
         }
         this.context.closePath()
-        // this.context.fill("evenodd")
-        this.context.stroke()
+        this.context.fill("evenodd")
         this.context.globalAlpha = 1
+        this.context.stroke()
         this.context.lineWidth = 1
       }
 
@@ -641,7 +641,7 @@ export default {
     console.log(this.groundPolygon)
     console.log(this.underPolygon)
 
-    document.body.style.overflow = "scroll" 
+    document.body.style.overflow = "auto" 
 
     const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB", "IA", "IR", "GM", "AS"]
     this.buildingCode = this.$route.params.buildingCode?.toUpperCase()
@@ -667,6 +667,7 @@ export default {
         else if (this.floorIndex === -1) floorName = 'B'
 
         this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
+        // this.image = await this.loadImage(require("assets/images/map/SBF.png"))
       }
     } catch (error) {
       alert(error.message)

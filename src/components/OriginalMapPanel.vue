@@ -318,6 +318,7 @@ export default {
         areaCoords += `${this.areaPoints[0].x} ${this.areaPoints[0].y}` 
         areaCoords = "POLYGON((" + areaCoords + "))"
         console.log(areaCoords)
+        console.log(JSON.stringify(this.areaPoints))
         // let { x, y } = this.getCentroid()
         // console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
 
