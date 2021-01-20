@@ -5,9 +5,7 @@
       :place-list="placeList"
       :map-level="mapLevel"
       :occupied-room-list="occupiedRoomList"
-      :gate-list="gateList"
-      :hover-place="hoverPlace"
-      @updateHoverPlace="setHoverPlace"></canvas-map>
+      :gate-list="gateList"></canvas-map>
 
     <modal ref="modal"></modal>
     <search-bar ref="searchBar"></search-bar>
@@ -47,15 +45,6 @@
         <span v-else>{{$t('datePicker.ok')}}</span>
       </template>
     </datetime>
-
-    <div style="width: 400px; height: 100px; position: absolute; left: 0; bottom: 0; background-color: #ffffff; line-height: 1.8;">
-      <div v-if="hoverPlace && hoverPlace.areaCoords">
-        <span style="font-size: 1.2rem; color: #f00;">Name: </span><span style="font-size: 1.2rem;">{{hoverPlace.name}}</span>
-      </div>
-      <div v-if="hoverPlace && hoverPlace.areaCoords">
-        <span style="font-size: 1.2rem; color: #f00;">Type: </span><span style="font-size: 1.2rem;">{{hoverPlace.type.join(",")}}</span>
-      </div>
-    </div>
 
     <loading-panel
       v-if="loading"
@@ -105,8 +94,7 @@ export default {
       loading: false,
       loadingError: false,
       occupationRequesting: false,
-      gateRequesting: false,
-      hoverPlace: null
+      gateRequesting: false
     }
   },
   computed: {
@@ -249,9 +237,6 @@ export default {
         time: 3000
       })
       // throw new Error("errorMessage")
-    },
-    setHoverPlace(place) {
-      this.hoverPlace = place
     }
   },
   async mounted() {

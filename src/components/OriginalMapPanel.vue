@@ -317,7 +317,7 @@ export default {
         this.areaPoints.forEach((e, i) => areaCoords += `${e.x} ${e.y},`)
         areaCoords += `${this.areaPoints[0].x} ${this.areaPoints[0].y}` 
         areaCoords = "POLYGON((" + areaCoords + "))"
-        console.log(areaCoords)
+        // console.log(areaCoords)
         console.log(JSON.stringify(this.areaPoints))
         // let { x, y } = this.getCentroid()
         // console.log(`(${Math.floor(x)} ${Math.floor(y)})`)
@@ -333,7 +333,8 @@ export default {
 
       var tag = document.createElement('input');
       tag.setAttribute('id', 'cp_hgz_input');
-      tag.value = JSON.stringify(placeObj)+',';
+      tag.value = JSON.stringify(this.areaPoints)
+      // tag.value = JSON.stringify(placeObj)+',';
       // tag.value = JSON.stringify(areaPoints).replace(/,/g, ", ");
       document.getElementsByTagName('body')[0].appendChild(tag);
       document.getElementById('cp_hgz_input').select();
@@ -382,13 +383,22 @@ export default {
     testPlacesStr(val) {
       if (!val) return
       // if (val.charAt(val.length - 1) === ",") val = val.substr(0, val.length - 1)
+      // try {
+      //   const placeArray = JSON.parse(val)
+      //   this.$emit("updatePlace", placeArray)
+      // } catch (error) {
+      //   this.$emit("updatePlace", [])
+      //   console.log(error)
+      // }
+      let pointArr
       try {
-        // const placeArray = JSON.parse(`[${val}]`)
-        const placeArray = JSON.parse(val)
-        this.$emit("updatePlace", placeArray)
+        pointArr = JSON.parse(val)
       } catch (error) {
-        this.$emit("updatePlace", [])
         console.log(error)
+      }
+      if (pointArr) {
+        this.areaPoints = pointArr
+        this.$emit("changeIsRoom", this.isRoom)
       }
     }
   }

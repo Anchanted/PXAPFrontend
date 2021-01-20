@@ -114,26 +114,33 @@ export default {
     },
     getOldToNewPoint({ x, y }) {
       const pointList = [
+        // -1
+        // {
+        //   "new": {"x": 260, "y": 144},
+        //   "old": {"x": 163, "y": 145}
+        // },
+        // {
+        //   "new": {"x": 2121, "y": 956},
+        //   "old": {"x": 1399, "y": 681}
+        // }
+        // 5
         {
-          "new": {
-            "x": 260,
-            "y": 144
-          },
-          "old": {
-            "x": 163,  
-            "y": 145
-          }
+          "new": {"x": 226, "y": 120},
+          "old": {"x": 34, "y": 97}
         },
         {
-          "new": {
-            "x": 2121,
-            "y": 956
-          },
-          "old": {
-            "x": 1399, 
-            "y": 681
-          }
+          "new": {"x": 2177, "y": 1102},
+          "old": {"x": 1575, "y": 872}
         }
+        // 4
+        // {
+        //   "new": {"x": 225, "y": 119},
+        //   "old": {"x": 26, "y": 79}
+        // },
+        // {
+        //   "new": {"x": 2173, "y": 1101},
+        //   "old": {"x": 1575, "y": 857}
+        // }
       ]
       const p1 = pointList[0]
       const p2 = pointList[1]
@@ -153,7 +160,7 @@ export default {
   async mounted () {
     document.body.style.overflow = "auto" 
 
-    const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "ES", "HS", "DB", "GM", "AS"]
+    const buildingArr= ["FB", "CB", "SA", "SB", "SC", "SD", "PB", "MA", "MB", "EB", "EE", "BS", "IR", "IA", "ES", "HS", "DB", "GM", "AS"]
     this.buildingCode = this.$route.params.buildingCode.toUpperCase()
     this.floorIndex = parseInt(this.$route.params.floorIndex)
 
@@ -169,7 +176,6 @@ export default {
       else if (this.floorIndex === 0) floorName = 'G'
       else if (this.floorIndex === -1) floorName = 'B'
 
-      // require("assets/images/map/campus/map.png")
       this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
 
       this.context = this.$refs.map.getContext('2d')

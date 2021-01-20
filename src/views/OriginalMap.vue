@@ -217,12 +217,12 @@ export default {
 
       if (this.placeList.length) {
         const size = 30
-          this.placeList.forEach(place => {
-            if (this.buildingCode !== place.buildingCode || this.floorIndex !== place.floorIndex) return
-            this.context.drawImage(this.iconSprite, (iconSpriteInfo[place.iconType]["column"] - 1) * iconSpriteInfo[place.iconType]["width"], (iconSpriteInfo[place.iconType]["row"] - 1) * iconSpriteInfo[place.iconType]["height"], iconSpriteInfo[place.iconType]["width"], iconSpriteInfo[place.iconType]["height"],
-              parseInt(place.location.x - size/2), parseInt(place.location.y - size/2), size, size)
-          })
-        }
+        this.placeList.forEach(place => {
+          if (this.buildingCode !== place.buildingCode || this.floorIndex !== place.floorIndex) return
+          this.context.drawImage(this.iconSprite, (iconSpriteInfo[place.iconType]["column"] - 1) * iconSpriteInfo[place.iconType]["width"], (iconSpriteInfo[place.iconType]["row"] - 1) * iconSpriteInfo[place.iconType]["height"], iconSpriteInfo[place.iconType]["width"], iconSpriteInfo[place.iconType]["height"],
+            parseInt(place.location.x - size/2), parseInt(place.location.y - size/2), size, size)
+        })
+      }
 
       if (this.pathArr.length) {
         this.pathArr.forEach(feature => {
@@ -667,7 +667,6 @@ export default {
         else if (this.floorIndex === -1) floorName = 'B'
 
         this.image = await this.loadImage(process.env.VUE_APP_BASE_API + `/static/images/map/building/${imageCode.toLowerCase()}/${imageCode}${floorName}F.png`)
-        // this.image = await this.loadImage(require("assets/images/map/SBF.png"))
       }
     } catch (error) {
       alert(error.message)

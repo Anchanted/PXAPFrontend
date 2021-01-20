@@ -27,8 +27,7 @@ export default {
     gateList: {
       type: Array,
       default: () => []
-    },
-    hoverPlace: Object
+    }
   },
   data() {
     return {
@@ -290,34 +289,6 @@ export default {
 
         if (this.placeList.length) {
           const size = parseInt(this.iconSize * 1)
-
-          for (let i = this.placeList.length - 1; i >= 0; i--) {
-            const place = this.placeList[i];
-            if (!place.areaCoords) continue
-            ctx.globalAlpha = this.hoverPlace?.id === place.id ? 1 : 0.2
-            let color
-            if (place.displayLevel === 2) color = "rgb(0, 255, 0)"
-            else if (place.displayLevel === 3) color = "rgb(0, 0, 255)"
-            else color = "rgb(255, 0, 0)"
-            ctx.fillStyle = color
-            ctx.strokeStyle = color
-            ctx.lineWidth = 3
-            ctx.lineCap = 'round'
-            ctx.lineJoin = 'round'
-            ctx.beginPath()
-            place.areaCoords.forEach((pointList, i) => {
-              pointList.forEach((point, j) => {
-                const { x, y } = this.getImageToCanvasPoint(point)
-                if (j == 0) ctx.moveTo(x, y)
-                else ctx.lineTo(x, y)
-              })
-            })
-            ctx.closePath()
-            ctx.fill("evenodd")
-            ctx.globalAlpha = 1
-            ctx.stroke()
-            ctx.lineWidth = 1
-          }
 
           this.placeList.forEach(place => {
             // selected place
@@ -774,19 +745,7 @@ export default {
           this.lastMouseX = px
           this.lastMouseY = py
         } else {
-          // this.canvas.style.cursor = this.isPointInItem(e.clientX, e.clientY) ? "pointer" : "default"
-          const element = this.isPointInItem(e.clientX, e.clientY)
-          if (element) {
-            this.canvas.style.cursor = "pointer"
-            if (typeof element === "object") {
-              this.$emit("updateHoverPlace", element)
-            } else {
-              this.$emit("updateHoverPlace", null)
-            }
-          } else {
-            this.canvas.style.cursor = "default"
-            this.$emit("updateHoverPlace", null)
-          }
+          this.canvas.style.cursor = this.isPointInItem(e.clientX, e.clientY) ? "pointer" : "default"
         }
         // if (relativeX <= 0 || relativeX >= this.canvas.width || relativeY <= 0 || relativeY >= this.canvas.height) this.mdown = false;
       }
