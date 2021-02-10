@@ -2,9 +2,15 @@
   <div class="button-group-container" :style="containerStyle">
     <div class="top-button-group">
       <div class="top-button-group-secondary">
+        <!-- Home Button -->
+        <div v-if="buttonList.includes('home')" class="home button-container">
+          <button class="btn home-button button iconfont icon-campus" @click="$router.push({ path: '/' })"
+            data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.home')"></button>
+        </div>
+
         <!-- Menu Dropdown -->
         <div class="menu">
-          <button type="button" class="btn btn-secondary menu-button" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
+          <button type="button" class="btn bg-secondary button menu-button" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
             data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.menu')">
             <div class="bar"></div>
           </button>
@@ -26,12 +32,6 @@
                 @click="hideButton"></button>
             </template>
           </div>
-        </div>
-
-        <!-- Home Button -->
-        <div v-if="buttonList.includes('home')" class="home button-container">
-          <button class="btn btn-light d-flex flex-column justify-content-around align-items-center home-button button iconfont icon-campus" @click="$router.push({ path: '/' })"
-            data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.home')"></button>
         </div>
       </div>
 
@@ -58,7 +58,7 @@
 
       <!-- Gate Button -->
       <div v-if="buttonList.includes('gate')" class="gate button-container" :style="{ 'z-index': gateRequesting ? 1 : null }">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center gate-button button iconfont icon-entrance" :style="{ color : gateActivated ? '#007bff' : '#555555' }"
+        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center gate-button button iconfont icon-entrance" :class="{ 'button-checked' : gateActivated }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.gate.${gateActivated ? 'hide' : 'show'}`)"
           @click="clickGate"></button>
       </div>
@@ -67,7 +67,7 @@
       <div v-if="buttonList.includes('occupation')" class="occupation" :style="{ 'z-index': occupationRequesting ? 1 : null }">
         <div v-if="occupationActivated && occupationTime" class="occupation-time">{{occupationTime}}</div>
         <div class="button-container">
-          <button class="btn btn-light d-flex flex-column justify-content-around align-items-center occupation-button button iconfont icon-group" :style="{ color : occupationActivated ? '#007bff' : '#555555' }"
+          <button class="btn btn-light d-flex flex-column justify-content-around align-items-center occupation-button button iconfont icon-group" :class="{ 'button-checked' : occupationActivated }"
             data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.occupation.${occupationActivated ? 'hide' : 'show'}`)"
             @click="clickOccupation"></button>
         </div>
@@ -75,7 +75,7 @@
 
       <!-- Location Button -->
       <div v-if="buttonList.includes('location')" class="location button-container">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center location-button button iconfont icon-location" :style="{ color : locationActivated ? '#007bff' : '#555555' }"
+        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center location-button button iconfont icon-location" :class="{ 'button-checked' : locationActivated }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.location.${locationActivated ? 'hide' : 'show'}`)"
           @click="clickLocation"></button>
       </div>
@@ -296,7 +296,7 @@ img {
   justify-content: flex-start;
 
   >div {
-    margin-left: 20px;
+    margin-left: 10px;
   }
 
   .floor {
@@ -354,7 +354,7 @@ img {
 
   &-secondary {
     >div {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
   }
 
@@ -521,7 +521,7 @@ img {
   .button {
     // box-shadow: 0px 0px 2px 1px rgba(142,142,142,.4);
     // -webkit-box-shadow: 0px 0px 2px 1px rgba(142,142,142,.4);
-    background: #f8f9fa;
+    background-color: #f8f9fa;
     color: #555555;
     border-radius: 3px;
     width: 40px;
@@ -530,6 +530,10 @@ img {
     padding: 0;
     line-height: 40px;
     font-size: 24px;
+  }
+
+  .button-checked {
+    color: #007bff;
   }
 }
 

@@ -9,8 +9,8 @@
 
     <template v-else>
       <div class="place-picture">
-        <div class="place-picture-container" :style="{ 'background-image': `url(${place.imgUrl && place.imgUrl[0] ? baseUrl + place.imgUrl[0] : defaultPic})` }" @click="viewImage">
-        </div>
+        <div class="place-picture-container" :style="{ 'background-image': `url(${place.imgUrl && place.imgUrl[0] ? baseUrl + place.imgUrl[0] : defaultPic})` }" @click="viewImage"></div>
+        <!-- <div class="place-picture-container" :style="{ 'background-image': `url(${defaultPic})` }"></div> -->
       </div>
 
       <!-- <div class="place-additional-group"> -->
