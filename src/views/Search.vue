@@ -1,72 +1,58 @@
 <template>
-  <div class="search-container pb-3" ref="container">
-    <loading-panel
-      v-if="loading"
-      :has-error="loadingError"
-      class="search-loading-panel"
-      @refresh="initialSearch">
-    </loading-panel>
+  <div class="search-page pb-3" ref="page">
+    <template v-if="!showLoading">
+      <div class="search-topbar" :style="{ top: modalScrollTop + 'px' }">{{$tc("search.result", totalNumber)}}</div>
 
-    <template v-else>
-      <div v-if="totalNumber" class="search-section">
-        <div class="search-topbar" :style="{ top: modalScrollTop + 'px' }">{{$tc("search.result", totalNumber)}}</div>
-
-        <div class="search-section-items">
-          <place-card class="search-section-item"
-            v-for="(item, index) in itemList" :key="index"
-            :data-type="item.dataType"
-            :name-title="item.name || item.content"
-            :address-title="placeAddress(item)"
-            @click.native="onclick($event, item)">
-            <template #icon v-if="item.dataType === 'building'">{{item.code}}</template>
-            <template #icon v-else-if="item.dataType === 'room'">{{item.building_code}}</template>
-            <template #icon v-else-if="item.dataType === 'query'">
-              <span class="iconfont" :class="`icon-search`"></span>
-            </template>
-            <template #icon v-else>
-              <span class="iconfont" :class="`icon-${item.icon_type || item.dataType}`"></span>
-            </template>
-            <template #name>{{item.name || item.content}}</template>
-            <template #type v-if="item.dataType !== 'building' && item.dataType !== 'query'">{{item.type && item.type.capitalize()}}</template>
-            <template #address v-if="item.dataType !== 'query'">{{placeAddress(item)}}</template>
-          </place-card>
-        </div>
-
-        <nav class="mt-3" aria-label="Page navigation example">
-          <ul class="pagination justify-content-center page" style="margin-bottom:0">
-            <li class="page-item" :class="navDisabledClass('first')" @click.prevent="goToAnotherPage(1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.firstPage')">
-              <a class="page-link" href="javascript:void(0)" aria-label="First">
-                <span class="iconfont icon-double-arrow-left page-first" aria-hidden="true"></span>
-              </a>
-            </li>
-            <li class="page-item" :class="navDisabledClass('first')" @click.prevent="goToAnotherPage(pageNum-1<1 ? 1 : pageNum-1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.previousPage')">
-              <a class="page-link" href="javascript:void(0)" aria-label="Previous">
-                <span class="iconfont icon-arrow-down page-previous" aria-hidden="true"></span>
-              </a>
-            </li>
-            <li class="page-item" v-for="value in displayedPages" :key="value" :class="value === pageNum ? 'active' : ''" @click.prevent="goToAnotherPage(value)">
-              <a class="page-link" href="javascript:void(0)">{{value}}</a>
-            </li>
-            <li class="page-item" :class="navDisabledClass('last')" @click.prevent="goToAnotherPage(pageNum+1>totalPages ? totalPages : pageNum+1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.nextPage')">
-              <a class="page-link" href="javascript:void(0)" aria-label="Next">
-                <span class="iconfont icon-arrow-down page-next" aria-hidden="true"></span>
-              </a>
-            </li>
-            <li class="page-item" :class="navDisabledClass('last')" @click.prevent="goToAnotherPage(totalPages)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.lastPage')">
-              <a class="page-link" href="javascript:void(0)" aria-label="Last">
-                <span class="iconfont icon-double-arrow-left page-last" aria-hidden="true"></span>
-              </a>
-            </li>
-          </ul>
-        </nav>
+      <div class="search-item-list">
+        <place-card class="search-item"
+          v-for="(item, index) in itemList" :key="index"
+          :item="item"
+          @click.native="onclick($event, item)"/>
       </div>
 
-      <div v-else class="search-none">{{$t('search.noResult')}}</div>
+      <nav class="mt-3" aria-label="Page navigation example">
+        <ul class="pagination justify-content-center page" style="margin-bottom:0">
+          <li class="page-item" :class="navDisabledClass('first')" @click.prevent="goToAnotherPage(1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.firstPage')">
+            <a class="page-link" href="javascript:void(0)" aria-label="First">
+              <span class="iconfont icon-double-arrow-left page-first" aria-hidden="true"></span>
+            </a>
+          </li>
+          <li class="page-item" :class="navDisabledClass('first')" @click.prevent="goToAnotherPage(pageNum-1<1 ? 1 : pageNum-1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.previousPage')">
+            <a class="page-link" href="javascript:void(0)" aria-label="Previous">
+              <span class="iconfont icon-arrow-down page-previous" aria-hidden="true"></span>
+            </a>
+          </li>
+          <li class="page-item" v-for="value in displayedPages" :key="value" :class="value === pageNum ? 'active' : ''" @click.prevent="goToAnotherPage(value)">
+            <a class="page-link" href="javascript:void(0)">{{value}}</a>
+          </li>
+          <li class="page-item" :class="navDisabledClass('last')" @click.prevent="goToAnotherPage(pageNum+1>totalPages ? totalPages : pageNum+1)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.nextPage')">
+            <a class="page-link" href="javascript:void(0)" aria-label="Next">
+              <span class="iconfont icon-arrow-down page-next" aria-hidden="true"></span>
+            </a>
+          </li>
+          <li class="page-item" :class="navDisabledClass('last')" @click.prevent="goToAnotherPage(totalPages)" data-toggle="tooltip" data-placement="top" data-trigger="hover" :data-original-title="$t('tooltip.lastPage')">
+            <a class="page-link" href="javascript:void(0)" aria-label="Last">
+              <span class="iconfont icon-double-arrow-left page-last" aria-hidden="true"></span>
+            </a>
+          </li>
+        </ul>
+      </nav>
     </template>
+
+    <loading-panel
+      v-else
+      loading-text
+      network-image
+      empty-image
+      ref="loadingPanel"
+      class="search-loading-panel"
+      @refresh="initialSearch"/>
   </div>
 </template>
 
 <script>
+import HttpError from "assets/js/HttpError"
+
 import LoadingPanel from 'components/LoadingPanel'
 import PlaceCard from 'components/PlaceCard'
 
@@ -90,26 +76,12 @@ export default {
       totalNumber: 0,
       query: null,
       invalidRequest: false, // lacks parameters, parameter type error, pageNo out of total page number
-      loading: true,
-      loadingError: false
+      showLoading: true
     }
   },
 
   computed: {
     ...mapState(['modalScrollTop']),
-    placeAddress() {
-      return place => {
-        let addressArr = []
-        const floor = place.floor_name
-        const building = place.building_name
-        const zone = place.zone || place.building_zone
-        if (floor) addressArr.push(this.$t("place.floor." + floor))
-        if (building) addressArr.push(building)
-        addressArr.push(zone || this.$t("place.zone.b"))
-        if (this.$t("place.address.reverse") === "true") addressArr = addressArr.reverse()
-        return addressArr.join(this.$t("place.address.conj"))
-      }
-    },
     pageNum() {
       return this.currentPageNo + 1
     },
@@ -153,10 +125,8 @@ export default {
 
   methods: {
     async initialSearch() {
-      this.loading = true
-      this.loadingError = false
       this.$nextTick(() => {
-        this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'Search' })
+        this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Search' })
       })
 
       try {
@@ -171,16 +141,24 @@ export default {
           this.totalPages = data.totalPages
           this.totalNumber = data.totalElements || 0
 
-          this.loading = false
+          if (this.totalNumber) {
+            this.showLoading = false
+          } else {
+            this.$refs.loadingPanel?.setEmpty()
+          }
           this.$nextTick(() => {
-            this.$store.commit('setModalHeight', { height: this.$refs.container?.offsetHeight, component: 'Search' })
+            this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Search' })
             $('[data-toggle="tooltip"]').tooltip();
             $('[data-tooltip="tooltip"]').tooltip();
           })
         }
       } catch (error) {
         console.log(error)
-        this.loadingError = true
+        if (error instanceof HttpError) {
+          this.$refs.loadingPanel?.setNetworkError()
+        } else {
+          this.$refs.loadingPanel?.setError()
+        }
       }
     },
 
@@ -218,103 +196,76 @@ export default {
 </script>
 
 <style lang="scss">
-.search-loading-panel {
-  width: 100%;
-  height: 300px;
-  position: relative;
-  background-color: #ffffff;
-
-  .refresh {
-    span {
-      font-size: 1.2rem;
-    }
-  }
-
-  button {
-    font-size: 1rem;
-  }
-}
-
-.search-topbar {
-  width: 424px;
-  height: 40px;
-  position: absolute;
-  top: 0;
-  color: #888888;
-  background-color: #FFFFFF;
-  border-bottom: 1px #C6C6C6 solid;
-  font-size: 1rem;
-  line-height: 40px;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.search-container {
+.search-page {
   // position: relative;
   width: 424px;
   height: auto;
   background: #FFFFFF;
   // overflow: scroll;
 
-  .search-loading {
-    width: 100%;
-    height: 100vh;
-    padding-top: 20vw;
+  .search-topbar {
+    width: 424px;
+    height: 40px;
     position: absolute;
+    top: 0;
+    color: #888888;
+    background-color: #FFFFFF;
+    border-bottom: 1px #C6C6C6 solid;
+    font-size: 1rem;
+    line-height: 40px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .search-section-items {
+  .search-item-list {
     width: 424px;
     height: auto;
     padding: 40px 0 0;
 
-    .search-section-item:first-child > div {
+    .search-item:first-child > div {
       border-top: none;
     }
   }
 
-  .search-none {
+  .page {
+    span {
+      line-height: 1;
+      display: inline-block;
+      font-size: 14px;
+    }
+
+    &-previous {
+      transform: rotate(90deg);
+      -o-transform: rotate(90deg);  /* Opera */
+      -ms-transform: rotate(90deg); 	/* IE 9 */
+      -moz-transform: rotate(90deg); 	/* Firefox */
+      -webkit-transform: rotate(90deg); /* Safari 和 Chrome */
+    }
+
+    &-next {
+      transform: rotate(-90deg);
+      -o-transform: rotate(-90deg);  /* Opera */
+      -ms-transform: rotate(-90deg); 	/* IE 9 */
+      -moz-transform: rotate(-90deg); 	/* Firefox */
+      -webkit-transform: rotate(-90deg); /* Safari 和 Chrome */
+    }
+
+    &-last {
+      transform: rotateZ(180deg);
+      -o-transform: rotateZ(180deg);  /* Opera */
+      -ms-transform: rotateZ(180deg); 	/* IE 9 */
+      -moz-transform: rotateZ(180deg); 	/* Firefox */
+      -webkit-transform: rotateZ(180deg); /* Safari 和 Chrome */
+    }
+  }
+
+  .search-loading-panel {
     width: 100%;
     height: 300px;
-    line-height: 300px;
-    padding-top: 10px;
-    font-size: 1.2rem;
-    color: #888888;
-    text-align: center;
-  }
-}
-
-.page {
-  span {
-    line-height: 1;
-    display: inline-block;
-    font-size: 14px;
-  }
-
-  &-previous {
-    transform: rotate(90deg);
-    -o-transform: rotate(90deg);  /* Opera */
-    -ms-transform: rotate(90deg); 	/* IE 9 */
-    -moz-transform: rotate(90deg); 	/* Firefox */
-    -webkit-transform: rotate(90deg); /* Safari 和 Chrome */
-  }
-
-  &-next {
-    transform: rotate(-90deg);
-    -o-transform: rotate(-90deg);  /* Opera */
-    -ms-transform: rotate(-90deg); 	/* IE 9 */
-    -moz-transform: rotate(-90deg); 	/* Firefox */
-    -webkit-transform: rotate(-90deg); /* Safari 和 Chrome */
-  }
-
-  &-last {
-    transform: rotateZ(180deg);
-    -o-transform: rotateZ(180deg);  /* Opera */
-    -ms-transform: rotateZ(180deg); 	/* IE 9 */
-    -moz-transform: rotateZ(180deg); 	/* Firefox */
-    -webkit-transform: rotateZ(180deg); /* Safari 和 Chrome */
+    position: relative;
+    background-color: #ffffff;
   }
 }
 </style>

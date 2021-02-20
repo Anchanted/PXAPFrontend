@@ -30,6 +30,7 @@ export default {
     }
   },
   data() {
+    const iconSize = 24
     return {
       canvas: null,
       context: null,
@@ -86,7 +87,9 @@ export default {
         x: null,
         y: null,
       },
-      iconSize: 24,
+      iconSize,
+      markerSize: iconSize * 2,
+      locationIconSize: parseInt(iconSize * 1.5),
       mapMarginColor: null,
       virtualButton: {
         position: {
@@ -288,38 +291,39 @@ export default {
         }
 
         if (this.placeList.length) {
-          const size = parseInt(this.iconSize * 1)
-
-          this.placeList.forEach(place => {
+          for (let i = this.placeList.length - 1; i >= 0; i--) {
+            let place = this.placeList[i]
             // selected place
-            if (!this.$isEmptyObject(this.selectedPlace) && this.selectedPlace.id === place.id && this.selectedPlace.placeType === place.placeType) return
+            if (!this.$isEmptyObject(this.selectedPlace) && this.selectedPlace.id === place.id && this.selectedPlace.placeType === place.placeType) continue
             // direction marker
-            if (!this.$isEmptyObject(this.fromDirectionMarker) && this.fromDirectionMarker.id === place.id && this.fromDirectionMarker.placeType === place.placeType) return
-            if (!this.$isEmptyObject(this.toDirectionMarker) && this.toDirectionMarker.id === place.id && this.toDirectionMarker.placeType === place.placeType) return
+            if (!this.$isEmptyObject(this.fromDirectionMarker) && this.fromDirectionMarker.id === place.id && this.fromDirectionMarker.placeType === place.placeType) continue
+            if (!this.$isEmptyObject(this.toDirectionMarker) && this.toDirectionMarker.id === place.id && this.toDirectionMarker.placeType === place.placeType) continue
             // place not to display
-            if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
-            this.drawImage(this.imageMap.get("icon"), place.location.x, place.location.y, size, size, size/2, size/2, true, true, 
+            if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) continue
+            this.drawImage(this.imageMap.get("icon"), place.location.x, place.location.y, this.iconSize, this.iconSize, this.iconSize/2, this.iconSize/2, true, true, 
               (iconSpriteInfo[place.iconType]["column"] - 1) * iconSpriteInfo[place.iconType]["width"], (iconSpriteInfo[place.iconType]["row"] - 1) * iconSpriteInfo[place.iconType]["height"], iconSpriteInfo[place.iconType]["width"], iconSpriteInfo[place.iconType]["height"])
-          })
+          }
         }
 
         if (this.$route.name !== "Direction") {
           if (this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration) {
             const t = this.lastMarkerAnimation.timer
-            const size = t < this.markerAnimationDuration ? easeOutCirc(t, this.iconSize*2, -this.iconSize*1.9, this.markerAnimationDuration) : 0
-            this.drawMarker(this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, size, this.lastMarkerAnimation.markerType)
+            const sacleFactor = t < this.markerAnimationDuration ? easeOutCirc(t, 1, -0.8, this.markerAnimationDuration) : 0.2
+            ctx.globalAlpha = sacleFactor
+            this.drawMarker(this.lastMarkerAnimation.x, this.lastMarkerAnimation.y, this.markerSize * sacleFactor, this.lastMarkerAnimation.markerType)
+            ctx.globalAlpha = 1
             this.lastMarkerAnimation.timer += 0.016
           }
 
           if (!this.$isEmptyObject(this.selectedPlace)) {
             const t = this.currentMarkerAnimation.timer
-            const size = t < this.markerAnimationDuration ? easeOutBack(t, this.iconSize*2/3, this.iconSize*2*2/3, this.markerAnimationDuration) : this.iconSize*2
-            this.drawMarker(this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, size, this.currentMarkerAnimation.markerType)
+            const sacleFactor = t < this.markerAnimationDuration ? easeOutBack(t, 0.3, 0.7, this.markerAnimationDuration) : 1
+            this.drawMarker(this.currentMarkerAnimation.x, this.currentMarkerAnimation.y, this.markerSize * sacleFactor, this.currentMarkerAnimation.markerType)
             if (t <= this.markerAnimationDuration) this.currentMarkerAnimation.timer += 0.016
           }
         } else {
-          if (!this.$isEmptyObject(this.fromDirectionMarker)) this.drawMarker(this.fromDirectionMarker.x, this.fromDirectionMarker.y, this.iconSize * 2, "fromDir")
-          if (!this.$isEmptyObject(this.toDirectionMarker)) this.drawMarker(this.toDirectionMarker.x, this.toDirectionMarker.y, this.iconSize * 2, "toDir")
+          if (!this.$isEmptyObject(this.fromDirectionMarker)) this.drawMarker(this.fromDirectionMarker.x, this.fromDirectionMarker.y, this.markerSize, "fromDir")
+          if (!this.$isEmptyObject(this.toDirectionMarker)) this.drawMarker(this.toDirectionMarker.x, this.toDirectionMarker.y, this.markerSize, "toDir")
         }
       }
 
@@ -332,9 +336,8 @@ export default {
       }
 
       if (this.locationActivated && this.location.x != null && this.location.y != null) {
-        const size = this.iconSize * 1.5
-        this.drawImage(this.imageMap.get("locationMarker"), this.location.x, this.location.y, size, size, size/2, size/2, true, false)
-        const aniSize = size * 0.3 + locationAnimation(this.locationAnimation.timer, size * 0.15, this.locationAnimation.duration)
+        this.drawImage(this.imageMap.get("locationMarker"), this.location.x, this.location.y, this.iconSize, this.iconSize, this.iconSize/2, this.iconSize/2, true, false)
+        const aniSize = this.iconSize * 0.3 + locationAnimation(this.locationAnimation.timer, this.iconSize * 0.15, this.locationAnimation.duration)
         // this.drawImage(this.imageMap.get("locationCircle"), this.location.x, this.location.y, aniSize, aniSize, aniSize/2, aniSize/2, true, false)
         ctx.restore()
         ctx.save()
@@ -355,12 +358,11 @@ export default {
         ctx.restore()
         ctx.save()
         ctx.scale(2, 2)
-        const size = this.virtualButton.size
         ctx.shadowBlur = 10
         ctx.shadowColor = "#555555"
         // ctx.fillStyle = "#f8f9fa"
         // ctx.fillRect(this.virtualButton.position.x, this.virtualButton.position.y, size, size)
-        ctx.drawImage(this.imageMap.get("displayButton"), this.virtualButton.position.x, this.virtualButton.position.y, size, size)
+        ctx.drawImage(this.imageMap.get("displayButton"), this.virtualButton.position.x, this.virtualButton.position.y, this.virtualButton.size, this.virtualButton.size)
         ctx.shadowBlur = 0
         ctx.restore()
         ctx.save()
@@ -613,55 +615,33 @@ export default {
       }
 
       // click on markers
-      const size = this.iconSize * 2
       const selfRotate = false
       if (this.$route.name !== "Direction") {
         if (!this.$isEmptyObject(this.selectedPlace)) {
           const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.currentMarkerAnimation.x, y: this.currentMarkerAnimation.y })
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - size/2), parseInt(canvasY - size), size, size)
-          else ctx.rect(parseInt(this.canvasHeight - (canvasY + size/2)), parseInt(canvasX - size), size, size)
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - this.iconSize/2), parseInt(canvasY - this.iconSize), this.iconSize, this.iconSize)
+          else ctx.rect(parseInt(this.canvasHeight - (canvasY + this.iconSize/2)), parseInt(canvasX - this.iconSize), this.iconSize, this.iconSize)
           if (ctx.isPointInPath(px, py)) return 1
         }
       } else {
         if (!this.$isEmptyObject(this.fromDirectionMarker)) {
           const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.fromDirectionMarker.x, y: this.fromDirectionMarker.y })
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - size/2), parseInt(canvasY - size), size, size)
-          else ctx.rect(parseInt(this.canvasHeight - (canvasY + size/2)), parseInt(canvasX - size), size, size)
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - this.iconSize/2), parseInt(canvasY - this.iconSize), this.iconSize, this.iconSize)
+          else ctx.rect(parseInt(this.canvasHeight - (canvasY + this.iconSize/2)), parseInt(canvasX - this.iconSize), this.iconSize, this.iconSize)
 
           if (ctx.isPointInPath(px, py)) return 2
         }
         if (!this.$isEmptyObject(this.toDirectionMarker)) {
           const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.toDirectionMarker.x, y: this.toDirectionMarker.y })
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - size/2), parseInt(canvasY - size), size, size)
-          else ctx.rect(parseInt(this.canvasHeight - (canvasY + size/2)), parseInt(canvasX - size), size, size)
+          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - this.iconSize/2), parseInt(canvasY - this.iconSize), this.iconSize, this.iconSize)
+          else ctx.rect(parseInt(this.canvasHeight - (canvasY + this.iconSize/2)), parseInt(canvasX - this.iconSize), this.iconSize, this.iconSize)
 
           if (ctx.isPointInPath(px, py)) return 3
         }
       }
-
-      // click on places
-      ({ x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }));
-      const place = this.placeList.filter(place => place.id !== this.selectedPlace.id).find(place => {
-        if (!place.areaCoords) {
-          if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
-          const { x, y } = this.getImageToCanvasPoint(place.location)
-          ctx.beginPath()
-          ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
-        } else {
-          const pointList = place.areaCoords[0] || []
-          ctx.beginPath()
-          pointList.forEach((e, index) => {
-            const { x, y } = this.getImageToCanvasPoint(e)
-            if (index == 0) ctx.moveTo(x, y)
-            else ctx.lineTo(x, y)
-          })
-        }
-        if (ctx.isPointInPath(px, py)) return true
-      })
-      if (place) return place
 
       // click on paths
       if (this.$route.name === "Direction" && this.globalPathList.length) {
@@ -686,6 +666,27 @@ export default {
         }
         ctx.lineWidth = 1
       }
+
+      // click on places
+      ({ x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }));
+      const place = this.placeList.filter(place => place.id !== this.selectedPlace.id).find(place => {
+        if (!place.areaCoords) {
+          if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
+          const { x, y } = this.getImageToCanvasPoint(place.location)
+          ctx.beginPath()
+          ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
+        } else {
+          const pointList = place.areaCoords[0] || []
+          ctx.beginPath()
+          pointList.forEach((e, index) => {
+            const { x, y } = this.getImageToCanvasPoint(e)
+            if (index == 0) ctx.moveTo(x, y)
+            else ctx.lineTo(x, y)
+          })
+        }
+        if (ctx.isPointInPath(px, py)) return true
+      })
+      if (place) return place
 
       // click on selected area 
       if (this.$route.name !== "Direction" && this.selectedPlace?.areaCoords) {
@@ -773,31 +774,30 @@ export default {
           return
         }
 
-        if (!(this.currentMarkerAnimation.timer >= 0 && this.currentMarkerAnimation.timer <= this.markerAnimationDuration) 
-          && !(this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration)) {
-          if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
-            if (!this.lastDoubleClick) {  // second click
-              this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
-              // this.manipulateMap(0.5)
-              this.mapAnimation = {
-                deltaX: 0,
-                deltaY: 0,
-                deltaScale: 0.5,
-                timer: 0,
-                duration: 0.1
-              }
-
-              this.lastClickTime = currentTime
-              this.lastDoubleClick = true
-              clearTimeout(this.clickTimeoutId)
-              return
+        if ((this.currentMarkerAnimation.timer >= 0 && this.currentMarkerAnimation.timer <= this.markerAnimationDuration) 
+            || (this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration)) return
+        if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
+          if (!this.lastDoubleClick) {  // second click
+            this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
+            // this.manipulateMap(0.5)
+            this.mapAnimation = {
+              deltaX: 0,
+              deltaY: 0,
+              deltaScale: 0.5,
+              timer: 0,
+              duration: 0.1
             }
-          }
 
-          this.clickTimeoutId = setTimeout(() => this.chooseItem(e), 300)
-          this.lastClickTime = currentTime
-          this.lastDoubleClick = false
+            this.lastClickTime = currentTime
+            this.lastDoubleClick = true
+            clearTimeout(this.clickTimeoutId)
+            return
+          }
         }
+
+        this.clickTimeoutId = setTimeout(() => this.chooseItem(e), 300)
+        this.lastClickTime = currentTime
+        this.lastDoubleClick = false
       } else {
         if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
         this.setLocationUrl()
@@ -805,90 +805,89 @@ export default {
     },
 
     chooseItem(e) {
-      if (!(this.currentMarkerAnimation.timer >= 0 && this.currentMarkerAnimation.timer <= this.markerAnimationDuration) 
-        && !(this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration)) {
-        // occupation mode
-        if (this.occupationActivated) {
-          this.$alert({
-            message: 'To do other operations, please quit room occupation mode first.',
-            time: 3000,
-            type: "warning"
-          })
-          return
-        }
+      if ((this.currentMarkerAnimation.timer >= 0 && this.currentMarkerAnimation.timer <= this.markerAnimationDuration) 
+          || (this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration)) return
+      // occupation mode
+      if (this.occupationActivated) {
+        this.$alert({
+          message: 'To do other operations, please quit room occupation mode first.',
+          time: 3000,
+          type: "warning"
+        })
+        return
+      }
 
-        let marker
-        const { x: px, y: py } = this.getCanvasToImagePoint(this.getMousePoint({ x: e.clientX, y: e.clientY }))
-        if ((px >= 0 && px <= this.imgWidth) && (py >= 0 && py <= this.imgHeight)) {
-          marker = {
-            ...this.markerObj,
-            location: {
-              x: Math.floor(px),
-              y: Math.floor(py)
-            },
-            buildingId: parseInt(this.$route.params.buildingId),
-            floorId: parseInt(this.$route.params.floorId)
-          }
+      let marker
+      const { x: px, y: py } = this.getCanvasToImagePoint(this.getMousePoint({ x: e.clientX, y: e.clientY }))
+      if ((px >= 0 && px <= this.imgWidth) && (py >= 0 && py <= this.imgHeight)) {
+        marker = {
+          ...this.markerObj,
+          location: {
+            x: Math.floor(px),
+            y: Math.floor(py)
+          },
+          buildingId: parseInt(this.$route.params.buildingId),
+          floorId: parseInt(this.$route.params.floorId)
         }
-        const element = this.isPointInItem(e.clientX, e.clientY)
-        if (this.$route.name !== "Direction") {
-          // route is not direction
-          if (element) {
-            if (typeof element === "number" && element === 1) {
-              this.$EventBus.$emit("showModal")
-              this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaCoords)
-            } else if (typeof element === "object") {
-              this.mousedownActivated = true
-              this.setSelectedPlace(element)
-            }
-          } else {
-            // click on nothing
-            if (this.$isEmptyObject(this.selectedPlace)) {
-              // marked place
-              if (marker) {
-                this.mousedownActivated = true
-                this.setSelectedPlace(marker)
-              }
-            } else {
-              // modal hides
-              this.setSelectedPlace()
-              this.$store.commit('setGlobalText', "")
-            }
+      }
+      const element = this.isPointInItem(e.clientX, e.clientY)
+      if (this.$route.name !== "Direction") {
+        // route is not direction
+        if (element) {
+          if (typeof element === "number" && element === 1) {
+            this.$EventBus.$emit("showModal")
+            this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaCoords)
+          } else if (typeof element === "object") {
+            this.mousedownActivated = true
+            this.setSelectedPlace(element)
           }
         } else {
-          // route is direction
-          if (typeof element === "number" && element >= 10) {
-            const index = element - 10
-            if (index !== this.globalPathListIndex) this.$store.commit("direction/setGlobalPathListIndex", index)
-            this.$EventBus.$emit("showPanel")
-            this.adjustMapPosition("direction")
-            return
-          } else {
-            const place = element && typeof element === "object" ? element : marker
-            if (!place) return
-            if (!this.$isEmptyObject(this.fromDirectionMarker) && !this.$isEmptyObject(this.toDirectionMarker)) {
-              // Exit Direction
-              console.log("third point")
+          // click on nothing
+          if (this.$isEmptyObject(this.selectedPlace)) {
+            // marked place
+            if (marker) {
               this.mousedownActivated = true
-              this.$store.commit("direction/setCachedPlaceInfo", {})
-              this.setSelectedPlace(place)
+              this.setSelectedPlace(marker)
+            }
+          } else {
+            // modal hides
+            this.setSelectedPlace()
+            this.$store.commit('setGlobalText', "")
+          }
+        }
+      } else {
+        // route is direction
+        if (typeof element === "number" && element >= 10) {
+          const index = element - 10
+          if (index !== this.globalPathListIndex) this.$store.commit("direction/setGlobalPathListIndex", index)
+          this.$EventBus.$emit("showPanel")
+          this.adjustMapPosition("direction")
+          return
+        } else {
+          const place = element && typeof element === "object" ? element : marker
+          if (!place) return
+          if (!this.$isEmptyObject(this.fromDirectionMarker) && !this.$isEmptyObject(this.toDirectionMarker)) {
+            // Exit Direction
+            console.log("third point")
+            this.mousedownActivated = true
+            this.$store.commit("direction/setCachedPlaceInfo", {})
+            this.setSelectedPlace(place)
+          } else {
+            // const oppositeGlobalText = this.isSelectorTo ? this.globalFromText : this.globalToText
+            const oppositeGlobalObj = this.isSelectorTo ? this.globalFromObj : this.globalToObj
+
+            if (this.globalObjKeyArr.every((key, i) => i === 0 ? true : oppositeGlobalObj[key] === place[key]) && oppositeGlobalObj.location?.x === place.location?.x && oppositeGlobalObj.location?.y === place.location?.y) {
+              // same item
+              this.$alert({
+                message: this.$t("direction.selector.same"),
+                time: 3000,
+                type: "warning"
+              })
             } else {
-              // const oppositeGlobalText = this.isSelectorTo ? this.globalFromText : this.globalToText
-              const oppositeGlobalObj = this.isSelectorTo ? this.globalFromObj : this.globalToObj
-  
-              if (this.globalObjKeyArr.every((key, i) => i === 0 ? true : oppositeGlobalObj[key] === place[key]) && oppositeGlobalObj.location?.x === place.location?.x && oppositeGlobalObj.location?.y === place.location?.y) {
-                // same item
-                this.$alert({
-                  message: this.$t("direction.selector.same"),
-                  time: 3000,
-                  type: "warning"
-                })
-              } else {
-                const obj = {}
-                this.globalObjKeyArr.forEach(key => obj[key] = place[key])
-                this.$store.commit(this.isSelectorTo ? "direction/setGlobalToObj" : "direction/setGlobalFromObj", obj)
-                this.$EventBus.$emit("setDirectionText", { isTo: this.isSelectorTo, text: obj.name })
-              }
+              const obj = {}
+              this.globalObjKeyArr.forEach(key => obj[key] = place[key])
+              this.$store.commit(this.isSelectorTo ? "direction/setGlobalToObj" : "direction/setGlobalFromObj", obj)
+              this.$EventBus.$emit("setDirectionText", { isTo: this.isSelectorTo, text: obj.name })
             }
           }
         }
@@ -943,7 +942,7 @@ export default {
 
           const getGroupSize = (currentScale = this.scale.x) => {
             let pointList = []
-            const markerSize = this.iconSize * 2 / (currentScale * this.scaleAdaption.x)
+            const markerSize = this.markerSize / (currentScale * this.scaleAdaption.x)
             const margin = 30
 
             markerList.forEach(({ x: markerX, y: markerY }) => {
@@ -1020,7 +1019,7 @@ export default {
         const { x: placeX, y: placeY } = this.getImageToCanvasPoint({ x: translateX, y: translateY })
         let deltaX = 0
         let deltaY = 0
-        const markerSize = this.iconSize * 2
+        const markerSize = this.markerSize
         
         let pointList
         if (this.rotate) {

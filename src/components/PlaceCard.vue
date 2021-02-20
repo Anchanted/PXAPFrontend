@@ -1,34 +1,13 @@
 <template>
-  <div v-if="!simple" class="item">
+  <div class="item" :class="[{'simple-item': simple}]">
     <div class="item-container">
-      <div class="item-icon" :style="{ 'background-color': dataType === 'query' ? '#888888' : '#0069d9'}">
-        <slot name="icon"></slot>
-      </div>
+      <div class="item-icon" :class="[`bg-${item.color || 'primary'}`, {'iconfont': isIcon}, isIcon ? `icon-${item.icon || item.dataType}` : 'font-weight-bold']">{{isIcon ? "" : (item.buildingCode || item.code)}}</div>
       <div class="item-info">
-        <div class="item-info-name" :class="dataType === 'building' ? 'two-line' : 'one-line'" :title="nameTitle">
-          <slot name="name"></slot>
-        </div>
-        <div class="item-info-type one-line" :title="typeTitle">
-          <slot name="type"></slot>
-        </div>
-        <div class="item-info-address one-line" :title="addressTitle">
-          <slot name="address"></slot>
-        </div>
+        <div class="item-info-name" :class="!simple && item.dataType === 'building' ? 'two-line' : 'one-line'"  v-html="(cancelable ? null : item.nameHighlight) || item.name" :title="item.name"></div>
+        <div class="item-info-type one-line" v-if="!simple && item.dataType !== 'building' && item.dataType !== 'query'" :title="item.type">{{item.type}}</div>
+        <div class="item-info-address one-line" v-if="item.dataType !== 'query'" :title="address">{{address}}</div>
       </div>
-    </div>
-  </div>
-
-  <div v-else class="simple-item">
-    <div class="simple-item-icon" :style="{ 'background-color': dataType === 'query' ? '#888888' : '#0069d9'}">
-      <slot name="icon"></slot>
-    </div>
-    <div class="simple-item-info">
-      <div class="simple-item-info-name one-line" :title="nameTitle">
-        <slot name="name"></slot>
-      </div>
-      <div class="simple-item-info-address one-line" :title="addressTitle">
-        <slot name="address"></slot>
-      </div>
+      <span class="iconfont icon-close item-close" v-if="simple && cancelable"></span>
     </div>
   </div>
 </template>
@@ -40,18 +19,30 @@ export default {
       type: Boolean,
       default: false,
     },
-    dataType: {
-      type: String,
-      required: true
+    item: {
+      type: Object,
+      default: () => ({})
     },
-    nameTitle: {
-      type: String
+    cancelable: {
+      type: Boolean,
+      default: false,
+    }
+  },
+  computed: {
+    isIcon() {
+      return this.item.placeType !== "building" && this.item.placeType !== "room"
     },
-    typeTitle: {
-      type: String
-    },
-    addressTitle: {
-      type: String
+    address() {
+      let addressArr = []
+      const floor = this.item.floorName
+      const building = this.item.buildingName
+      const zone = this.item.zone || this.item.buildingZone
+      const locale = this.item.languageCode || this.$i18n.fallbackLocale
+      if (floor) addressArr.push(this.$t("place.floor." + floor, locale))
+      if (building) addressArr.push(building)
+      addressArr.push(zone?.length === 1 ? this.$t("place.zone." + zone) : zone || this.item.extraInfo?.path)
+      if (this.$t("place.address.reverse", locale) === "true") addressArr = addressArr.reverse()
+      return addressArr.join(this.$t("place.address.conj", locale))
     }
   }
 }
@@ -67,7 +58,7 @@ export default {
   .item-container {
     width: 100%;
     height: auto;
-    padding: 10px 0 5px;
+    padding: 8px 0;
     border-top: 1px #C6C6C6 solid;
     display: flex;
     justify-content: flex-start;
@@ -80,35 +71,27 @@ export default {
     text-align: center;
     vertical-align: middle;
     font-size: 1.2rem;
-    line-height: 1.5;
-    font-weight: bold;
+    line-height: 40px;
     color: #FFFFFF;
-    background: #0069d9;
+    background-color: #0069d9;
     border-radius: 20px;
     flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    span {
-      font-size: 1.2rem;
-      line-height: 40px;
-      font-weight: normal;
-    }
   }
 
   &-info {
-    width: calc(100% - 50px - 15px);
+    // width: calc(100% - 50px - 15px);
     height: 70px;
     margin-left: 15px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: space-around;
+    flex-grow: 1;
+    overflow: hidden;
 
     &-name {
+      height: auto;
       font-size: 1.2rem;
       line-height: 1.2;
-      height: 50px;
       flex-grow: 1;
     }
 
@@ -133,63 +116,43 @@ export default {
 }
 
 .simple-item {
-  width: 100%;
-  height: auto;
-  padding: 5px 10px;
-  cursor: pointer;
-  // border-top: 1px #C6C6C6 solid;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  padding: 5px 0 5px 10px;
 
-  &-icon {
-    width: 30px;
-    height: 30px;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 1rem;
-    line-height: 30px;
-    font-weight: bold;
-    color: #FFFFFF;
-    background: #0069d9;
-    border-radius: 25px;
-    flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    span {
-      font-size: 1rem;
-      line-height: 30px;
-      font-weight: normal;
-    }
+  .item-container {
+    padding: 0;
+    border-top: none;
   }
 
-  &-info {
-    width: calc(100% - 30px - 15px);
+  .item-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    line-height: 30px;
+    border-radius: 15px;
+  }
+
+  .item-info {
+    // width: calc(100% - 30px - 15px);
     height: 50px;
-    margin-left: 15px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    padding-right: 10px;
 
     &-name {
       font-size: 1.2rem;
-      line-height: 1.5;
-      // height: 40px;
+      flex-grow: 0;
     }
 
     &-address {
-      font-size: 0.8rem;
       line-height: 1.2;
-      color: #888888;
-      flex-shrink: 0;
     }
   }
 }
 
-.simple-item:hover {
-  background-color: #E6E6E6;
+.item-close {
+  margin-right: 10px;
+  font-size: 1rem;
+  line-height: 1rem;
+  color: #888888;
+  flex-shrink: 0;
 }
 
 .one-line {

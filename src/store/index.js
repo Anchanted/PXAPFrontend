@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-import searchHistory from './module/searchHistory.js'
+import search from './module/search.js'
 import direction from './module/direction.js'
 import button from './module/button.js'
 
@@ -76,7 +76,7 @@ export default new Vuex.Store({
   actions: {
   },
   modules: {
-    searchHistory,
+    search,
     direction,
     button
   }

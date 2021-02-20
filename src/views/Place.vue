@@ -1,13 +1,6 @@
 <template>
   <div class="place-page pb-3" ref="page">
-    <loading-panel
-      v-if="loading"
-      :has-error="loadingError"
-      class="place-loading-panel"
-      @refresh="getPlaceInfo">
-    </loading-panel>
-
-    <template v-else>
+    <template v-if="!showLoading">
       <div class="place-picture">
         <div class="place-picture-container" :style="{ 'background-image': `url(${place.imgUrl && place.imgUrl[0] ? baseUrl + place.imgUrl[0] : defaultPic})` }" @click="viewImage"></div>
         <!-- <div class="place-picture-container" :style="{ 'background-image': `url(${defaultPic})` }"></div> -->
@@ -42,7 +35,7 @@
         </div>
         <div class="place-basic-address">
           <div class="iconfont icon-marker place-basic-address-icon text-secondary"></div>
-          <div class="place-basic-address-text">{{placeAddress}}</div>
+          <div class="place-basic-address-text">{{address}}</div>
         </div>
       </div>
 
@@ -99,10 +92,20 @@
         <div class="place-description-text">{{place.description}}</div>
       </div>
     </template>
+
+    <loading-panel
+      v-else
+      loading-text
+      network-image
+      ref="loadingPanel"
+      class="place-loading-panel"
+      @refresh="getPlaceInfo"/>
   </div>
 </template>
 
 <script>
+import HttpError from "assets/js/HttpError"
+
 import Timetable from 'components/Timetable'
 import LoadingPanel from "components/LoadingPanel"
 
@@ -117,13 +120,12 @@ export default {
       baseUrl: process.env.VUE_APP_BASE_API,
       lessonList: [],
       place: {},
-      loading: true,
-      loadingError: false,
+      showLoading: true,
       defaultPic: require("assets/images/default.png")
     }
   },
   computed: {
-    placeAddress() {
+    address() {
       let addressArr = []
       const floorInfo = this.place.floorInfo
       const buildingName = this.place.buildingName
@@ -180,8 +182,6 @@ export default {
   },
   methods: {
     async getPlaceInfo() {
-      this.loading = true
-      this.loadingError = false
       this.$nextTick(() => {
         this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
       })
@@ -202,7 +202,7 @@ export default {
         this.place = { ...data.place }
         this.lessonList = data.place.extraInfo?.timetable || []
       
-        if (!this.loadingError) this.loading = false
+        this.showLoading = false
         this.$nextTick(() => {
           this.$store.commit('setModalHeight', { height: this.$refs.page?.offsetHeight, component: 'Place' })
           $('[data-toggle="tooltip"]').tooltip();
@@ -210,7 +210,11 @@ export default {
         })
       } catch (error) {
         console.log(error)
-        this.loadingError = true
+        if (error instanceof HttpError) {
+          this.$refs.loadingPanel?.setNetworkError()
+        } else {
+          this.$refs.loadingPanel?.setError()
+        }
       }
     },
     onclickDirection(e, placeFloor) {
@@ -259,23 +263,6 @@ export default {
   height: auto;
   width: 424px;
   position: relative;
-
-  .place-loading-panel {
-    width: 100%;
-    height: 300px;
-    position: relative;
-    background-color: #ffffff;
-
-    .refresh {
-      span {
-        font-size: 1.2rem;
-      }
-    }
-
-    button {
-      font-size: 1rem;
-    }
-  }
 
   .place-picture {
     width: 100%;
@@ -495,6 +482,13 @@ export default {
       word-wrap: break-word;
       // word-break: normal;
     }
+  }
+
+  .place-loading-panel {
+    width: 100%;
+    height: 300px;
+    position: relative;
+    background-color: #ffffff;
   }
 }
 </style>

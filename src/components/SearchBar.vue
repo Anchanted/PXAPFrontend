@@ -82,7 +82,7 @@ export default {
       globalText: state => state.globalText,
       displayDirectionButton: state => state.displayDirectionButton,
       screenHeight: state => state.screenHeight,
-      displaySearchHistory: state => state.searchHistory.displaySearchHistory
+      displaySearchHistory: state => state.search.displaySearchHistory
     }),
     historyModalStyle() {
       const computedHeight = this.screenHeight - 66 - 50
@@ -100,14 +100,15 @@ export default {
   },
   methods: {
     ...mapActions([
-      "searchHistory/commitDisplaySearchHistory",
+      "search/commitDisplaySearchHistory",
     ]),
     submit() {
-      if (this.text) {
-        // console.log(this.text)
+      const value = this.text
+      if (value) {
+        // console.log(value)
         this.$refs.input.blur()
-        this.selectItem({ content: this.text, dataType: 'query' })
-        this["searchHistory/commitDisplaySearchHistory"](false)
+        this.selectItem({ name: value, dataType: 'query' })
+        this["search/commitDisplaySearchHistory"](false)
       } else {
         console.log('invalid')
       }
@@ -116,7 +117,7 @@ export default {
       // console.log('onfocus')
       this.inputFocused = true
       if (this.text === '') {
-        this["searchHistory/commitDisplaySearchHistory"](true)
+        this["search/commitDisplaySearchHistory"](true)
         if (!this.modalCollapsed) {
           this.$store.commit("setModalRouterLeave", true)
           this.$store.commit('setModalCollapsed', true)
@@ -124,9 +125,8 @@ export default {
       }
     },
     onblur() {
-      // console.log('onblur')
       this.inputFocused = false
-      this["searchHistory/commitDisplaySearchHistory"](false)
+      this["search/commitDisplaySearchHistory"](false)
     },
     displayDirBox() {
       this.$router.push({ 
@@ -160,7 +160,7 @@ export default {
     text(val) {
       if (val === '') {
         if (this.$refs.input == document.activeElement) {
-          this["searchHistory/commitDisplaySearchHistory"](true)
+          this["search/commitDisplaySearchHistory"](true)
           if (!this.modalCollapsed) {
             this.$store.commit("setModalRouterLeave", true)
             this.$store.commit('setModalCollapsed', true)
@@ -172,7 +172,7 @@ export default {
             })
         }
       } else {
-        this["searchHistory/commitDisplaySearchHistory"](false)
+        this["search/commitDisplaySearchHistory"](false)
       }
     },
     globalText(val) {

@@ -5,11 +5,11 @@
       :place-list="placeList"
       :map-level="mapLevel"
       :occupied-room-list="occupiedRoomList"
-      :gate-list="gateList"></canvas-map>
+      :gate-list="gateList"/>
 
-    <modal ref="modal"></modal>
-    <search-bar ref="searchBar"></search-bar>
-    <direction-modal v-show="displayDirection" ref="directionModal"></direction-modal>
+    <modal ref="modal"/>
+    <search-bar ref="searchBar"/>
+    <direction-modal v-show="displayDirection" ref="directionModal"/>
 
     <button-group
       v-show="!displayVirtualButton"
@@ -20,7 +20,7 @@
       :occupation-time="occupationTime"
       :occupation-requesting="occupationRequesting"
       :gate-requesting="gateRequesting"
-      :loading="loading"></button-group>
+      :loading="showLoading"/>
 
     <datetime
       v-if="displayDatetime"
@@ -47,24 +47,26 @@
     </datetime>
 
     <loading-panel
-      v-if="loading"
-      :has-error="loadingError"
+      v-if="showLoading"
+      loading-text
+      network-image
+      ref="loadingPanel"
       class="canvas-map-loading-panel"
-      @refresh="$router.go(0)">
-    </loading-panel>
+      @refresh="$router.go(0)"/>
   </div>
 </template>
 
 <script>
+import weekInfo from 'assets/json/week.json'
+import { DateTime, Interval } from 'luxon'
+import HttpError from "assets/js/HttpError"
+
 import SearchBar from 'components/SearchBar'
 import ButtonGroup from 'components/ButtonGroup'
 import Modal from 'components/Modal'
 import DirectionModal from "components/DirectionModal"
 import LoadingPanel from "components/LoadingPanel"
 import CanvasMap from "components/CanvasMap"
-
-import weekInfo from 'assets/json/week.json'
-import { DateTime, Interval } from 'luxon'
 
 import { mapState } from 'vuex'
 
@@ -91,8 +93,7 @@ export default {
       geolocation: {},
       geoWatchId: null,
       occupationTime: null,
-      loading: false,
-      loadingError: false,
+      showLoading: true,
       occupationRequesting: false,
       gateRequesting: false
     }
@@ -200,7 +201,7 @@ export default {
     },
 
     datetimeClose() {
-      if (!this.$refs.dt.datetime) this.$store.commit("button/setOccupationActivated", false)
+      if (!this.$refs.dt?.datetime) this.$store.commit("button/setOccupationActivated", false)
     },
 
     geolocationInfo(position) {
@@ -280,10 +281,14 @@ export default {
       this.imageMap.set("map", image)
       this.$refs.canvasMap.initMap()
 
-      if (!this.loadingError) this.loading = false
+      this.showLoading = false
     } catch (error) {
       console.log(error)
-      this.loadingError = true
+      if (error instanceof HttpError) {
+        this.$refs.loadingPanel?.setNetworkError()
+      } else {
+        this.$refs.loadingPanel?.setError()
+      }
     }
   },
 

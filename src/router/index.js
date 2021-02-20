@@ -102,7 +102,7 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.params.buildingId && !to.params.floorId) next({ name: "PageNotFound" })
+  if (!to.params.buildingId !== !to.params.floorId) next({ name: "PageNotFound" })
   else if (to.name === "Search" && !to.query.q) next({ name: 'PageNotFound' })
   else if (to.name === "Direction" && (to.params.buildingId || to.params.floorId)) next({ name: "Map", params: to.params })
   else {

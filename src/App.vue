@@ -82,7 +82,7 @@ export default {
     const scrollBarWidth = this.getScrollbarWidth()
     console.log('scrollBarWidth', scrollBarWidth)
     this.$store.commit('setScrollBarWidth', scrollBarWidth)
-    this.$store.dispatch('searchHistory/refreshHistoryList', this.unifySearchItem)
+    this.$store.dispatch('search/refreshHistoryList', this.unifySearchItem)
 
     this.$EventBus.$on("viewImage", this.viewImage)
   },

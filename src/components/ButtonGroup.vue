@@ -109,7 +109,7 @@ export default {
     },
     currentFloor: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     floorList: {
       type: Array,
@@ -117,7 +117,7 @@ export default {
     },
     currentBuilding: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     occupationTime: String,
     loading: Boolean,

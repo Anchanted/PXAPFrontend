@@ -1,4 +1,4 @@
-// import translationFields from "assets/json/searchTranslationFields.json"
+import iconSpriteInfo from "assets/json/iconSpriteInfo.json"
 import campusLocationList from "assets/json/campusLocation.json"
 import i18n from "locales"
 
@@ -8,7 +8,7 @@ const mixin = {
       urlLocationReg: /@.*?(\?|$)/,
       markerObj: {
         id: 0,
-        placeType: "place",
+        placeType: "marker",
         name: i18n.t("place.marker.place"),
         type: ["marker"],
         iconType: "pin",
@@ -30,7 +30,7 @@ const mixin = {
   methods: {
     selectItem(item) {
       if (!item.dataType) return
-      this.$store.dispatch("searchHistory/saveHistoryList", { item, "unifySearchItem": this.unifySearchItem })
+      this.$store.dispatch("search/saveHistoryList", { item, "unifySearchItem": this.unifySearchItem })
       if (item.dataType === 'query') {
         this.$router.push({
           name: 'Search',
@@ -40,7 +40,7 @@ const mixin = {
             locationInfo: this.$route.params.locationInfo
           },
           query: {
-            q: encodeURIComponent(item.content)
+            q: encodeURIComponent(item.name)
           }
         })
       } else {
@@ -68,26 +68,51 @@ const mixin = {
       }
     },
 
-    unifySearchItem(itemList) {
+    unifySearchItem(itemList, checkLocale = true) {
       const translationFields = [
         "name",
         "type",
         "department",
         "zone",
-        "building_name",
-        "building_department"
+        "buildingName",
+        "buildingDepartment"
       ]
       const fallbackLocale = i18n.fallbackLocale || "en"
       let currentLocale = i18n.locale || "en"
       currentLocale = new RegExp(/^(en|zh|es)$/).test(currentLocale) ? currentLocale : fallbackLocale
       return itemList.map(e => {
         const item = JSON.parse(JSON.stringify(e || {}))
-        if (!item.dataType) item["dataType"] = item.place_type || item.placeType
-        translationFields.forEach(field => {
-          // if (item[field]) return
-          if (item.languageCode) currentLocale = item.languageCode
-          item[field] = item[field + "_" + currentLocale] ? item[field + "_" + currentLocale] : item[field + "_" + fallbackLocale]
+        let keys = Object.keys(item)
+        keys.forEach(key => {
+          const re = /_[a-z]{3,}/g
+          if (key.match(re)) {
+            const newKey = key.replace(re, function($1) {
+              return `${$1.charAt(1).toUpperCase()}${$1.substring(2)}`
+            })
+            item[newKey] = item[key]
+            delete item[key]
+          }
         })
+        if (!item.dataType) item["dataType"] = item.placeType
+        if (iconSpriteInfo[item.iconType]) {
+          item["color"] = iconSpriteInfo[item.iconType]?.["color"]
+          item["icon"] = iconSpriteInfo[item.iconType]?.["icon"]
+        } else if (item["dataType"] === "query") {
+          item["color"] = "secondary"
+          item["icon"] = "search"
+        } else if (item["dataType"] === "marker") {
+          item["color"] = "danger"
+          item["icon"] = item["iconType"]
+        }
+        if (checkLocale) {
+          translationFields.forEach(key => {
+            // if (item[key]) return
+            if (item.languageCode) currentLocale = item.languageCode
+            const value = item[key + "_" + currentLocale] ? item[key + "_" + currentLocale] : item[key + "_" + fallbackLocale]
+            if (value != null) item[key] = value
+          })
+        }
+        if (item.type) item["type"] = item.type.capitalize()
         return item
       })
     },

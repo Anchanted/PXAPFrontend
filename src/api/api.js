@@ -3,6 +3,7 @@ import store from 'store'
 import alert from 'plugins/AlertMessage'
 import i18n from 'locales'
 import { decryptByAES } from "utils/aesUtils"
+import HttpError from "assets/js/HttpError"
 // const qs = require('qs')
 
 const instance = axios.create()
@@ -15,14 +16,14 @@ instance.defaults.timeout = 10000
 // 响应拦截器
 instance.interceptors.response.use(
   // 请求成功
-  res => res.status === 200 ? Promise.resolve(res) : Promise.reject(res),
+  res => Promise.resolve(res),
   // 请求失败
   error => {
     const { response } = error;
     if (response) {
       // 请求已发出，但是不在2xx的范围
       errorHandle(response.status, response.data.msg);
-      return Promise.reject(response);
+      return Promise.reject(new HttpError(response.data.msg, response, response.status));
     } else {
       // 处理断网的情况
       // eg:请求超时或断网时，更新state的network状态
@@ -31,7 +32,7 @@ instance.interceptors.response.use(
       if (!window.navigator.onLine) {
         store.commit('changeNetwork', false);
       } else {
-        return Promise.reject(error);
+        return Promise.reject(new HttpError("Connection Error", null, error));
       }
     }
   })
@@ -87,9 +88,9 @@ const api = {
           }
         }
         else {
-          reject(res)
+          reject(new HttpError(res.data.msg, res.status, res))
         }
-      }).catch(err => reject(err.response))
+      }).catch(err => reject(err))
     })
   }
 }

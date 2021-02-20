@@ -1,36 +1,33 @@
 <template>
   <div class="direction-page" ref="page">
-    <loading-panel
-      v-if="loading"
-      :has-error="loadingError"
-      class="direction-loading-panel"
-      @refresh="searchDirection">
-    </loading-panel>
-
-    <div v-else-if="errorInfo" class="path-error">
-      {{errorInfo}}
-      Please try again.
-    </div>
-
-    <div v-else>
-      <div v-for="(path, index) in globalPathList" :key="index" 
-        class="path-card" 
-        :class="{ 'path-card-selected': index === globalPathListIndex }"
-        @click="onclickcard($event, index)">
-        <div class="path-card-text">
-          <span class="path-card-text-name">{{$t("direction.route", { number: index + 1 })}}</span>
-          <span v-if="index === 0" class="path-card-text-notice">{{$t("direction.shortest")}}</span>
-        </div>
-        <div class="path-card-share">
-          <button type="button" class="iconfont icon-share btn btn-primary path-card-share-button" @click="onclickshare"></button>
-          <span class="text-primary path-card-share-text" @click="onclickshare">{{$t('tooltip.share')}}</span>
-        </div>
+    <div v-for="(path, index) in globalPathList" :key="index" 
+      class="path-card" 
+      :class="{ 'path-card-selected': index === globalPathListIndex }"
+      @click="onclickcard($event, index)">
+      <div class="path-card-text">
+        <span class="path-card-text-name">{{$t("direction.route", { number: index + 1 })}}</span>
+        <span v-if="index === 0" class="path-card-text-notice">{{$t("direction.shortest")}}</span>
+      </div>
+      <div class="path-card-share">
+        <button type="button" class="iconfont icon-share btn btn-primary path-card-share-button" @click="onclickshare"></button>
+        <span class="text-primary path-card-share-text" @click="onclickshare">{{$t('tooltip.share')}}</span>
       </div>
     </div>
+
+    <loading-panel
+      v-show="showLoading"
+      loading-text
+      network-image
+      :empty-text="errorInfo"
+      ref="loadingPanel"
+      class="direction-loading-panel"
+      @refresh="searchDirection"/>
   </div>
 </template>
 
 <script>
+import HttpError from "assets/js/HttpError"
+
 import LoadingPanel from "components/LoadingPanel"
 
 import { mapState } from 'vuex'
@@ -43,8 +40,7 @@ export default {
   data() {
     return {
       errorInfo: "",
-      loading: false,
-      loadingError: false
+      showLoading: false
     }
   },
   computed: {
@@ -110,8 +106,8 @@ export default {
 
       this.errorInfo = ""
       if (!this.globalFromText && !this.globalToText) return
-      this.loading = true
-      this.loadingError = false
+      this.showLoading = true
+      this.$refs.loadingPanel?.setLoading()
 
       try {
         const params = {}
@@ -178,15 +174,18 @@ export default {
           })
         }
 
-        if (!this.loadingError) this.loading = false
+        if (!this.errorInfo) {
+          this.showLoading = false
+        } else {
+          this.$refs.loadingPanel?.setEmpty()
+        }
       } catch (error) {
         console.log(error)
-        this.loadingError = true
-        this.$alert({
-          message: 'Failed to get path. Please try again.',
-          time: 3000,
-          type: "danger"
-        })
+        if (error instanceof HttpError) {
+          this.$refs.loadingPanel?.setNetworkError()
+        } else {
+          this.$refs.loadingPanel?.setError()
+        }
       }
     },
 
@@ -255,7 +254,9 @@ export default {
     delete to.params.noRequest
     next()
     if (this.checkRouterChange(to.fullPath, from.fullPath)) {
-      if (!noRequest) this.searchDirection()
+      if (!noRequest) {
+        this.$nextTick(() => this.searchDirection())
+      }
     }
   },
   beforeRouteLeave(to, from, next) {
@@ -273,27 +274,6 @@ export default {
 <style lang="scss">
 .direction-page {
   min-height: 300px;
-
-  .direction-loading-panel {
-    width: 100%;
-    height: 300px;
-    position: absolute;
-    background-color: #ffffff;
-
-    .refresh {
-      span {
-        font-size: 1.2rem;
-      }
-
-      button {
-        font-size: 1.2rem;
-      }
-    }
-
-    button {
-      font-size: 1rem !important;
-    }
-  }
 
   .path-error {
     padding: 40px 20px;
@@ -361,6 +341,13 @@ export default {
 
   .path-card-selected {
     background-color: #f4f9fd;
+  }
+
+  .direction-loading-panel {
+    width: 100%;
+    height: 300px;
+    position: absolute;
+    background-color: #ffffff;
   }
 }
 </style>
