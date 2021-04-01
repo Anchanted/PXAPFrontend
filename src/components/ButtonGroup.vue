@@ -19,17 +19,22 @@
             <button class="dropdown-item language" type="button"
               data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.language')"
               @click="changeLanguage">{{langAbbr}}</button>
+            <!-- Message Button -->
+            <button class="dropdown-item iconfont icon-message" type="button"
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.message')"
+              data-target="#messageModal"
+              @click="onclickbuttonmessage"></button>
             <!-- Help Button -->
             <div class="dropdown-divider" style="margin: 0"></div>
             <button class="dropdown-item iconfont icon-help-outline" type="button"
               data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"
-              @click="helpButton"></button>
+              @click="onclickbuttonhelp"></button>
             <!-- Hide Button -->
             <template v-if="!loading">
               <div class="dropdown-divider" style="margin: 0"></div>
               <button class="dropdown-item iconfont icon-hide" type="button"
                 data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.hideButton')"
-                @click="hideButton"></button>
+                @click="onclickbuttonhelp"></button>
             </template>
           </div>
         </div>
@@ -60,7 +65,7 @@
       <div v-if="buttonList.includes('gate')" class="gate button-container" :style="{ 'z-index': gateRequesting ? 1 : null }">
         <button class="btn btn-light d-flex flex-column justify-content-around align-items-center gate-button button iconfont icon-entrance" :class="{ 'button-checked' : gateActivated }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.gate.${gateActivated ? 'hide' : 'show'}`)"
-          @click="clickGate"></button>
+          @click="onclickbuttongate"></button>
       </div>
 
       <!-- Occupation Button -->
@@ -69,7 +74,7 @@
         <div class="button-container">
           <button class="btn btn-light d-flex flex-column justify-content-around align-items-center occupation-button button iconfont icon-group" :class="{ 'button-checked' : occupationActivated }"
             data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.occupation.${occupationActivated ? 'hide' : 'show'}`)"
-            @click="clickOccupation"></button>
+            @click="onclickbuttonoccupation"></button>
         </div>
       </div>
 
@@ -77,7 +82,7 @@
       <div v-if="buttonList.includes('location')" class="location button-container">
         <button class="btn btn-light d-flex flex-column justify-content-around align-items-center location-button button iconfont icon-location" :class="{ 'button-checked' : locationActivated }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.location.${locationActivated ? 'hide' : 'show'}`)"
-          @click="clickLocation"></button>
+          @click="onclickbuttonlocation"></button>
       </div>
 
       <!-- Zoom Button -->
@@ -168,10 +173,14 @@ export default {
     }
   },
   methods: {
-    helpButton() {
+    onclickbuttonhelp() {
       window.open("/static/html/guide.html", '_blank')
     },
-    hideButton() {
+    onclickbuttonmessage() {
+      console.log("here")
+      $('#messageModal').modal('show')
+    },
+    onclickbuttonhelp() {
       this.$store.commit("button/setDisplayVirtualButton", true)
     },
     refreshZoomBtn(scale = 1) {
@@ -204,10 +213,10 @@ export default {
         this.$EventBus.$emit("buttonZoom", -0.5)
       }
     },
-    clickGate() {
+    onclickbuttongate() {
       this.$store.commit("button/reverseGateActivated")
     },
-    clickOccupation() {
+    onclickbuttonoccupation() {
       this.$store.commit("button/reverseOccupationActivated")
     },
     chooseOtherFloor(e, floor) {
@@ -234,7 +243,7 @@ export default {
         this.$router.go(0)
       }
     },
-    clickLocation() {
+    onclickbuttonlocation() {
       this.$store.commit("button/reverseLocationActivated")
     }
   },

@@ -34,7 +34,7 @@ import FilteredPath from "assets/json/campus/filteredPath.json5"
 // import BS5FPath from "assets/json/BS/BS5F.json5"
 // import BSZPath from "assets/json/CB/zPath.json5"
 // import PortalPath from "assets/json/portalPath.json5"
-import { drawArrow } from "utils/utilFunctions.js"
+import { drawArrow } from "assets/js/utilFunctions.js"
 
 export default {
   components: {
@@ -237,7 +237,8 @@ export default {
             } else {
               this.context.globalAlpha = 0.5
               this.context.strokeStyle = "purple"
-              if (properties.walk != null && properties.car != null) this.context.strokeStyle = "orangered"
+              if (properties.crossroad) this.context.strokeStyle = "blue"
+              else if (properties.walk != null && properties.car != null) this.context.strokeStyle = "orangered"
               else if (properties.walk != null) this.context.strokeStyle = "purple"
               else if (properties.car != null) this.context.strokeStyle = "cyan"
               if (properties.current) this.context.strokeStyle = "red"

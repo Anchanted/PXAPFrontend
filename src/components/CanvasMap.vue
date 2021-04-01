@@ -8,7 +8,7 @@
 import iconSpriteInfo from "assets/json/iconSpriteInfo.json"
 import markerSpriteInfo from "assets/json/markerSpriteInfo.json"
 import arrowSpriteInfo from "assets/json/arrowSpriteInfo.json"
-import { easeOutBack, easeOutCirc, arrowAnimation, locationAnimation } from 'utils/utilFunctions.js'
+import { easeOutBack, easeOutCirc, arrowAnimation, locationAnimation } from 'assets/js/utilFunctions.js'
 
 import { mapState } from "vuex"
 
@@ -60,7 +60,6 @@ export default {
       },
       lastMouseX: null,
       lastMouseY: null,
-      init: false,
       mdown: false, 
       mclick: false,
       mdowntime: null,
@@ -90,7 +89,7 @@ export default {
       iconSize,
       markerSize: iconSize * 2,
       locationIconSize: parseInt(iconSize * 1.5),
-      mapMarginColor: null,
+      marginColor: "#ffffff",
       virtualButton: {
         position: {
           x: 100,
@@ -152,15 +151,12 @@ export default {
   },
   methods: {
     initMap() {
-      this.imgWidth = parseInt(this.imageMap.get("map").width)
-      this.imgHeight = parseInt(this.imageMap.get("map").height)
-      console.log(this.imgWidth, this.imgHeight)
+      this.resetLayout()
 
       this.context.drawImage(this.imageMap.get("map"), 0, 0, this.imgWidth, this.imgHeight)
       const pixel = this.context.getImageData(2, 2, 1, 1).data
-      this.mapMarginColor = (!pixel?.length) ? null : `rgb(${pixel.join(",")})`
+      if (pixel?.length) this.marginColor =`rgb(${pixel[0]},${pixel[1]},${pixel[2]})`
 
-      this.resetLayout()
       this.setInitialMapLocation()
 
       this.setLocationUrl()
@@ -169,14 +165,6 @@ export default {
     },
 
     animate () {
-      // set scale such as image cover all the canvas
-      if (!this.init) {
-        const scaleRatio = this.canvasWidth > this.canvasHeight ? this.scale.x : this.scale.y
-        this.scale.x = scaleRatio;
-        this.scale.y = scaleRatio;
-        this.init = true;
-      }
-
       if (this.mapAnimation.timer >= 0 && this.mapAnimation.timer <= this.mapAnimation.duration) {
         const t = this.mapAnimation.timer
         const nt = (t + 0.016) > this.mapAnimation.duration ? this.mapAnimation.duration : t + 0.016
@@ -190,44 +178,57 @@ export default {
         this.mapAnimation.timer += 0.016
       }
 
-      // this.validateScale()
-      // this.validateTranslate()
-
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
       this.drawMapInfo()
       window.requestAnimationFrame(this.animate)
     },
 
     drawMapInfo () {
       const ctx = this.context
+      ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
       ctx.save()
       ctx.scale(2, 2)
 
-      if (this.rotate) {
-        ctx.translate(this.canvasHeight, 0)
-        ctx.rotate(Math.PI / 2)
-      }
+      ctx.fillStyle = this.marginColor
+      ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
 
-      if (this.mapMarginColor) {
-        ctx.fillStyle = this.mapMarginColor
-        ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
-      }
+      const rotate = this.rotate
+      if (this.imageMap.get("map")) {
+        const scaledSizeX = this.imgWidth * this.scale.x * this.scaleAdaption.x
+        const scaledSizeY = this.imgHeight * this.scale.y * this.scaleAdaption.y
+        const canvasX = parseInt(this.translate.x + this.translateAdaption.x)
+        const canvasY = parseInt(this.translate.y + this.translateAdaption.y)
 
-      this.drawImage(this.imageMap.get("map"), 0, 0, this.imgWidth, this.imgHeight, 0, 0, false, false)
+        ctx.save()
+        ctx.translate(canvasX, canvasY)
+        if (rotate) {
+          ctx.translate(scaledSizeX, 0)
+          ctx.rotate(Math.PI / 2)
+        } 
+        ctx.drawImage(this.imageMap.get("map"), 0, 0, rotate ? scaledSizeY : scaledSizeX, rotate ? scaledSizeX : scaledSizeY)
+        ctx.restore()
+      }
 
       // Gate arrow
       if (this.gateActivated && this.gateList) {
         const augY = arrowAnimation(this.arrowAnimation.timer, -20, this.arrowAnimation.duration)
         const size = 30
         this.gateList.forEach((e) => {
-          this.drawImage(this.imageMap.get("arrow"), e.location.x, e.location.y, size, size, size/2, 0, true, false, 
+          this.drawImage(this.imageMap.get("arrow"), e.location.x, e.location.y, size, size, size/2, 0, true, 
           (arrowSpriteInfo[e.arrow]["column"] - 1) * arrowSpriteInfo[e.arrow]["width"], (arrowSpriteInfo[e.arrow]["row"] - 1) * arrowSpriteInfo[e.arrow]["height"], arrowSpriteInfo[e.arrow]["width"], arrowSpriteInfo[e.arrow]["height"],
           e.direction, 0, (this.currentHour >= e.startTime && this.currentHour < e.endTime ? augY : 0) + 20)
         })
         this.arrowAnimation.timer = (this.arrowAnimation.timer + 0.016 > this.arrowAnimation.duration) ? 0 : this.arrowAnimation.timer + 0.016
       }
 
-      if (!this.occupationActivated) {
+      if (this.occupationActivated) {
+        if (this.occupiedRoomList?.length) {
+          const size = this.iconSize
+          this.occupiedRoomList.forEach(room => {
+            const centroid = room.location
+            this.drawImage(this.imageMap.get('group'), centroid.x, centroid.y, size, size, size/2, size/2, true)
+          })
+        }
+      } else {
         if (this.$route.name !== "Direction") {
           if (!this.$isEmptyObject(this.selectedPlace)) this.drawPolygon(this.selectedPlace.areaCoords)
         } else {
@@ -300,7 +301,7 @@ export default {
             if (!this.$isEmptyObject(this.toDirectionMarker) && this.toDirectionMarker.id === place.id && this.toDirectionMarker.placeType === place.placeType) continue
             // place not to display
             if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) continue
-            this.drawImage(this.imageMap.get("icon"), place.location.x, place.location.y, this.iconSize, this.iconSize, this.iconSize/2, this.iconSize/2, true, true, 
+            this.drawImage(this.imageMap.get("icon"), place.location.x, place.location.y, this.iconSize, this.iconSize, this.iconSize/2, this.iconSize/2, true, 
               (iconSpriteInfo[place.iconType]["column"] - 1) * iconSpriteInfo[place.iconType]["width"], (iconSpriteInfo[place.iconType]["row"] - 1) * iconSpriteInfo[place.iconType]["height"], iconSpriteInfo[place.iconType]["width"], iconSpriteInfo[place.iconType]["height"])
           }
         }
@@ -327,58 +328,35 @@ export default {
         }
       }
 
-      if (this.occupationActivated && this.occupiedRoomList) {
-        const size = this.iconSize
-        this.occupiedRoomList.forEach(room => {
-          const centroid = room.location
-          this.drawImage(this.imageMap.get('group'), centroid.x, centroid.y, size, size, size/2, size/2, true, true)
-        })
-      }
-
       if (this.locationActivated && this.location.x != null && this.location.y != null) {
-        this.drawImage(this.imageMap.get("locationMarker"), this.location.x, this.location.y, this.iconSize, this.iconSize, this.iconSize/2, this.iconSize/2, true, false)
-        const aniSize = this.iconSize * 0.3 + locationAnimation(this.locationAnimation.timer, this.iconSize * 0.15, this.locationAnimation.duration)
-        // this.drawImage(this.imageMap.get("locationCircle"), this.location.x, this.location.y, aniSize, aniSize, aniSize/2, aniSize/2, true, false)
-        ctx.restore()
-        ctx.save()
-        ctx.scale(2, 2)
-        const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.location.x, y: this.location.y })
-        this.context.fillStyle="#0069d9"
+        this.drawImage(this.imageMap.get("locationMarker"), this.location.x, this.location.y, this.locationIconSize, this.locationIconSize, this.locationIconSize/2, this.locationIconSize/2, true)
+        const aniSize = this.locationIconSize * 0.3 + locationAnimation(this.locationAnimation.timer, this.locationIconSize * 0.15, this.locationAnimation.duration)
+        // this.drawImage(this.imageMap.get("locationCircle"), this.location.x, this.location.y, aniSize, aniSize, aniSize/2, aniSize/2, true)
+        const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint(this.transformPoint({ x: this.location.x, y: this.location.y }))
+        ctx.fillStyle="#0069d9"
         ctx.beginPath()
         ctx.arc(canvasX, canvasY, aniSize / 2, 0, 2*Math.PI)
         ctx.fill()
-        ctx.restore()
-        ctx.save()
-        ctx.translate(this.canvasHeight, 0)
-        ctx.rotate(Math.PI / 2)
         this.locationAnimation.timer = (this.locationAnimation.timer + 0.016 > this.locationAnimation.duration) ? 0 : this.locationAnimation.timer + 0.016
       }
 
       if (this.displayVirtualButton) {
-        ctx.restore()
-        ctx.save()
-        ctx.scale(2, 2)
         ctx.shadowBlur = 10
         ctx.shadowColor = "#555555"
-        // ctx.fillStyle = "#f8f9fa"
-        // ctx.fillRect(this.virtualButton.position.x, this.virtualButton.position.y, size, size)
         ctx.drawImage(this.imageMap.get("displayButton"), this.virtualButton.position.x, this.virtualButton.position.y, this.virtualButton.size, this.virtualButton.size)
         ctx.shadowBlur = 0
-        ctx.restore()
-        ctx.save()
-        ctx.scale(2, 2)
       }
 
       ctx.restore()
     },
 
     drawImage() {
-      if (!(arguments.length === 9 
-        || arguments.length === 10 
+      if (!(arguments.length === 8 
+        || arguments.length === 9 
+        || arguments.length === 11 
         || arguments.length === 12 
         || arguments.length === 13 
-        || arguments.length === 14 
-        || arguments.length === 16)) throw new Error("Invalid argument number.")
+        || arguments.length === 15)) throw new Error("Invalid argument number.")
 
       if (!arguments[0]) return
 
@@ -390,7 +368,6 @@ export default {
       const imgOffsetX = arguments[5]
       const imgOffsetY = arguments[6]
       const fixSize = arguments[7]
-      const selfRotate = arguments[8]
       let sx 
       let sy
       let sWidth
@@ -399,64 +376,50 @@ export default {
       let translateX
       let translateY
 
-      if (arguments.length === 10 || arguments.length === 12) {
-        degree = arguments[9]
-        translateX = arguments[10] || 0
-        translateY = arguments[11] || 0
-      } else if (arguments.length === 14 || arguments.length === 16) {
-        degree = arguments[13]
-        translateX = arguments[14] || 0
-        translateY = arguments[15] || 0
+      if (arguments.length === 9 || arguments.length === 11) {
+        degree = arguments[8]
+        translateX = arguments[9] || 0
+        translateY = arguments[10] || 0
+      } else if (arguments.length === 13 || arguments.length === 15) {
+        degree = arguments[12]
+        translateX = arguments[13] || 0
+        translateY = arguments[14] || 0
       }
 
-      if (arguments.length >= 13) {
-        sx = arguments[9]
-        sy = arguments[10]
-        sWidth = arguments[11]
-        sHeight = arguments[12]
+      if (arguments.length >= 12) {
+        sx = arguments[8]
+        sy = arguments[9]
+        sWidth = arguments[10]
+        sHeight = arguments[11]
       }
 
       const ctx = this.context
+
+      const { x: pointX, y: pointY } = this.transformPoint({ x, y })
+
       if (degree != null) {
-        const { x: tx, y: ty } = this.getImageToCanvasPoint({ x, y })
-        ctx.save()
-        ctx.translate(tx, ty)
-        ctx.rotate(degree * Math.PI / 180)
-        ctx.translate(-tx, -ty)
-        ctx.translate(translateX, translateY)
+        const { x: tx, y: ty } = this.getImageToCanvasPoint({ x: pointX, y: pointY })
+        ctx.save();
+        ctx.translate(tx, ty);
+        ctx.rotate(degree * Math.PI / 180);
+        ctx.translate(-tx, -ty);
+        ctx.translate(translateX, translateY);
       }
 
       const scaleX = this.scale.x * this.scaleAdaption.x
       const scaleY = this.scale.y * this.scaleAdaption.y
-      if (this.rotate && selfRotate) {
-        ctx.restore()
-        ctx.save()
-        ctx.scale(2, 2)
-        if (!fixSize) {
-          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: x - imgOffsetY, y: y + imgOffsetX })
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - canvasY), parseInt(canvasX), sizeX * scaleY, sizeY * scaleX)
-          else ctx.drawImage(image, parseInt(this.canvasHeight - canvasY), parseInt(canvasX), sizeX * scaleY, sizeY * scaleX)
-        } else {
-          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x, y })
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(this.canvasHeight - (canvasY + imgOffsetX)), parseInt(canvasX - imgOffsetY), sizeX, sizeY)
-          else ctx.drawImage(image, parseInt(this.canvasHeight - (canvasY + imgOffsetX)), parseInt(canvasX - imgOffsetY), sizeX, sizeY)
-        }
-        ctx.restore()
-        ctx.save()
-        ctx.translate(this.canvasHeight, 0)
-        ctx.rotate(Math.PI / 2)
+
+      if (!fixSize) {
+        const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: pointX - imgOffsetX, y: pointY - imgOffsetY })
+        if (arguments.length >= 12) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(canvasX), parseInt(canvasY), sizeX * scaleX, sizeY * scaleY)
+        else ctx.drawImage(image, parseInt(canvasX), parseInt(canvasY), sizeX * scaleX, sizeY * scaleY)
       } else {
-        if (!fixSize) {
-          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: x - imgOffsetX, y: y - imgOffsetY })
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(canvasX), parseInt(canvasY), sizeX * scaleX, sizeY * scaleY)
-          else ctx.drawImage(image, parseInt(canvasX), parseInt(canvasY), sizeX * scaleX, sizeY * scaleY)
-        } else {
-          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x, y })
-          if (arguments.length >= 13) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(canvasX - imgOffsetX), parseInt(canvasY - imgOffsetY), sizeX, sizeY)
-          else ctx.drawImage(image, parseInt(canvasX - imgOffsetX), parseInt(canvasY - imgOffsetY), sizeX, sizeY)
-        }
+        const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: pointX, y: pointY })
+        if (arguments.length >= 12) ctx.drawImage(image, sx, sy, sWidth, sHeight, parseInt(canvasX - imgOffsetX), parseInt(canvasY - imgOffsetY), sizeX, sizeY)
+        else ctx.drawImage(image, parseInt(canvasX - imgOffsetX), parseInt(canvasY - imgOffsetY), sizeX, sizeY)
       }
-      if (degree != null) ctx.restore();
+
+      if (degree != null) ctx.restore()
     },
 
     drawPolygon(polygon) {
@@ -471,7 +434,7 @@ export default {
         ctx.beginPath()
         polygon.forEach((pointList, i) => {
           pointList.forEach((point, j) => {
-            const { x, y } = this.getImageToCanvasPoint(point)
+            const { x, y } = this.getImageToCanvasPoint(this.transformPoint(point))
             if (j == 0) ctx.moveTo(x, y)
             else ctx.lineTo(x, y)
           })
@@ -488,7 +451,7 @@ export default {
       const ctx = this.context
       ctx.shadowBlur = 10
       ctx.shadowColor = "#ffffff"
-      this.drawImage(this.imageMap.get("marker"), x, y, size, size, size/2, size, true, true,
+      this.drawImage(this.imageMap.get("marker"), x, y, size, size, size/2, size, true,
         (markerSpriteInfo[iconType]["column"] - 1) * markerSpriteInfo[iconType]["width"], (markerSpriteInfo[iconType]["row"] - 1) * markerSpriteInfo[iconType]["height"], markerSpriteInfo[iconType]["width"], markerSpriteInfo[iconType]["height"])
       ctx.shadowBlur = 0
     },
@@ -501,7 +464,7 @@ export default {
       route.forEach((path, i) => {
         const pointList = path.pointList || []
         pointList.forEach((point, j) => {
-          const { x, y } = this.getImageToCanvasPoint(point)
+          const { x, y } = this.getImageToCanvasPoint(this.transformPoint(point))
           if (j === 0) {
             if (i === 0) ctx.moveTo(x, y)
           } else {
@@ -512,10 +475,10 @@ export default {
       ctx.stroke()
     },
 
-    getMousePoint({ x, y }, followRotation = true) {
+    getMousePoint({ x, y }) {
       return {
-        x: (!this.rotate || !followRotation) ? x - this.canvas.getBoundingClientRect().left : y - this.canvas.getBoundingClientRect().top,
-        y: (!this.rotate || !followRotation) ? y - this.canvas.getBoundingClientRect().top : this.canvas.getBoundingClientRect().right - x
+        x: x - Math.floor(this.canvas.getBoundingClientRect().left),
+        y: y - Math.floor(this.canvas.getBoundingClientRect().top)
       }
     },
 
@@ -524,7 +487,7 @@ export default {
 
       if (newScale > 4) newScale = 4
       else if (newScale < 1) newScale = 1
-      
+
       if (this.scale.x !== newScale && this.scale.x === this.scale.y) {
         this.scale.x = newScale
         this.scale.y = newScale
@@ -605,7 +568,7 @@ export default {
 
     isPointInItem(pointX, pointY) {
       const ctx = this.context
-      let { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }, false)
+      let { x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY })
 
       // click on virtual button
       if (this.displayVirtualButton) {
@@ -615,30 +578,24 @@ export default {
       }
 
       // click on markers
-      const selfRotate = false
       if (this.$route.name !== "Direction") {
         if (!this.$isEmptyObject(this.selectedPlace)) {
-          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.currentMarkerAnimation.x, y: this.currentMarkerAnimation.y })
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint(this.transformPoint({ x: this.currentMarkerAnimation.x, y: this.currentMarkerAnimation.y }))
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - this.iconSize/2), parseInt(canvasY - this.iconSize), this.iconSize, this.iconSize)
-          else ctx.rect(parseInt(this.canvasHeight - (canvasY + this.iconSize/2)), parseInt(canvasX - this.iconSize), this.iconSize, this.iconSize)
+          ctx.rect(parseInt(canvasX - this.markerSize/2), parseInt(canvasY - this.markerSize), this.markerSize, this.markerSize)
           if (ctx.isPointInPath(px, py)) return 1
         }
       } else {
         if (!this.$isEmptyObject(this.fromDirectionMarker)) {
-          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.fromDirectionMarker.x, y: this.fromDirectionMarker.y })
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint(this.transformPoint({ x: this.fromDirectionMarker.x, y: this.fromDirectionMarker.y }))
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - this.iconSize/2), parseInt(canvasY - this.iconSize), this.iconSize, this.iconSize)
-          else ctx.rect(parseInt(this.canvasHeight - (canvasY + this.iconSize/2)), parseInt(canvasX - this.iconSize), this.iconSize, this.iconSize)
-
+          ctx.rect(parseInt(canvasX - this.markerSize/2), parseInt(canvasY - this.markerSize), this.markerSize, this.markerSize)
           if (ctx.isPointInPath(px, py)) return 2
         }
         if (!this.$isEmptyObject(this.toDirectionMarker)) {
-          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint({ x: this.toDirectionMarker.x, y: this.toDirectionMarker.y })
+          const { x: canvasX, y: canvasY } = this.getImageToCanvasPoint(this.transformPoint({ x: this.toDirectionMarker.x, y: this.toDirectionMarker.y }))
           ctx.beginPath()
-          if (!this.rotate || selfRotate) ctx.rect(parseInt(canvasX - this.iconSize/2), parseInt(canvasY - this.iconSize), this.iconSize, this.iconSize)
-          else ctx.rect(parseInt(this.canvasHeight - (canvasY + this.iconSize/2)), parseInt(canvasX - this.iconSize), this.iconSize, this.iconSize)
-
+          ctx.rect(parseInt(canvasX - this.markerSize/2), parseInt(canvasY - this.markerSize), this.markerSize, this.markerSize)
           if (ctx.isPointInPath(px, py)) return 3
         }
       }
@@ -654,7 +611,7 @@ export default {
           route.forEach((path, i) => {
             const pointList = path.pointList || []
             pointList.forEach((point, j) => {
-              const { x, y } = this.getImageToCanvasPoint(point)
+              const { x, y } = this.getImageToCanvasPoint(this.transformPoint(point))
               if (j === 0) {
                 if (i === 0) ctx.moveTo(x, y)
               } else {
@@ -672,14 +629,14 @@ export default {
       const place = this.placeList.filter(place => place.id !== this.selectedPlace.id).find(place => {
         if (!place.areaCoords) {
           if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
-          const { x, y } = this.getImageToCanvasPoint(place.location)
+          const { x, y } = this.getImageToCanvasPoint(this.transformPoint(place.location))
           ctx.beginPath()
           ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
         } else {
           const pointList = place.areaCoords[0] || []
           ctx.beginPath()
           pointList.forEach((e, index) => {
-            const { x, y } = this.getImageToCanvasPoint(e)
+            const { x, y } = this.getImageToCanvasPoint(this.transformPoint(e))
             if (index == 0) ctx.moveTo(x, y)
             else ctx.lineTo(x, y)
           })
@@ -692,7 +649,7 @@ export default {
       if (this.$route.name !== "Direction" && this.selectedPlace?.areaCoords) {
         ctx.beginPath()
         this.selectedPlace.areaCoords[0].forEach((e, index) => {
-          const { x, y } = this.getImageToCanvasPoint(e)
+          const { x, y } = this.getImageToCanvasPoint(this.transformPoint(e))
           if (index == 0) ctx.moveTo(x, y)
           else ctx.lineTo(x, y)
         })
@@ -701,7 +658,7 @@ export default {
     },
 
     onmousewheel(e) {
-      this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
+      this.focusedPoint = this.getMousePoint({ x: e.clientX, y: e.clientY })
       this.manipulateMap(-e.deltaY / 5 / 400)
       this.canvas.style.cursor = this.isPointInItem(e.clientX, e.clientY) ? "pointer" : "default"
       // console.log(this.translate.x, this.translate.y, this.scale.x)
@@ -727,22 +684,24 @@ export default {
       if (this.canvas) {
         if (this.displayVirtualButton && this.virtualButton.mselected) {
           this.canvas.style.cursor = "move"
-          const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY }, false)
-          const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
-          const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
+          const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
           const offset = parseInt(this.virtualButton.size / 2)
           let posX = px - offset
           let posY = py - offset
-          if (px + offset > canvasWidth) posX = canvasWidth - this.virtualButton.size
+          if (px + offset > this.canvasWidth) posX = this.canvasWidth - this.virtualButton.size
           else if (posX < 0) posX = 0
-          if (py + offset > canvasHeight) posY = canvasHeight - this.virtualButton.size
+          if (py + offset > this.canvasHeight) posY = this.canvasHeight - this.virtualButton.size
           else if (posY < 0) posY = 0
           this.virtualButton.position.x = posX
           this.virtualButton.position.y = posY
         } else if (e.buttons === 1 && this.mdown) {
           this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
-          if (this.lastMouseX != null && this.lastMouseY != null) this.manipulateMap(px - this.lastMouseX, py - this.lastMouseY)
+          if (this.lastMouseX != null && this.lastMouseY != null) {
+            const deltaX = px - this.lastMouseX
+            const deltaY = py - this.lastMouseY
+            this.manipulateMap(deltaX, deltaY)
+          }
           this.lastMouseX = px
           this.lastMouseY = py
         } else {
@@ -778,7 +737,7 @@ export default {
             || (this.lastMarkerAnimation.timer >= 0 && this.lastMarkerAnimation.timer <= this.markerAnimationDuration)) return
         if (this.lastClickTime && currentTime - this.lastClickTime < 300) { // double click
           if (!this.lastDoubleClick) {  // second click
-            this.focusedPoint = { ...this.getMousePoint({ x: e.clientX, y: e.clientY }) }
+            this.focusedPoint = this.getMousePoint({ x: e.clientX, y: e.clientY })
             // this.manipulateMap(0.5)
             this.mapAnimation = {
               deltaX: 0,
@@ -818,7 +777,7 @@ export default {
       }
 
       let marker
-      const { x: px, y: py } = this.getCanvasToImagePoint(this.getMousePoint({ x: e.clientX, y: e.clientY }))
+      const { x: px, y: py } = this.transformPoint(this.getCanvasToImagePoint(this.getMousePoint({ x: e.clientX, y: e.clientY })), true)
       if ((px >= 0 && px <= this.imgWidth) && (py >= 0 && py <= this.imgHeight)) {
         marker = {
           ...this.markerObj,
@@ -857,14 +816,15 @@ export default {
         }
       } else {
         // route is direction
-        if (typeof element === "number" && element >= 10) {
-          const index = element - 10
-          if (index !== this.globalPathListIndex) this.$store.commit("direction/setGlobalPathListIndex", index)
-          this.$EventBus.$emit("showPanel")
-          this.adjustMapPosition("direction")
-          return
+        if (typeof element === "number") {
+          if (element >= 10) {
+            const index = element - 10
+            if (index !== this.globalPathListIndex) this.$store.commit("direction/setGlobalPathListIndex", index)
+            this.$EventBus.$emit("showPanel")
+            this.adjustMapPosition("direction")
+          }
         } else {
-          const place = element && typeof element === "object" ? element : marker
+          const place = (element && typeof element === "object") ? element : marker
           if (!place) return
           if (!this.$isEmptyObject(this.fromDirectionMarker) && !this.$isEmptyObject(this.toDirectionMarker)) {
             // Exit Direction
@@ -919,9 +879,10 @@ export default {
     },
 
     adjustMapPosition(type, translateX = 0, translateY = 0, scale = 1, areaCoords) {
+      ({ x: translateX, y: translateY } = this.transformPoint({ x: translateX, y: translateY }));
       if (type === "middle" || type === "direction") {
         if (type === "direction") {
-          const pathPointList = []
+          let pathPointList = []
           this.globalPathList.forEach(route => {
             route.forEach((path, i) => {
               const pointList = path.pointList || []
@@ -937,8 +898,11 @@ export default {
           if (this.toDirectionMarker.areaCoords?.[0]?.length >= 3) areaPointList = areaPointList.concat(this.toDirectionMarker.areaCoords[0])
 
           const markerList = []
-          if (this.fromDirectionMarker.x != null && this.fromDirectionMarker.y != null) markerList.push({ x: this.fromDirectionMarker.x, y: this.fromDirectionMarker.y})
-          if (this.toDirectionMarker.x != null && this.toDirectionMarker.y != null) markerList.push({ x: this.toDirectionMarker.x, y: this.toDirectionMarker.y})
+          if (this.fromDirectionMarker.x != null && this.fromDirectionMarker.y != null) markerList.push(this.transformPoint({ x: this.fromDirectionMarker.x, y: this.fromDirectionMarker.y}))
+          if (this.toDirectionMarker.x != null && this.toDirectionMarker.y != null) markerList.push(this.transformPoint({ x: this.toDirectionMarker.x, y: this.toDirectionMarker.y}))
+
+          pathPointList = pathPointList.map(point => this.transformPoint(point))
+          areaPointList = areaPointList.map(point => this.transformPoint(point))
 
           const getGroupSize = (currentScale = this.scale.x) => {
             let pointList = []
@@ -946,23 +910,12 @@ export default {
             const margin = 30
 
             markerList.forEach(({ x: markerX, y: markerY }) => {
-              let markerPointList
-              if (this.rotate) {
-                markerPointList = [
-                  {x: markerX - markerSize, y: markerY + markerSize / 2},
-                  {x: markerX - markerSize, y: markerY - markerSize / 2},
-                  {x: markerX, y: markerY - markerSize / 2},
-                  {x: markerX, y: markerY + markerSize / 2}
-                ]
-              } else {
-                markerPointList = [
-                  {x: markerX - markerSize / 2, y: markerY - markerSize},
-                  {x: markerX + markerSize / 2, y: markerY - markerSize},
-                  {x: markerX + markerSize / 2, y: markerY},
-                  {x: markerX - markerSize / 2, y: markerY}
-                ]
-              } 
-              pointList = pointList.concat(markerPointList)
+              pointList = pointList.concat([
+                {x: markerX - markerSize / 2, y: markerY - markerSize},
+                {x: markerX + markerSize / 2, y: markerY - markerSize},
+                {x: markerX + markerSize / 2, y: markerY},
+                {x: markerX - markerSize / 2, y: markerY}
+              ])
             })
 
             pointList = pointList.concat(pathPointList).concat(areaPointList)
@@ -1005,9 +958,9 @@ export default {
         }
         
         const { x: placeX, y: placeY } = this.getImageToCanvasPoint({ x: translateX, y: translateY })
-        const { x: centerX, y: centerY }  = this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })
-        // const { x: centerX, y: centerY }  = this.getMousePoint({ x: ((this.rotate ? this.canvasHeight : this.canvasWidth) + 424 + 10) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })
-        this.focusedPoint = { ...this.getImageToCanvasPoint({ x: translateX, y: translateY }) }
+        const { x: centerX, y: centerY }  = this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 })
+        // const { x: centerX, y: centerY }  = this.getMousePoint({ x: (this.canvasWidth + 424 + 10) / 2, y: this.canvasHeight / 2 })
+        this.focusedPoint = { x: placeX, y: placeY }
         this.mapAnimation = {
           deltaX: parseInt(centerX - placeX),
           deltaY: parseInt(centerY - placeY),
@@ -1021,22 +974,12 @@ export default {
         let deltaY = 0
         const markerSize = this.markerSize
         
-        let pointList
-        if (this.rotate) {
-          pointList = [
-            {x: placeX - markerSize, y: placeY + markerSize / 2},
-            {x: placeX - markerSize, y: placeY - markerSize / 2},
-            {x: placeX, y: placeY - markerSize / 2},
-            {x: placeX, y: placeY + markerSize / 2},
-          ]
-        } else {
-          pointList = [
-            {x: placeX - markerSize / 2, y: placeY - markerSize},
-            {x: placeX + markerSize / 2, y: placeY - markerSize},
-            {x: placeX + markerSize / 2, y: placeY},
-            {x: placeX - markerSize / 2, y: placeY}
-          ]
-        } 
+        let pointList = [
+          {x: placeX - markerSize / 2, y: placeY - markerSize},
+          {x: placeX + markerSize / 2, y: placeY - markerSize},
+          {x: placeX + markerSize / 2, y: placeY},
+          {x: placeX - markerSize / 2, y: placeY}
+        ]
         if (areaCoords?.[0]?.length >= 3) pointList = pointList.concat(areaCoords[0].map(point => this.getImageToCanvasPoint(point)))
 
         const minX = pointList.reduce((min, p) => p.x < min ? p.x : min, pointList[0].x)
@@ -1077,25 +1020,30 @@ export default {
         this.canvas.height = clientHeight * 2
       }
 
-      if (this.imgWidth && this.imgHeight) {
-        if (this.imgWidth <= this.imgHeight) {
-          this.$store.commit("setImageRotation", false)
-        } else { // imgWidth > imgHeight
-          this.$store.commit("setImageRotation", clientWidth < clientHeight)
-        }
+      const imgWidth = parseInt(this.imageMap.get("map").width)
+      const imgHeight = parseInt(this.imageMap.get("map").height)
+      console.log(imgWidth, imgHeight)
 
-        this.canvasWidth = this.rotate ? clientHeight : clientWidth
-        this.canvasHeight =  this.rotate ? clientWidth : clientHeight
+      if (imgWidth <= imgHeight) {
+        this.$store.commit("setImageRotation", false)
+      } else { // imgWidth > imgHeight
+        this.$store.commit("setImageRotation", clientWidth < clientHeight)
+      }
 
-        const scaleAdaption = Math.min(this.canvasWidth / this.imgWidth, this.canvasHeight / this.imgHeight)
-        this.scaleAdaption = {
-          x: scaleAdaption,
-          y: scaleAdaption
-        }
-        this.translateAdaption = {
-          x: parseInt(this.canvasWidth - this.imgWidth * this.scaleAdaption.x) / 2,
-          y: parseInt(this.canvasHeight - this.imgHeight * this.scaleAdaption.y) / 2
-        }
+      this.imgWidth = this.rotate ? imgHeight : imgWidth
+      this.imgHeight = this.rotate ? imgWidth : imgHeight
+
+      this.canvasWidth = clientWidth
+      this.canvasHeight =  clientHeight
+
+      const scaleAdaption = Math.min(this.canvasWidth / this.imgWidth, this.canvasHeight / this.imgHeight)
+      this.scaleAdaption = {
+        x: scaleAdaption,
+        y: scaleAdaption
+      }
+      this.translateAdaption = {
+        x: parseInt(this.canvasWidth - this.imgWidth * this.scaleAdaption.x) / 2,
+        y: parseInt(this.canvasHeight - this.imgHeight * this.scaleAdaption.y) / 2
       }
     },
 
@@ -1103,7 +1051,8 @@ export default {
       if (this.mdown) return
       if (!this.canvasWidth || !this.canvasHeight || !this.imgWidth || !this.imgHeight) return
       if (!this.scale.x || !this.scale.y || this.translate.x == null || this.translate.y == null) return
-      const { x: centerX, y: centerY } = this.getCanvasToImagePoint(this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 }))
+
+      const { x: centerX, y: centerY } = this.transformPoint(this.getCanvasToImagePoint(this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })), true)
       const zoom = Math.floor(this.scale.x * 100) / 100
       const currentLocationInfo = `${Math.floor(centerX)},${Math.floor(centerY)},${zoom}z`
 
@@ -1122,32 +1071,39 @@ export default {
     },
     
     setInitialMapLocation() {
-      let followMap = false
-      if (!this.$route.params.locationInfo) followMap = true
-      else {
+      if (this.$route.params.locationInfo) {
         const re = /^([+-]?\d+),([+-]?\d+),(\d+(\.\d*)?)z$/
         const matchArr = this.$route.params.locationInfo?.match(re)
-        // console.log(matchArr)
-        if (!matchArr) followMap = true
-        else {
-          const centerX = parseInt(matchArr[1])
-          const centerY = parseInt(matchArr[2])
+        if (matchArr) {
+          const { x: centerX, y: centerY } = this.transformPoint({ x: parseInt(matchArr[1]), y: parseInt(matchArr[2]) })
           const zoom = Math.floor(parseFloat(matchArr[3]) * 100) / 100
-          console.log(centerX, centerY, zoom)
 
           this.validateScale(zoom)
 
-          const { x: mapCenterX, y: mapCenterY } = this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })
+          const { x: mapCenterX, y: mapCenterY } = this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 })
 
           const newOriginX = mapCenterX - centerX * this.scale.x * this.scaleAdaption.x - this.translateAdaption.x
           const newOriginY = mapCenterY - centerY * this.scale.y * this.scaleAdaption.y - this.translateAdaption.y
           this.validateTranslate(newOriginX, newOriginY)
+          return
         }
       }
 
-      if (followMap) {
-        if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
-        this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
+      if (this.locationUrlTimeout) clearTimeout(this.locationUrlTimeout)
+      this.locationUrlTimeout = setTimeout(() => this.setLocationUrl(), 300)
+    },
+
+    transformPoint({ x: oldX = 0, y: oldY = 0 }, reverse = false) {
+      if (this.rotate) {
+        return {
+          x: reverse ? oldY : this.imgWidth - oldY,
+          y: reverse ? this.imgWidth - oldX : oldX
+        }
+      } else {
+        return {
+          x: oldX,
+          y: oldY
+        }
       }
     }
   },
@@ -1164,7 +1120,7 @@ export default {
     window.onmouseup = e => this.onmouseup(e)
 
     this.$EventBus.$on("buttonZoom", zoom => {
-      this.focusedPoint = {...this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })}
+      this.focusedPoint = this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })
       // this.manipulateMap(mZoom / 400)
       this.mapAnimation = {
         deltaX: 0,
@@ -1340,15 +1296,14 @@ export default {
       immediate: true,
       deep: true,
       handler: function (val) {
-        if (val.map && val.direction) this.adjustMapPosition("direction")
+        if (!val.map || !val.direction) return
+        this.adjustMapPosition("direction")
       }
     },
     displayVirtualButton(val) {
       if (!val) return
-      const canvasWidth = this.rotate ? this.canvasHeight : this.canvasWidth
-      const canvasHeight = this.rotate ? this.canvasWidth : this.canvasHeight
-      this.virtualButton.position.x = parseInt(canvasWidth * 0.98 - this.virtualButton.size)
-      this.virtualButton.position.y = parseInt((canvasHeight - this.virtualButton.size) / 2)
+      this.virtualButton.position.x = parseInt(this.canvasWidth * 0.98 - this.virtualButton.size)
+      this.virtualButton.position.y = parseInt((this.canvasHeight - this.virtualButton.size) / 2)
     },
     gateActivated(val) {
       if (val) {

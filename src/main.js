@@ -8,7 +8,7 @@ import router from 'router'
 import api from 'api'
 import i18n from 'locales'
 
-import mixin from 'utils/mixin.js'
+import mixin from 'assets/js/mixin.js'
 
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
