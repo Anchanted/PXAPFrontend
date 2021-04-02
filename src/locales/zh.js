@@ -109,6 +109,7 @@ module.exports = {
         "share": "分享",
         "menu": "菜单",
         "language": "变更成另一种语言",
+        "message": "消息",
         "help": "帮助",
         "hideButton": "隐藏按钮",
         'floor': '选择其他楼层',

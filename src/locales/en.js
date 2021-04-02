@@ -109,6 +109,7 @@ module.exports = {
         "share": "Share",
         "menu": "Menu",
         "language": "Change to another language",
+        "message": "Message",
         "help": "Help",
         "hideButton": "Hide buttons",
         'floor': 'Choose another floor',

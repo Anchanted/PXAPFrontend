@@ -112,7 +112,7 @@ const mixin = {
             if (value != null) item[key] = value
           })
         }
-        if (item.type) item["type"] = item.type.capitalize()
+        if (item.type && typeof item.type == "string") item["type"] = item.type.capitalize()
         return item
       })
     },

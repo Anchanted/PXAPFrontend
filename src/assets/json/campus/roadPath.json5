@@ -7,12 +7,28 @@
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
                 "walk": 2, 
-                "car": 0
+                "car": 0,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [49, 48],
+                    [77, 47]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [77, 47],
                     [600, 26],
                     [1003, 9]
@@ -41,12 +57,28 @@
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
                 "walk": 2, 
-                "car": 1
+                "car": 1,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [56, 68],
+                    [85, 67]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [85, 67],
                     [411, 54],
                     [461, 52],
@@ -62,16 +94,63 @@
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
                 "walk": 2, 
-                "car": 0
+                "car": 0,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [306, 702],
+                    [335, 701]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [335, 701],
                     [605, 690],
                     [804, 682],
+                    [1157, 667]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [1157, 667],
+                    [1175, 666]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [1175, 666],
                     [1228, 664]
                 ]
@@ -83,13 +162,45 @@
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
                 "walk": 2, 
-                "car": 1
+                "car": 1,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [314, 723],
+                    [343, 722]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [343, 722],
+                    [1163, 688]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [1163, 688],
                     [1181, 687]
                 ]
@@ -101,16 +212,48 @@
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
                 "walk": 2, 
-                "car": 0
+                "car": 0,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [564, 1355],
+                    [589, 1345]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [589, 1345],
                     [841, 1248],
                     [927, 1215],
                     [1037, 1173],
+                    [1273, 1081]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [1273, 1081],
                     [1289, 1075]
                 ]
@@ -122,74 +265,13 @@
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
                 "walk": 2, 
-                "car": 1
+                "car": 1,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
                     [569, 1369],
-                    [595, 1359],
-                    [846, 1262],
-                    [1043, 1186],
-                    [1277, 1095],
-                    [1293, 1089]
-                ]
-            }
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "buildingCode": [null, null], 
-                "level": [0, 0], 
-                "walk": 2, 
-                "car": 1
-            },
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [1157, 667],
-                    [1163, 688],
-                    [1210, 857],
-                    [1273, 1081],
-                    [1277, 1095]
-                ]
-            }
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "buildingCode": [null, null], 
-                "level": [0, 0], 
-                "walk": 2, 
-                "car": 0
-            },
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [1175, 666],
-                    [1181, 687],
-                    [1227, 851],
-                    [1289, 1075],
-                    [1293, 1089]
-                ]
-            }
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "buildingCode": [null, null], 
-                "level": [0, 0], 
-                "walk": 2, 
-                "car": 0
-            },
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [77, 47],
-                    [85, 67],
-                    [335, 701],
-                    [343, 722],
-                    [589, 1345],
                     [595, 1359]
                 ]
             }
@@ -205,10 +287,293 @@
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
+                    [595, 1359],
+                    [846, 1262],
+                    [1043, 1186],
+                    [1277, 1095]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [1277, 1095],
+                    [1293, 1089]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [1157, 667],
+                    [1163, 688]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [1163, 688],
+                    [1210, 857],
+                    [1273, 1081]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [1273, 1081],
+                    [1277, 1095]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [1175, 666],
+                    [1181, 687]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [1181, 687],
+                    [1227, 851],
+                    [1289, 1075]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [1289, 1075],
+                    [1293, 1089]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [77, 47],
+                    [85, 67]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [85, 67],
+                    [335, 701]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [335, 701],
+                    [343, 722]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [343, 722],
+                    [589, 1345]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 0,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [589, 1345],
+                    [595, 1359]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [49, 48],
+                    [56, 68]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [56, 68],
+                    [306, 702]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [306, 702],
+                    [314, 723]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [314, 723],
+                    [564, 1355]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "buildingCode": [null, null], 
+                "level": [0, 0], 
+                "walk": 2, 
+                "car": 1,
+                "crossroad": true
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
                     [564, 1355],
                     [569, 1369]
                 ]
@@ -277,7 +642,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 2,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -292,7 +658,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 2,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -307,7 +674,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 2,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -322,7 +690,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 2,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -337,7 +706,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 2,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -352,7 +722,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 2
+                "car": 2,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -367,7 +738,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 1
+                "car": 1,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -382,7 +754,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 1
+                "car": 1,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -397,7 +770,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 0
+                "car": 0,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
@@ -412,7 +786,8 @@
             "properties": {
                 "buildingCode": [null, null], 
                 "level": [0, 0], 
-                "car": 1
+                "car": 1,
+                "crossroad": true
             },
             "geometry": {
                 "type": "LineString",
