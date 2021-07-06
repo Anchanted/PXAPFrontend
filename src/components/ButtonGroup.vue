@@ -20,6 +20,7 @@
               data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.language')"
               @click="changeLanguage">{{langAbbr}}</button>
             <!-- Message Button -->
+            <div class="dropdown-divider" style="margin: 0"></div>
             <button class="dropdown-item iconfont icon-message" type="button"
               data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.message')"
               data-target="#messageModal"
@@ -29,20 +30,25 @@
             <button class="dropdown-item iconfont icon-help-outline" type="button"
               data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"
               @click="onclickbuttonhelp"></button>
+            <!-- Help Button -->
+            <div class="dropdown-divider" style="margin: 0"></div>
+            <button class="dropdown-item iconfont icon-vpn" type="button"
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.vpn')"
+              @click="onclickbuttonvpn"></button>
             <!-- Hide Button -->
             <template v-if="!loading">
               <div class="dropdown-divider" style="margin: 0"></div>
               <button class="dropdown-item iconfont icon-hide" type="button"
                 data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.hideButton')"
-                @click="onclickbuttonhelp"></button>
+                @click="onclickbuttonhide"></button>
             </template>
           </div>
         </div>
       </div>
 
       <!-- Floor Dropdown -->
-      <div v-if="buttonList.includes('floor') && !loading" class="floor">
-        <button type="button" class="btn btn-outline-secondary dropdown-building" disabled>{{currentBuilding.code}}</button>
+      <div v-show="!loading && indoorMode && currentBuilding && currentBuilding.code && floorName" class="floor">
+        <button type="button" class="btn btn-outline-secondary dropdown-building" disabled>{{currentBuilding && currentBuilding.code}}</button>
         <button type="button" class="btn btn-secondary dropdown-floor" data-toggle="dropdown" data-tooltip="tooltip" aria-haspopup="true" aria-expanded="false"
           data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.floor')">{{floorName}}</button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -108,6 +114,7 @@ import { mapState } from 'vuex'
 
 export default {
   props: {
+    indoorMode: Boolean,
     buttonList: {
       type: Array,
       default: () => []
@@ -115,10 +122,6 @@ export default {
     currentFloor: {
       type: Object,
       default: () => ({})
-    },
-    floorList: {
-      type: Array,
-      default: () => []
     },
     currentBuilding: {
       type: Object,
@@ -136,11 +139,13 @@ export default {
   },
   computed: {
     ...mapState({
+      scale: state => state.scale,
+      maxScale: state => state.maxScale,
+      minScale: state => state.minScale,
       rotate: state => state.imageRotation,
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
-      locationActivated: state => state.button.locationActivated,
-      scale: state => state.scale
+      locationActivated: state => state.button.locationActivated
     }),
     containerStyle() {
       return {
@@ -148,15 +153,11 @@ export default {
       }
     },
     floorName() {
-      if (!this.currentFloor) {
-        if (!this.floorList) return ''
-        if (this.floorList.find(floor => floor.name === 'GF')) {
-          return this.floorList.find(floor => floor.name === 'GF')
-        } else {
-          return this.floorList.find(floor => floor.name === '1F')
-        }
-      } else
-        return this.currentFloor.name;
+      return this.currentFloor?.name || ""
+    },
+    floorList() {
+      const floorList = this.currentBuilding?.floorList || []
+      return floorList.filter(e => !!e.refCoords)
     },
     langAbbr() {
       const locale = this.$i18n.locale || 'en'
@@ -180,24 +181,27 @@ export default {
       console.log("here")
       $('#messageModal').modal('show')
     },
-    onclickbuttonhelp() {
+    onclickbuttonvpn() {
+
+    },
+    onclickbuttonhide() {
       this.$store.commit("button/setDisplayVirtualButton", true)
     },
     refreshZoomBtn(scale = 1) {
       if (this.$refs.zinbtn && this.$refs.zinbtn) {
-        if (scale >= 4) {
+        if (scale >= this.maxScale) {
           $(this.$refs.zinbtn).tooltip('dispose')
           this.$refs.zinbtn.disabled = true;
         }
-        if (scale < 4) {
+        if (scale < this.maxScale) {
           $(this.$refs.zinbtn).tooltip()
           this.$refs.zinbtn.disabled = false;
         }
-        if (scale == 1) {
+        if (scale == this.minScale) {
           $(this.$refs.zoutbtn).tooltip('dispose')
           this.$refs.zoutbtn.disabled = true;
         }
-        if (scale > 1) {
+        if (scale > this.minScale) {
           $(this.$refs.zoutbtn).tooltip()
           this.$refs.zoutbtn.disabled = false;
         }
@@ -205,12 +209,12 @@ export default {
     },
     zoomIn() {
       if (!this.$refs.zinbtn.disabled) {
-        this.$EventBus.$emit("buttonZoom", 0.5)
+        this.$store.commit("button/setButtonZoom", 0.5)
       }
     },
     zoomOut() {
       if (!this.$refs.zoutbtn.disabled) {
-        this.$EventBus.$emit("buttonZoom", -0.5)
+        this.$store.commit("button/setButtonZoom", -0.5)
       }
     },
     onclickbuttongate() {
@@ -220,18 +224,7 @@ export default {
       this.$store.commit("button/reverseOccupationActivated")
     },
     chooseOtherFloor(e, floor) {
-      const buildingId = parseInt(this.$route.params.buildingId || 0)
-      const buildingIdList = floor.buildingId || []
-      if (buildingIdList.find(e => e === buildingId) && floor.id !== this.currentFloor.id){
-        this.$router.push({
-          name: "Map",
-          params: {
-            buildingId: buildingId,
-            floorId: floor.id,
-          }
-        });
-        // this.$router.go(0);
-      }
+      this.$store.commit("setFloorDataEvent", [this.currentBuilding?.id, floor.id])
     },
     changeLanguage() {
       const langArr = ['EN', 'ZH', 'ES']

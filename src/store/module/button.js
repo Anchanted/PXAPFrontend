@@ -2,6 +2,10 @@ const button = {
   namespaced: true,
 
   state: {
+    buttonZoom: {
+      flag: false,
+      data: 0
+    },
     displayVirtualButton: false,
     locationActivated: false,
     gateActivated: false,
@@ -9,6 +13,10 @@ const button = {
   },
 
   mutations: {
+    setButtonZoom(state, payload) {
+      state.buttonZoom.data = payload
+      state.buttonZoom.flag = !state.buttonZoom.flag
+    },
     setDisplayVirtualButton(state, payload) {
       state.displayVirtualButton = payload
     },

@@ -20,6 +20,8 @@ import alert from '@/plugins/AlertMessage'
 
 import '@vant/touch-emulator';
 
+import allSettled from "promise.allsettled"
+
 String.prototype.capitalize = function () {
   return this.toLowerCase().replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
 };
@@ -59,6 +61,8 @@ Vue.use(alert)
 
 Vue.use(Datetime)
 Vue.component('datetime', Datetime);
+
+allSettled.shim()
 
 // Vue.use(VueLazyload, {
 //   preLoad: 1.3,

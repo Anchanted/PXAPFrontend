@@ -157,22 +157,22 @@ export default {
               // if (lesson.week) lesson.week.forEach((week, index) => weekArr += week + (index < lesson.week.length - 1 ? ',' : ''))
               // const weekArr = lesson.week
               return `
-                      <table class="lesson">
-                        <tbody>
-                          <tr>
-                            <td>${lesson.moduleCode}</td>
-                          </tr>
-                          <tr>
-                            <td>${lesson.type}</td>
-                          </tr>
-                          <tr>
-                            <td>${lesson.staff}</td>
-                          </tr>
-                          <tr>
-                            <td>Week: ${this.calculateWeeks(lesson.week.join(','))}</td>
-                          </tr>
-                        </tbody>
-                      </table>`
+                <table class="lesson">
+                  <tbody>
+                    <tr>
+                      <td>${lesson.moduleCode}</td>
+                    </tr>
+                    <tr>
+                      <td>${lesson.type}</td>
+                    </tr>
+                    <tr>
+                      <td>${lesson.staff}</td>
+                    </tr>
+                    <tr>
+                      <td>Week: ${this.calculateWeeks(lesson.week?.join(','))}</td>
+                    </tr>
+                  </tbody>
+                </table>`
             }
           }
         }

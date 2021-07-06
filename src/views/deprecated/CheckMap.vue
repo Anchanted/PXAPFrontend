@@ -28,7 +28,8 @@ export default {
       displayMap: true,
       buildingCode: null,
       floorIndex: null,
-      hoverPlace: null
+      hoverPlace: null,
+      floor: null
     }
   },
   methods: {
@@ -55,7 +56,6 @@ export default {
         for (let i = this.placeList.length - 1; i >= 0; i--) {
           const place = this.placeList[i];
           if (!place.areaCoords) continue
-          ctx.globalAlpha = this.hoverPlace?.id === place.id ? 1 : 0.2
           let color
           if (place.displayLevel === 2) color = "rgb(0, 255, 0)"
           else if (place.displayLevel === 3) color = "rgb(0, 0, 255)"
@@ -65,19 +65,48 @@ export default {
           ctx.lineWidth = 1
           ctx.lineCap = 'round'
           ctx.lineJoin = 'round'
-          ctx.beginPath()
-          place.areaCoords.forEach((pointList, i) => {
-            pointList.forEach((point, j) => {
-              if (j == 0) ctx.moveTo(point.x, point.y)
-              else ctx.lineTo(point.x, point.y)
+          place.areaCoords.forEach(polygon => {
+            ctx.beginPath()
+            polygon.forEach(pointList => {
+              pointList.forEach((point, i) => {
+                if (i == 0) ctx.moveTo(point.x, point.y)
+                else ctx.lineTo(point.x, point.y)
+              })
             })
+            ctx.closePath()
+            ctx.globalAlpha = 0.2
+            ctx.fill("evenodd")
+            ctx.globalAlpha = 1
+            ctx.stroke()
           })
-          ctx.closePath()
-          ctx.fill("evenodd")
-          ctx.globalAlpha = 1
-          ctx.stroke()
           ctx.lineWidth = 1
         }
+      }
+
+      if (this.floor?.buildingList) {
+        this.floor.buildingList.forEach(pf => {
+          if (!pf.areaCoords) return
+          ctx.fillStyle = "red"
+          ctx.strokeStyle = "red"
+          ctx.lineWidth = 1
+          ctx.lineCap = 'round'
+          ctx.lineJoin = 'round'
+          pf.areaCoords.forEach(polygon => {
+            ctx.beginPath()
+            polygon.forEach(pointList => {
+              pointList.forEach((point, i) => {
+                if (i == 0) ctx.moveTo(point.x, point.y)
+                else ctx.lineTo(point.x, point.y)
+              })
+            })
+            ctx.closePath()
+            ctx.globalAlpha = 0.2
+            ctx.fill("evenodd")
+            ctx.globalAlpha = 1
+            ctx.stroke()
+          })
+          ctx.lineWidth = 1
+        })
       }
 
       requestAnimationFrame(this.animate)
@@ -98,13 +127,15 @@ export default {
       const ctx = this.context
       const place = this.placeList.find(place => {
         if (!place.areaCoords) return false
-        const pointList = place.areaCoords[0] || []
-        ctx.beginPath()
-        pointList.forEach((point, index) => {
-          if (index == 0) ctx.moveTo(point.x, point.y)
-          else ctx.lineTo(point.x, point.y)
-        })
-        if (ctx.isPointInPath(mouseX, mouseY)) return true
+        for (let i = 0; i < place.areaCoords.length; i++) {
+          const pointList = place.areaCoords[i]?.[0] || []
+          ctx.beginPath()
+          pointList.forEach((point, index) => {
+            if (index == 0) ctx.moveTo(point.x, point.y)
+            else ctx.lineTo(point.x, point.y)
+          })
+          if (ctx.isPointInPath(mouseX, mouseY)) return true
+        }
       })
       if (place) {
         this.hoverPlace = place
@@ -188,7 +219,7 @@ export default {
       this.$refs.map.style.width = this.mapWidth + 'px'
       this.$refs.map.style.height = this.mapHeight + 'px'
 
-      const data = await this.$api.floor.getFloorInfoPlain(this.floorIndex, this.buildingCode)
+      const data = await this.$api.floor.getFloorInfoPlain(this.buildingCode, this.floorIndex)
       console.log(data)
       const placeList = data.placeList || []
       // this.placeList = placeList.map(place => {
@@ -200,6 +231,44 @@ export default {
       //   return place
       // })
       this.placeList = placeList
+
+      const floor = data.floor
+      if (!floor.ratio) floor["ratio"] = 1
+      if (floor.refCoords) {
+        floor.refCoords[1][0][1] *= floor.ratio
+        floor.refCoords[1][1][1] *= floor.ratio
+        const degree = this.getDegree(floor.refCoords[0][0][0],floor.refCoords[0][0][1], floor.refCoords[0][1][0],floor.refCoords[0][1][1], floor.refCoords[1][0][0],floor.refCoords[1][0][1], floor.refCoords[1][1][0],floor.refCoords[1][1][1]) || 0
+        floor["degree"] = degree + ((degree < -Math.PI / 4) ? Math.PI : 0)
+        floor["scale"] = this.getDistance(floor.refCoords[0][0][0],floor.refCoords[0][0][1], floor.refCoords[0][1][0],floor.refCoords[0][1][1]) / this.getDistance(floor.refCoords[1][0][0],floor.refCoords[1][0][1], floor.refCoords[1][1][0],floor.refCoords[1][1][1]) || 1
+        const offset = this.getRotatedPoint(floor.refCoords[1][0][0],floor.refCoords[1][0][1], floor.degree)
+        floor["origin"] = {
+          x: floor.refCoords[0][0][0] - floor.scale * offset.x,
+          y: floor.refCoords[0][0][1] - floor.scale * offset.y
+        }
+
+        let pp
+        floor.buildingList.forEach(pf => {
+          if (!pf.areaCoords) return
+          pf.areaCoords.forEach(polygon => {
+            polygon.forEach(pointList => {
+              pointList.forEach(point => {
+                pp = {
+                  x: point.x,
+                  y: point.y
+                }
+                pp.x -= floor.origin.x
+                pp.y -= floor.origin.y
+                pp.x /= floor.scale
+                pp.y /= floor.scale
+                pp = this.getRotatedPoint(pp.x, pp.y, -floor.degree)
+                point.x = pp.x
+                point.y = pp.y / floor.ratio
+              })
+            })
+          })
+        })
+      }
+      this.floor = floor
 
       requestAnimationFrame(this.animate)
     } catch (error) {

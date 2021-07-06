@@ -81,7 +81,7 @@ export default {
   },
 
   computed: {
-    ...mapState(['modalScrollTop']),
+    ...mapState(["modalScrollTop"]),
     pageNum() {
       return this.currentPageNo + 1
     },
@@ -131,10 +131,15 @@ export default {
 
       try {
         if (this.query) {
-          const data = await this.$api.search.searchPage({
+          const query = {
             q: this.query,
             n: this.currentPageNo
-          })
+          }
+          const locationStr = this.getSearchLocation()
+          if (locationStr) {
+            query["location"] = locationStr
+          }
+          const data = await this.$api.search.searchPage(query)
           console.log(data)
 
           this.itemList = this.unifySearchItem(data.content || [])
@@ -165,9 +170,9 @@ export default {
     goToAnotherPage(value) {
       if (this.currentPageNo + 1 != value) {
         this.$router.replace({
-          name: 'Search',
+          name: "Search",
           params: {
-            buildingId: this.$route.params.buildingId,
+            locationInfo: this.$route.params.locationInfo,
             floorId: this.$route.params.floorId
           },
           query: {

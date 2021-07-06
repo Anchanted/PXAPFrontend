@@ -3,7 +3,7 @@
   <div id="app">
     <!-- <keep-alive :exclude="['Modal', 'ButtonGroup']"> -->
     <!-- <keep-alive> -->
-      <router-view :key="key"></router-view>
+      <router-view></router-view>
     <!-- </keep-alive> -->
   </div>
 </template>
@@ -11,6 +11,7 @@
 <script>
 import { Settings } from 'luxon'
 import { ImagePreview } from 'vant'
+import { mapState } from "vuex"
 
 export default {
   components: {
@@ -21,11 +22,7 @@ export default {
     }
   },
   computed: {
-    key() {
-      const buildingId = this.$route.params.buildingId || ''
-      const floorId = this.$route.params.floorId || ''
-      return `b${buildingId}f${floorId}`
-    }
+    ...mapState(['imageUrlListEvent'])
   },
   methods: {
     getScrollbarWidth() {
@@ -83,8 +80,6 @@ export default {
     console.log('scrollBarWidth', scrollBarWidth)
     this.$store.commit('setScrollBarWidth', scrollBarWidth)
     this.$store.dispatch('search/refreshHistoryList', this.unifySearchItem)
-
-    this.$EventBus.$on("viewImage", this.viewImage)
   },
   watch: {
     "$i18n.locale": {
@@ -92,6 +87,9 @@ export default {
       handler: function (val) {
         document.title = this.$t("title", val)
       }
+    },
+    "imageUrlListEvent.flag"() {
+      this.viewImage(this.imageUrlListEvent.data)
     }
   }
 }

@@ -333,7 +333,8 @@ export default {
 
       var tag = document.createElement('input');
       tag.setAttribute('id', 'cp_hgz_input');
-      tag.value = JSON.stringify(this.areaPoints)
+      // tag.value = JSON.stringify(this.areaPoints)
+      tag.value = `(${this.areaPoints.reduce((str, point) => `${str}${point.x} ${point.y},`, "")}${this.areaPoints[0].x} ${this.areaPoints[0].y})`
       // tag.value = JSON.stringify(placeObj)+',';
       // tag.value = JSON.stringify(areaPoints).replace(/,/g, ", ");
       document.getElementsByTagName('body')[0].appendChild(tag);
@@ -393,6 +394,13 @@ export default {
       let pointArr
       try {
         pointArr = JSON.parse(val)
+        // pointArr = val.split(",").map(pointStr => {
+        //   const strArr = pointStr.split(" ")
+        //   return {
+        //     x: parseInt(strArr[0]),
+        //     y: parseInt(strArr[1])
+        //   }
+        // })
       } catch (error) {
         console.log(error)
       }

@@ -8,7 +8,7 @@
       x:<input type="input" v-model.trim="focusPointX">&nbsp;y:<input type="input" v-model.trim="focusPointY">
     </div>
     <panel ref="panel" @updatePlace="updatePlace" @changeIsRoom="updatePointArr"></panel>
-    <canvas style="display: block;" ref="map" @click="clickMap"></canvas>
+    <canvas style="display: block; margin-left: 400px;" ref="map" @click="clickMap"></canvas>
   </div>
 </template>
 
@@ -152,7 +152,7 @@ export default {
       // console.log(e.pageX, e.clientX)
       // console.log(e.pageY, e.clientY)
       //alert('x: ' + x + '\ny: ' + y);
-      return { 'x': x, 'y': y };
+      return { 'x': x - 400, 'y': y };
     },
     loadImage (url) {
       return new Promise(function (resolve, reject) {

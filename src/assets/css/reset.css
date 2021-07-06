@@ -27,52 +27,52 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 em {
-    font-style: normal
+    font-style: normal;
 }
 
 small {
-    font-size: 12px
+    font-size: 12px;
 }
 
 ul, ol {
-    list-style: none
+    list-style: none;
 }
 
 a {
-    text-decoration: none
+    text-decoration: none;
 }
 
 a:hover {
-    /* text-decoration: underline */
+    text-decoration: none;
 }
 
 legend {
-    color: #000
+    color: #000;
 }
 
 fieldset, img {
-    border: 0
+    border: 0;
 }
 
 button, input, select, textarea {
-    font-size: 100%
+    font-size: 100%;
 }
 
 table {
     border-collapse: collapse;
-    border-spacing: 0
+    border-spacing: 0;
 }
 
 img {
-    -ms-interpolation-mode: bicubic
+    -ms-interpolation-mode: bicubic;
 }
 
 textarea {
-    resize: vertical
+    resize: vertical;
 }
 
 label, button {
-    cursor: pointer
+    cursor: pointer;
 }
 
 button, input {
@@ -94,11 +94,11 @@ button:disabled {
     content: '\20';
     display: block;
     height: 0;
-    clear: both
+    clear: both;
 }
 
 .clearfix {
-    zoom: 1
+    zoom: 1;
 }
 
 .clear {
@@ -107,7 +107,7 @@ button:disabled {
     line-height: 0;
     font-size: 0;
     visibility: hidden;
-    overflow: hidden
+    overflow: hidden;
 }
 
 /* clears the 'X' from Internet Explorer */

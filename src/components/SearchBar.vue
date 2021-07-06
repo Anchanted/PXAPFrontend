@@ -37,7 +37,6 @@
           v-if="displayDirectionButton"
           class="iconfont icon-direction text-primary second-button direction-button" 
           type="button"
-          :disabled="$route.params.buildingId || $route.params.floorId"
           data-toggle="tooltip" data-placement="bottom" data-trigger="hover" :data-original-title="$t('tooltip.direction.entrance')"
           @click="displayDirBox"></button>
         <button 
@@ -134,9 +133,8 @@ export default {
         params: {
           fromText: "",
           toText: "",
-          buildingId: this.$route.params.buildingId,
-          floorId: this.$route.params.floorId,
-          locationInfo: this.$route.params.locationInfo
+          locationInfo: this.$route.params.locationInfo,
+          floorId: this.$route.params.floorId
         },
         query: {
           mode: this.transportList[0].travelMode
@@ -154,7 +152,7 @@ export default {
   mounted () {
     $('[data-toggle="tooltip"]').tooltip();
     $('[data-tooltip="tooltip"]').tooltip();
-    this.text = this.globalText
+    this.text = this.globalText.data
   },
   watch: {
     text(val) {
@@ -165,18 +163,19 @@ export default {
             this.$store.commit("setModalRouterLeave", true)
             this.$store.commit('setModalCollapsed', true)
           }
-          if (this.$route.matched.length > 1)
+          if (this.$route.matched.length > 1) {
             this.$router.push({
               name: "Map",
               params: this.$route.params
             })
+          }
         }
       } else {
         this["search/commitDisplaySearchHistory"](false)
       }
     },
-    globalText(val) {
-      this.text = val
+    "globalText.flag"() {
+      this.text = this.globalText.data
     }
   }
 }
@@ -212,6 +211,10 @@ export default {
       
       &:hover:not([disabled]) {
         color: #0069d9;
+      }
+
+      &:disabled {
+        color: rgba(0, 0, 0, 0.4)
       }
     }
   }

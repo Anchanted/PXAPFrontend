@@ -17,10 +17,14 @@ import { mapState } from 'vuex'
 export default {
   name: "Modal",
   computed: {
-    ...mapState(["screenHeight", 'scrollBarWidth', 'panelCollapsed', 'modalCollapsed', 'modalHeight', "modalRouterLeave"]),
+    ...mapState(["screenHeight", "scrollBarWidth", "panelCollapsed", "modalCollapsed", "modalHeight", "modalRouterLeave"]),
     key() {
       const fullPath = this.$route.fullPath || ""
-      return decodeURIComponent(fullPath.split(this.urlLocationReg).join(""))
+      let pathStr = decodeURIComponent(fullPath.split(this.urlLocationReg).join(""))
+      if (this.$route.name === "Place") {
+        pathStr = pathStr.replace(/(id=\d+),f\d+/i, (match, p1) => p1)
+      }
+      return pathStr
     },
     modalStyle() {
       const computedHeight = this.screenHeight - 66 - 50

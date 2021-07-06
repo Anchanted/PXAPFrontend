@@ -42,8 +42,11 @@ module.exports = {
         },
         "floor": {
             "B2": "地下二层",
+            "B2F": "地下二层",
             "B1": "地下一层",
+            "B1F": "地下一层",
             "BF": "地下一层",
+            "0F": "地上一层",
             "GF": "G层",
             "1F": "一层",
             "2F": "二层",
@@ -111,6 +114,7 @@ module.exports = {
         "language": "变更成另一种语言",
         "message": "消息",
         "help": "帮助",
+        "vpn": "校园VPN",
         "hideButton": "隐藏按钮",
         'floor': '选择其他楼层',
         'home': '返回校园地图',
@@ -149,5 +153,9 @@ module.exports = {
     pageNotFound: {
         text: "迷路了吗？",
         link: "返回校园地图"
+    },
+    unit: {
+        "m": "米",
+        "km": "公里"
     }
 }

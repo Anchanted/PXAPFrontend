@@ -1,19 +1,15 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import store from 'store'
+
 import PageNotFound from 'views/404'
 import Place from 'views/Place'
-// import SearchTop from 'views/Search/SearchTop'
-// import SearchMore from 'views/Search/SearchMore'
 import Search from 'views/Search'
 import Direction from 'views/Direction'
 import OriginalMap from 'views/OriginalMap'
 import CheckMap from 'views/deprecated/CheckMap'
-import TimetableForm from 'views/deprecated/TimetableForm'
-// import TimetableCheck from 'views/deprecated/TimetableTest3'
-import TimetableCheck from 'components/deprecated/ElasticTimetable'
+import Spanish from 'views/Spanish'
 import MapPage from 'views/MapPage'
-
-import store from 'store'
 
 Vue.use(Router)
 
@@ -34,26 +30,20 @@ const routes = [
     name: 'CheckMap'
   },
   {
-    path: "/timetable/form",
-    component: TimetableForm,
-    name: 'TimetableForm'
+    path: "/spanish",
+    component: Spanish,
+    name: 'Spanish'
   },
   {
-    path: "/timetable/table",
-    component: TimetableCheck,
-    name: 'TimetableCheck'
-  },
-  {
-    // path: '/:buildingId(\\d+)?/:floorId(\\d+)?/@:latitude((-)?([^0][0-9]+|0)+\\.([0-9]{1,2})),:longitude((-)?([^0][0-9]+|0)+\\.([0-9]{1,2})),:zoom(\\d\\.([0-9]{1,2}))',
-    // path: '/:buildingId(\\d+)?/:floorId(\\d+)?/@:x(\\d+)?,:y(\\d+)?,:zoom(\\d|\\d\\.\\d{1,2})?z',
-    path: "/:buildingId(\\d+)?/:floorId(\\d+)?/@:locationInfo?",
-    alias: "/:buildingId(\\d+)?/:floorId(\\d+)?",
-    // path: '/:buildingId(\\d+)?/:floorId(\\d+)?',
+    // path: '/:floorId(\\d+)?/@:latitude((-)?([^0][0-9]+|0)+\\.([0-9]{1,2})),:longitude((-)?([^0][0-9]+|0)+\\.([0-9]{1,2})),:zoom(\\d\\.([0-9]{1,2}))',
+    // path: '/:floorId(\\d+)?/@:x(\\d+)?,:y(\\d+)?,:zoom(\\d|\\d\\.\\d{1,2})?z',
+    path: "/@:locationInfo?/:floorId(\\d+)?",
+    alias: "/:floorId(\\d+)?",
     component: MapPage,
     name: "Map",
     children: [
       {
-        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/search/@:locationInfo?",
+        path: "/search/@:locationInfo?/:floorId(\\d+)?",
         alias: "search",
         component: Search,
         name: "Search",
@@ -61,27 +51,17 @@ const routes = [
           keepAlive: true
         },
       },
-      // {
-      //   path: "/:buildingId(\\d+)?/:floorId(\\d+)?/search/:type(building|room|facility)/@:locationInfo?",
-      //   alias: "search/:type(building|room|facility)",
-      //   component: SearchMore,
-      //   name: "SearchMore",
-      //   meta: {
-      //     keepAlive: false,
-      //     display: true
-      //   },
-      // },
       {
-        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/place/@:locationInfo?",
+        path: "/place/@:locationInfo?/:floorId(\\d+)?",
         alias: "place",
         component: Place,
         name: "Place",
         meta: {
-          keepAlive: false,
+          keepAlive: true,
         },
       },
       {
-        path: "/:buildingId(\\d+)?/:floorId(\\d+)?/dir/:fromText([^/]*)?/:toText([^/]*)?/@:locationInfo?",
+        path: "/dir/:fromText([^/]*)?/:toText([^/]*)?/@:locationInfo?/:floorId(\\d+)?",
         alias: "dir/:fromText([^/]*)?/:toText([^/]*)?",
         components: {
           direction: Direction
@@ -102,37 +82,36 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => {
-  if (!to.params.buildingId !== !to.params.floorId) next({ name: "PageNotFound" })
-  else if (to.name === "Search" && !to.query.q) next({ name: 'PageNotFound' })
-  else if (to.name === "Direction" && (to.params.buildingId || to.params.floorId)) next({ name: "Map", params: to.params })
-  else {
-    if (to.matched?.[0]?.name === "Map" 
-      && decodeURIComponent(to.fullPath.split(/@.*?(\?|$)/).join("")) !== decodeURIComponent(from.fullPath.split(/@.*?(\?|$)/).join(""))) {
-      const fromBuildingId = from.params.buildingId || ''
-      const fromFloorId = from.params.floorId || ''
-      const toBuildingId = to.params.buildingId || ''
-      const toFloorId = to.params.floorId || ''
-      
-      store.commit("direction/setDisplayDirection", false)
-      if (`b${fromBuildingId}f${fromFloorId}` !== `b${toBuildingId}f${toFloorId}`) { // go to another page
-        store.commit('setPanelCollapsed', false)
-        store.commit('setModalCollapsed', true)
+  if (to.matched?.[0]?.name !== "Map") {
+    next()
+    return
+  }
+  if (to.name === "Search" && !to.query.q) {
+    next({ name: "Map" })
+  } else {
+    if (!from?.name || !from?.matched?.length) {
+      if (to.name.match(/Place|Direction/)) {
+        store.commit("setFirstRouteName", to.name)
       }
+    }
+    if (decodeURIComponent(to.fullPath.split(/@.*?(\?|$)/).join("")) !== decodeURIComponent(from.fullPath.split(/@.*?(\?|$)/).join(""))) {
+      store.commit("direction/setDisplayDirection", false)
+      // // go to another page
+      // store.commit('setPanelCollapsed', false)
+      // store.commit('setModalCollapsed', true)
   
       let globalText = ""
+      store.commit("setDisplayDirectionButton", to.matched.length <= 1)
       if (to.matched.length > 1) {
-        store.commit("setDisplayDirectionButton", false)
         store.commit('setPanelCollapsed', false)
         if (to.name === "Direction" && !store.state.modalCollapsed) store.commit("setModalRouterLeave", true)
         store.commit('setModalCollapsed', to.name === "Direction")
         if (to.name === "Direction") store.commit("direction/setDisplayDirection", true)
   
-        if (to.name.indexOf('Search') !== -1) globalText = decodeURIComponent(to.query.q || '')
+        if (to.name === 'Search') globalText = decodeURIComponent(to.query.q || '')
         else if (to.name === 'Place') globalText = to.params.name || ''
-      } else {
-        store.commit("setDisplayDirectionButton", true)
       }
-      store.commit('setGlobalText', globalText)
+      store.commit("setGlobalText", globalText)
   
       $('[data-toggle="tooltip"]').tooltip("dispose");
       $('[data-tooltip="tooltip"]').tooltip("dispose");

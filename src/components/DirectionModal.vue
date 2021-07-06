@@ -122,6 +122,7 @@ export default {
       this.refreshPage()
     },
     closeModal() {
+      this.isCurrentTo = false
       if (!this.$isEmptyObject(this.cachedPlaceInfo)) {
         this.$router.push({
           name: "Place",
@@ -167,9 +168,7 @@ export default {
       const toText = this.saveToText ? "" : this.toText
       if (fromText && toText
           && fromText.toLowerCase() === toText.toLowerCase() 
-          && this.globalObjKeyArr.every((key, i) => i === 0 ? true : this.globalFromObj[key] === this.globalToObj[key]) 
-          && this.globalFromObj.location?.x === this.globalToObj.location?.x 
-          && this.globalFromObj.location?.y === this.globalToObj.location?.y) {
+          && this.isSamePlace(this.globalFromObj, this.globalToObj)) {
         this.$alert({
           message: this.$t("direction.selector.same"),
           time: 3000,
@@ -185,15 +184,25 @@ export default {
       if (this.globalToObj.name && toText !== this.globalToObj.name) {
         this.$store.commit("direction/setGlobalToObj", {})
       }
-      // check if place is marker
+      // check place type
       const query = {}
-      if (this.globalFromObj.id === 0) {
-        if (this.globalFromObj.location?.x != null && this.globalFromObj.location?.y != null) query["fromLocation"] = `${this.globalFromObj.location.x},${this.globalFromObj.location.y}` + (this.globalFromObj.level != null ? `,${this.globalFromObj.level}` : "")
-        if (this.globalFromObj.buildingId && this.globalFromObj.floorId) query["fromIndoor"] = `${this.globalFromObj.buildingId},${this.globalFromObj.floorId}`
+      if (this.globalFromObj.id != null) {
+        if (this.globalFromObj.id === 0) {
+          if (this.globalFromObj.location?.x != null && this.globalFromObj.location?.y != null) {
+            query["fromLocation"] = this.getLocationString(this.globalFromObj)
+          }
+        } else {
+          query["fromId"] = this.getIdString(this.globalFromObj)
+        }
       }
-      if (this.globalToObj.id === 0) {
-        if (this.globalToObj.location?.x != null && this.globalToObj.location?.y != null) query["toLocation"] = `${this.globalToObj.location.x},${this.globalToObj.location.y}` + (this.globalToObj.level != null ? `,${this.globalToObj.level}` : "")
-        if (this.globalToObj.buildingId && this.globalToObj.floorId) query["toIndoor"] = `${this.globalToObj.buildingId},${this.globalToObj.floorId}`
+      if (this.globalToObj.id != null) {
+        if (this.globalToObj.id === 0) {
+          if (this.globalToObj.location?.x != null && this.globalToObj.location?.y != null) {
+            query["toLocation"] = this.getLocationString(this.globalToObj)
+          }
+        } else {
+          query["toId"] = this.getIdString(this.globalToObj)
+        }
       }
       // check travel mode
       if (this.$route.query.mode) {
@@ -208,9 +217,8 @@ export default {
           params: {
             fromText: fromText || "",
             toText: toText || "",
-            buildingId: this.$route.params.buildingId,
-            floorId: this.$route.params.floorId,
-            locationInfo: this.$route.params.locationInfo
+            locationInfo: this.$route.params.locationInfo,
+            floorId: this.$route.params.floorId
           },
           query
         })
@@ -228,7 +236,7 @@ export default {
       }
 
       const oppositeGlobalObj = this.isCurrentTo ? this.globalFromObj : this.globalToObj
-      if (this.globalObjKeyArr.every((key, i) => i === 0 ? true : oppositeGlobalObj[key] === item[key]) && oppositeGlobalObj.location?.x === item.location?.x && oppositeGlobalObj.location?.y === item.location?.y) {
+      if (this.isSamePlace(item, oppositeGlobalObj)) {
         this.$alert({
           message: this.$t("direction.selector.same"),
           time: 3000,
@@ -237,6 +245,12 @@ export default {
       } else {
         const obj = {}
         this.globalObjKeyArr.forEach(key => obj[key] = item[key])
+        if (item.location?.x != null && item.location?.y != null) {
+          obj["location"] = {
+            x: Math.round(item.location.x * 10) / 10,
+            y: Math.round(item.location.y * 10) / 10
+          }
+        }
         this.$store.commit(this.isCurrentTo ? "direction/setGlobalToObj" : "direction/setGlobalFromObj", obj)
         this.$EventBus.$emit("setDirectionText", { isTo: this.isCurrentTo, text: obj.name })
       }
