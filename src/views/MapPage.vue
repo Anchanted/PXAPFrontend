@@ -258,7 +258,7 @@ export default {
         }
         try {
           if (!data) {
-            data = await this.$api.floor.getFloorInfo({buildingId, floorId})
+            data = await this.$api.floor.getFloorData({buildingId, floorId})
           }
           console.log(data)
           if (!building) {
@@ -628,10 +628,10 @@ export default {
       if (this.$route.params.floorId) {
         query["floorId"] = this.$route.params.floorId
       }
-      const requests = [this.$api.floor.getCampusInfo()]
+      const requests = [this.$api.floor.getCampusData()]
       const floorId = this.$route.params.floorId
       if (floorId) {
-        requests.push(this.$api.floor.getFloorInfo({ floorId }))
+        requests.push(this.$api.floor.getFloorData({ floorId }))
       }
       const dataList = await Promise.allSettled(requests)
       console.log(dataList)
@@ -640,6 +640,7 @@ export default {
         throw dataList[0].reason
       }
       const data = dataList[0].value
+      console.log(data)
 
       // const floorData = [
       //   {
@@ -698,7 +699,7 @@ export default {
       // ]
       // for (let i = 0; i < floorData.length; i++) {
       //   const e = floorData[i];
-      //   const floorData = await this.$api.floor.getFloorInfo({buildingId: e.id[1], floorId: e.id[0]})
+      //   const floorData = await this.$api.floor.getFloorData({buildingId: e.id[1], floorId: e.id[0]})
       //   const floor = floorData.floor
       //   const floorImage = await this.loadImage(process.env.VUE_APP_BASE_API + floor.imgUrl)
       //   this.imageMap.set(`map${floor.id}`, floorImage)
@@ -748,6 +749,7 @@ export default {
       let flag = false
       dataList.forEach(result => {
         if (result.status !== "fulfilled") return
+        console.log(result.value)
         flag = true
         this.$store.commit("setCurrentBuildingId", result.value?.building?.id)
         this.getFloorData(result.value?.building?.id, result.value?.floor?.id, result.value)

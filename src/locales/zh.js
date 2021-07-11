@@ -1,5 +1,6 @@
 module.exports = {
     title: "欢迎来到XAP！",
+    none: "无",
     search: {
         'search': '搜索',
         'cancel': '取消',
@@ -33,8 +34,8 @@ module.exports = {
         },
         'indoor': '进入室内',
         'timetable': '课程表',
+        'floorinfo': '楼层信息',
         'department': '院系部门分布',
-        "departmentNone": "无",
         'contact': '联系方式',
         'description': '简介',
         "level": {

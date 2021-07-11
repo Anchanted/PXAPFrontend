@@ -1,5 +1,6 @@
 module.exports = {
     title: "¡Bienvenido a XAP!",
+    none: "Nada",
     search: {
         'search': 'Buscar',
         'cancel': 'Cancelar',
@@ -33,8 +34,8 @@ module.exports = {
         },
         'indoor': 'Ir Adentro',
         'timetable': 'Horario',
+        'floorinfo': 'Información de Piso',
         'department': 'Asignación de Departamento',
-        "departmentNone": "Nada",
         'contact': 'Contacto',
         'description': 'Descripción',
         "level": {

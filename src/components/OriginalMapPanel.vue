@@ -48,26 +48,36 @@
             </select>
           </div>
           <div class="row"><label class="row-name">Icon Type:</label>&nbsp;<span>{{iconType}}</span></div>
-          <div class="row"><label class="row-name">Icon Level:</label>&nbsp;<span>{{iconLevel}}</span></div>
+          <div class="row"><label class="row-name">Icon Level:</label>&nbsp;<span>{{displayLevel}}</span></div>
           <div class="row">
             <label class="row-name">Display Level:</label>&nbsp;
-            <select ref="displayLevel" @change="ondisplaylevelchange">
+            <select ref="zIndex" @change="onzindexchange">
               <option value="" disabled selected hidden>Choose a Level</option>
               <option v-for="n in 3" :key="n" :value="n">{{n}}</option>
             </select>
           </div>
         </div>
         <textarea style="display: block; width: 300px; height: 200px; font-size: 14px;" v-model.trim="testPlacesStr"></textarea>
-        <div>
-          <template v-if="isRoom">
-            <div v-for="(point, index) in areaPoints" :key="index" style="padding: 10px 10px;">
-              {{index + 1}}. x:<input type="text" :value="point.x" class="coordinate-input" @input="updateCoords(index, 'x', $event.target.value)">&nbsp;y:<input type="text" :value="point.y" class="coordinate-input" @input="updateCoords(index, 'y', $event.target.value)">
+        <div v-if="isRoom" class="point-area">
+          <div class="pointer-direction">
+            <label for="up"><input type = "radio" id="up" :value="true" v-model="pointerUp">&uarr;</label>
+            <span>-----</span>
+            <label for="down"><input type = "radio" id="down" :value="false" v-model="pointerUp">	&darr;</label>
+          </div>
+          <div v-for="(n, index) in areaPoints.length + 1" :key="index">
+            <div class="pointer-bar" :class="[index !== pointerIndex ? 'pointer-bar-hoverable' : '']" @click="pointerIndex = index">
+              <div v-if="index === pointerIndex" class="pointer-bar-line"></div>
+            </div>
+            <div v-if="index < areaPoints.length" class="point">
+              {{n}}. x:<input type="text" :value="areaPoints[index].x" class="coordinate-input" @input="updateCoords(index, 'x', $event.target.value)">&nbsp;y:<input type="text" :value="areaPoints[index].y" class="coordinate-input" @input="updateCoords(index, 'y', $event.target.value)">
               <button class="panel-body-delete" @click="deletePoint(index)">X</button>
             </div>
-          </template>
-          <div v-else-if="locationPoint" style="padding: 10px 10px;">
+          </div>
+        </div>
+        <div v-else-if="locationPoint" class="point-area">
+          <div class="point">
             x:<input type="text" :value="locationPoint.x" class="coordinate-input" @input="updateCoords(-1, 'x', $event.target.value)">&nbsp;y:<input type="text" :value="locationPoint.y" class="coordinate-input" @input="updateCoords(-1, 'y', $event.target.value)">
-            <button class="panel-body-delete" @click="deletePoint(-1)">X</button>
+            <button class="panel-body-delete" @click="deletePoint">X</button>
           </div>
         </div>
         <div>
@@ -106,8 +116,10 @@ export default {
       nameZH: null,
       type: null,
       iconType: null,
-      iconLevel: 1.0,
-      displayLevel: null,
+      displayLevel: 1.0,
+      zIndex: null,
+      pointerIndex: 0,
+      pointerUp: true,
       typeArr: [
         // {
         //   type: {
@@ -203,7 +215,10 @@ export default {
     },
     addPoint(point) {
       if (this.isRoom) {
-        this.areaPoints.push(point)
+        this.areaPoints.splice(this.pointerIndex, 0, point)
+        if (this.pointerUp) {
+          this.pointerIndex++
+        }
       } else {
         this.locationPoint = point
         this.$emit("changeIsRoom", this.isRoom)
@@ -213,8 +228,12 @@ export default {
     },
     deletePoint(index) {
       if (this.isRoom) {
-        if (index === -1) this.areaPoints.pop()
-        else this.areaPoints.splice(index, 1)
+        if (index < this.pointerIndex) {
+          this.pointerIndex--
+        }
+        // if (index === -1) this.areaPoints.pop()
+        // else this.areaPoints.splice(index, 1)
+        this.areaPoints.splice(index, 1)
       } else {
         this.locationPoint = null
         this.$emit("changeIsRoom", this.isRoom)
@@ -235,8 +254,12 @@ export default {
       }
     },
     clearData() {
-      if (this.isRoom) this.areaPoints = []
-      else this.locationPoint = null
+      if (this.isRoom) {
+        this.areaPoints = []
+        this.pointerIndex = 0
+      } else {
+        this.locationPoint = null
+      }
       this.$emit("changeIsRoom", this.isRoom)
     },
     ontypechange(e) {
@@ -259,8 +282,8 @@ export default {
         }
       }
     },
-    ondisplaylevelchange(e) {
-      this.displayLevel = parseInt(this.$refs.displayLevel.options[this.$refs.displayLevel.selectedIndex].value)
+    onzindexchange(e) {
+      this.zIndex = parseInt(this.$refs.zIndex.options[this.$refs.zIndex.selectedIndex].value)
     },
     getData () {
       // const level = parseInt(this.$refs.level.options[this.$refs.level.selectedIndex].value) || 1
@@ -276,7 +299,7 @@ export default {
       //     return
       //   }
 
-      //   if (!this.displayLevel) {
+      //   if (!this.zIndex) {
       //     alert('Display level not selected!')
       //     return
       //   }
@@ -305,7 +328,7 @@ export default {
       //   }
       // }
       // placeObj["type"] = [this.type.toLowerCase()]
-      // if (this.isRoom) placeObj["displayLevel"] = this.displayLevel
+      // if (this.isRoom) placeObj["zIndex"] = this.zIndex
       // if (this.buildingCode && this.floor) {
       //   placeObj["buildingCode"] = this.buildingCode
       //   placeObj["floorIndex"] = this.floorIndex
@@ -327,7 +350,7 @@ export default {
         // placeObj["areaCoords"] = this.areaPoints
       } else {
         placeObj["iconType"] = this.iconType.toLowerCase()
-        placeObj["iconLevel"] = parseFloat(this.iconLevel)
+        placeObj["displayLevel"] = parseFloat(this.displayLevel)
         placeObj["location"] = { ...this.locationPoint }
       }
 
@@ -393,14 +416,14 @@ export default {
       // }
       let pointArr
       try {
-        pointArr = JSON.parse(val)
-        // pointArr = val.split(",").map(pointStr => {
-        //   const strArr = pointStr.split(" ")
-        //   return {
-        //     x: parseInt(strArr[0]),
-        //     y: parseInt(strArr[1])
-        //   }
-        // })
+        // pointArr = JSON.parse(val)
+        pointArr = val.split(",").map(pointStr => {
+          const strArr = pointStr.split(" ")
+          return {
+            x: parseInt(strArr[0]),
+            y: parseInt(strArr[1])
+          }
+        })
       } catch (error) {
         console.log(error)
       }
@@ -453,6 +476,41 @@ export default {
           width: 100px;
           text-align: right;
           margin-bottom: 0px;
+        }
+      }
+
+      .point-area {
+        width: 240px;
+        padding: 5px 0;
+
+        .point {
+          padding: 5px 10px;
+        }
+
+        .pointer-direction {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+
+          label {
+            margin: 0;
+          }
+        }
+
+        .pointer-bar {
+          height: 10px;
+          display: flex;
+          align-items: center;
+
+          &-line {
+            width: 100%;
+            height: 2px;
+            background-color: #ff0000;
+          }
+        }
+
+        .pointer-bar-hoverable:hover {
+          background-color: rgba(255, 0, 0, 0.2);
         }
       }
 

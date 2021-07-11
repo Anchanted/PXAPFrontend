@@ -68,13 +68,13 @@ export default {
       lastMouseX: null,
       lastMouseY: null,
       mdown: false, 
-      mclick: false,
+      mmove: false,
       mdowntime: null,
       clickTimeoutId: 0,
       lastClickTime: null,
       lastDoubleClick: false,
       selectedPlace: {},
-      selectedPlaceKeyArr: ["id", "placeType", "name", "floorId", "iconType", "iconLevel", "areaCoords"],
+      selectedPlaceKeyArr: ["id", "placeType", "name", "floorId", "iconType", "displayLevel", "areaCoords"],
       fromDirectionMarker: {},
       toDirectionMarker: {},
       location: {
@@ -400,7 +400,7 @@ export default {
             if (!this.$isEmptyObject(this.fromDirectionMarker) && this.globalFromObj.id === place.id && this.globalFromObj.placeType == place.placeType) continue
             if (!this.$isEmptyObject(this.toDirectionMarker) && this.globalToObj.id === place.id && this.globalToObj.placeType == place.placeType) continue
             // place not to display
-            if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) continue
+            if (!place.displayLevel || (this.scale.x < place.displayLevel || this.scale.y < place.displayLevel)) continue
             this.drawImage(this.imageMap.get("icon"), place.location.x, place.location.y, this.iconSize, this.iconSize, this.iconSize/2, this.iconSize/2, true, 
               (iconSpriteInfo[place.iconType]["column"] - 1) * iconSpriteInfo[place.iconType]["width"], (iconSpriteInfo[place.iconType]["row"] - 1) * iconSpriteInfo[place.iconType]["height"], iconSpriteInfo[place.iconType]["width"], iconSpriteInfo[place.iconType]["height"])
           }
@@ -723,13 +723,13 @@ export default {
       // click on places
       ({ x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }));
       const place = this.placeList
-        .filter(place => (place.id !== this.selectedPlace.id) && !(place.placeType === "building" && place.floorId))
         .find(place => {
+          if (!place.displayLevel) return
           if (!this.$isEmptyObject(this.selectedPlace) && this.selectedPlace.id === place.id && this.selectedPlace.floorId == place.floorId) return
           if (!this.$isEmptyObject(this.fromDirectionMarker) && this.globalFromObj.id === place.id && this.globalFromObj.floorId == place.floorId) return
           if (!this.$isEmptyObject(this.toDirectionMarker) && this.globalToObj.id === place.id && this.globalToObj.floorId == place.floorId) return
           if (!place.areaCoords) {
-            if (!place.iconLevel || (this.scale.x < place.iconLevel || this.scale.y < place.iconLevel)) return
+            if (this.scale.x < place.displayLevel || this.scale.y < place.displayLevel) return
             const { x, y } = this.getImageToCanvasPoint(place.location?.x, place.location?.y)
             ctx.beginPath()
             ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
@@ -801,6 +801,7 @@ export default {
       this.lastMouseY = null;
       this.mdowntime = new Date().getTime();
       this.mdown = true;
+      this.mmove = false;
 
       if (this.displayVirtualButton) {
         this.virtualButton.mselected = false
@@ -813,6 +814,8 @@ export default {
       // console.log('mousemove')
       // if (this.canvas && e.target == this.canvas) {
       if (this.canvas) {
+        if (this.mdown) this.mmove = true
+
         if (this.displayVirtualButton && this.virtualButton.mselected) {
           this.canvas.style.cursor = "move"
           const { x: px, y: py } = this.getMousePoint({ x: e.clientX, y: e.clientY })
@@ -846,13 +849,14 @@ export default {
       this.canvas.style.cursor = this.isPointInItem(e.clientX, e.clientY) ? "pointer" : "default"
 
       const mdown = this.mdown
+      const mmove = this.mmove
       const mselected = this.virtualButton.mselected
 
       this.mdown = false
       if (this.displayVirtualButton && this.virtualButton.mselected) this.virtualButton.mselected = false
 
       const currentTime = Date.now()
-      if (mdown && currentTime - this.mdowntime < 200) { // simple click event
+      if (mdown && !mmove && currentTime - this.mdowntime < 200) { // simple click event
         if (this.displayVirtualButton && mselected) {
           // button group hidden mode
           setTimeout(() => {
@@ -883,6 +887,7 @@ export default {
           }
         }
 
+        console.log("single click")
         this.clickTimeoutId = setTimeout(() => this.chooseItem(e), 300)
         this.lastClickTime = currentTime
         this.lastDoubleClick = false
@@ -1044,7 +1049,7 @@ export default {
           }
           if (this.mousedownActivated) {
             if (centered) {
-              this.adjustMapPosition("middle", this.selectedPlace.x, this.selectedPlace.y, this.selectedPlace.iconLevel)
+              this.adjustMapPosition("middle", this.selectedPlace.x, this.selectedPlace.y, this.selectedPlace.displayLevel)
             } else {
               this.adjustMapPosition("include", this.selectedPlace.x, this.selectedPlace.y, null, this.selectedPlace.areaCoords)
             }

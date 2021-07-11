@@ -134,9 +134,10 @@ export default {
       if (ev.button === 0) {
         mousePos = this.getMousePos(ev)
         this.$refs.panel.addPoint(mousePos)
-      } else if (ev.button === 1) {
-        this.$refs.panel.deletePoint(-1)
-      }
+      } 
+      // else if (ev.button === 1) {
+      //   this.$refs.panel.deletePoint(-1)
+      // }
       // let pointStr = ''
       // for (let i = 0; i < this.pointArr.length; i++) pointStr += this.pointArr[i].x+','+this.pointArr[i].y+','
       // console.log(pointStr)

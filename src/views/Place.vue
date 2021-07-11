@@ -15,13 +15,19 @@
           <span class="place-basic-time-text" :class="{ 'text-success': place.extraInfo && place.extraInfo.endTime - place.extraInfo.startTime === 24 }">{{timeInfo}}</span>
         </div>
         <div class="place-basic-address">
-          <div class="iconfont icon-marker place-basic-address-icon text-secondary"></div>
-          <!-- <div class="place-basic-address-text">{{address}}</div> -->
-          <link-address :place="place" @chooseFloor="onclickFloor"></link-address>
+          <div class="place-basic-address-text-wrapper">
+            <div class="iconfont icon-marker place-basic-address-icon text-secondary"></div>
+            <div class="place-basic-address-text">{{address}}</div>
+            <!-- <link-address :place="place" @chooseFloor="onclickFloor"></link-address> -->
+          </div>
+          <div v-if="locateFloorList.length" class="place-basic-address-locate pt-3">
+            <button v-for="(pf, index) in locateFloorList" :key="index" 
+              class="place-basic-address-locate-cell btn btn-outline-primary" @click="onclickFloor(pf)">{{pf.floorName}}</button>
+          </div>
         </div>
       </div>
 
-      <div class="place-section place-function-group px-3 py-2">
+      <div class="place-section place-function-group">
         <template v-if="floorList.length">
           <div v-for="(placeFloor, index) in floorList" :key="index" class="place-function-button-wrapper direction">
             <button type="button" class="iconfont icon-direction btn btn-primary place-function-button direction-button" @click="onclickDirection(placeFloor)"></button>
@@ -55,14 +61,22 @@
         <timetable ref="timetable" :lessons="lessonList"></timetable>
       </div>
 
-      <div v-if="place.department" class="place-section place-department px-3 py-2">
-        <span class="place-section-title">{{$t('place.department')}}</span>
-        <div class="place-department-text">{{place.department.length ? place.department.join('\n') : $t("place.departmentNone")}}</div>
-      </div>
-
       <div v-if="place.description" class="place-section place-description px-3 py-2">
         <div class="place-section-title">{{$t('place.description')}}</div>
         <div class="place-description-text">{{place.description}}</div>
+      </div>
+
+      <div v-if="infoFloorList.length" class="place-section place-floorinfo px-3 py-2">
+        <span class="place-section-title">{{$t('place.floorinfo')}}</span>
+        <div class="place-floorinfo-content" v-for="(pf, index) in infoFloorList" :key="index">
+          <span class="place-floorinfo-content-title">{{pf.floorName}}</span>
+          <div class="place-floorinfo-content-body">{{(pf.info instanceof Array && pf.info.length) ? pf.info.join('\n') : $t("none")}}</div>
+        </div>
+      </div>
+
+      <div v-if="place.department" class="place-section place-department px-3 py-2">
+        <span class="place-section-title">{{$t('place.department')}}</span>
+        <div class="place-department-text">{{(place.department instanceof Array && place.department.length) ? place.department.join('\n') : $t("none")}}</div>
       </div>
     </template>
 
@@ -91,12 +105,12 @@ const LinkAddress = {
   },
   render(h) {
     let addressArr = []
-    const floorInfo = this.place.floorInfo
+    const placeFloorList = this.place.floorList
     const buildingName = this.place.buildingName
     const zone = this.place.zone || this.place.buildingZone 
     if (this.place.address) addressArr.push(this.place.address)
-    if (floorInfo) {
-      const floorArr = floorInfo
+    if (placeFloorList) {
+      const floorArr = placeFloorList
         .filter(e => !!e.floorId && this.place.placeType !== "building")
         .map(pf => h("a", {
           attrs: {
@@ -155,12 +169,24 @@ export default {
   computed: {
     address() {
       let addressArr = []
-      const floorInfo = this.place.floorInfo
+      const floorList = this.place.floorList
       const buildingName = this.place.buildingName
       const zone = this.place.zone || this.place.buildingZone 
       if (this.place.address) addressArr.push(this.place.address)
-      if (floorInfo) {
-        const floorStr = floorInfo.filter(e => !!e.floorId && this.place.placeType !== "building").map(e => this.$t("place.floor." + (e.floorName || "GF"))).join(this.$t("place.floor.conj"))
+      if (floorList) {
+        const filteredFloorList = floorList.filter(e => !!e.floorId && this.place.placeType !== "building")
+        filteredFloorList.sort((a, b) => a.floorLevelIndex - b.floorLevelIndex)
+        const groupedFloorArr = []
+        for (let i = 0; i < filteredFloorList.length; i++) {
+          const e = filteredFloorList[i];
+          if (i === 0 || e.floorLevelIndex - filteredFloorList[i-1].floorLevelIndex > 1) {
+            groupedFloorArr.push([e])
+          } else {
+            groupedFloorArr[groupedFloorArr.length - 1].push(e)
+          }
+        }
+        const hasConsecutive = groupedFloorArr.some(e => e.length > 1)
+        const floorStr = groupedFloorArr.map(arr => hasConsecutive ? (arr.length === 1 ? `${arr[0].floorName}` : `${arr[0].floorName}-${arr[arr.length - 1].floorName}`) : this.$t("place.floor." + (arr[0].floorName || "GF"))).join(this.$t("place.floor.conj"))
         if (floorStr) addressArr.push(floorStr)
       }
       if (buildingName) addressArr.push(buildingName)
@@ -171,7 +197,7 @@ export default {
 
     itemType() {
       if (!this.place.id) return this.$t("place.marker.place")
-      else if (this.place.placeType === 'building') return this.place.code
+      else if (this.place.placeType === "building") return this.place.code
       else if (this.place.type && this.place.type instanceof Array) return this.place.type.map(e => e?.capitalize()).join(', ')
       return null
     },
@@ -198,7 +224,15 @@ export default {
     },
 
     floorList() {
-      return this.place.floorInfo?.filter(e => (this.place.buildingId == null) === (e.floorId == null)) || [] 
+      return this.place.floorList?.filter(e => (this.place.buildingId == null) === (e.floorId == null)) || [] 
+    },
+
+    locateFloorList() {
+      return this.place.floorList?.filter(e => e.floorId != null) || [] 
+    },
+
+    infoFloorList() {
+      return this.place.floorList?.filter(e => e.floorId != null && e.info) || [] 
     },
 
     directionName() {
@@ -239,8 +273,8 @@ export default {
         if (this.$route.params.name == null) {
           this.$store.commit("setGlobalText", this.place.name)
         }
-        const floorInfo = data.place.floorInfo || []
-        const pf = floorInfo.find(pf => pf.floorId == floorId) || floorInfo[0] || {}
+        const placeFloorList = data.place.floorList || []
+        const pf = placeFloorList.find(pf => pf.floorId == floorId) || placeFloorList[0] || {}
         if (pf.location?.x || pf.location?.x === 0) {
           pf.location.x = Math.round(pf.location.x * 10) / 10
         }
@@ -283,11 +317,13 @@ export default {
       }
     },
     onclickFloor(pf) {
-      this.$store.commit("setFloorDataEvent", [this.place?.buildingId, pf.floorId])
-      this.$EventBus.$emit("setSelectedPlace", {
-        ...this.place,
-        ...pf
-      })
+      this.$store.commit("setFloorDataEvent", [this.place?.[this.place?.placeType === "building" ? "id" : "buildingId"], pf.floorId])
+      if (pf.location) {
+        this.$EventBus.$emit("setSelectedPlace", {
+          ...this.place,
+          ...pf
+        })
+      }
     },
     onclickDirection(placeFloor) {
       this.$store.commit("direction/setCachedPlaceInfo", { params: this.$route.params, query: this.$route.query })
@@ -307,8 +343,11 @@ export default {
       const query = {
         mode: this.transportList[0].travelMode
       }
-      if (placeFloor.location?.x != null && placeFloor.location?.y != null) query["toLocation"] = `${placeFloor.location.x},${placeFloor.location.y}` + (placeFloor.level != null ? `,${placeFloor.level}` : "")
-      if (this.place.buildingId && placeFloor.floorId) query["toIndoor"] = `${this.place.buildingId},${placeFloor.floorId}`
+      if (obj.id) {
+        query["toId"] = this.getIdString(obj)
+      } else if (obj.location?.x != null && obj.location?.y != null) {
+        query["toLocation"] = this.getLocationString(obj)
+      }
       this.$router.push({ 
         name: "Direction", 
         params: { 
@@ -404,30 +443,57 @@ export default {
 
     &-address {
       margin-top: 0.5rem;
-      display: flex;
-      align-items: center;
-      /* clear: both; */
 
-      &-icon {
-        width: 1.5rem;
-        height: 1.5rem;
-        margin-right: 10px;
-        font-size: 1.5rem;
-        line-height: 1.5rem;
-        text-align: center;
+      &-text-wrapper {
+        display: flex;
+        align-items: center;
+        /* clear: both; */
+
+        .place-basic-address-icon {
+          width: 1.5rem;
+          height: 1.5rem;
+          margin-right: 10px;
+          font-size: 1.5rem;
+          line-height: 1.5rem;
+          text-align: center;
+        }
+
+        .place-basic-address-text {
+          position: relative;
+          display: inline-block;
+          font-size: 1rem;
+          /* float: left; */
+        }
       }
 
-      &-text {
-        position: relative;
-        display: inline-block;
-        font-size: 1rem;
-        /* float: left; */
+      &-locate {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-row-gap: 0.5rem;
+        grid-column-gap: 0.5rem;
+
+        &-cell {
+          font-size: 0.8rem;
+          // padding: 0.8rem 0;
+          // border-radius: 0.5rem;
+          // text-align: center;
+
+          // &:hover {
+          //   background: #cce5ff;
+          // }
+        }
       }
     }
   }
 
   .place-function-group {
-    display: flex;
+    padding: 0.5rem 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-row-gap: 0.5rem;
+    grid-column-gap: 0.5rem;
+    // display: flex;
+    // flex-wrap: wrap;
     
     .place-function-button-wrapper {
       width: 90px;
@@ -468,26 +534,6 @@ export default {
     }
   }
 
-  .place-indoor {
-    &-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
-      grid-row-gap: 0.5rem;
-      grid-column-gap: 0.5rem;
-
-      &-cell {
-        font-size: 0.8rem;
-        // padding: 0.8rem 0;
-        // border-radius: 0.5rem;
-        // text-align: center;
-
-        // &:hover {
-        //   background: #cce5ff;
-        // }
-      }
-    }
-  }
-
   .place-contact {
     &-section {
       display: flex;
@@ -518,13 +564,6 @@ export default {
     }
   }
 
-  .place-department {
-    &-text {
-      font-size: 1rem;
-      white-space: pre-line
-    }
-  }
-
   .place-description {
     &-text {
       font-size: 1rem;
@@ -532,6 +571,37 @@ export default {
       white-space: pre-line;
       word-wrap: break-word;
       // word-break: normal;
+    }
+  }
+
+  .place-floorinfo {
+    &-content {
+      display: flex;
+      border-bottom: 1px #C6C6C6 solid;
+      padding: 5px 0;
+
+      &-title {
+        width: 36px;
+        font-size: 1rem;
+        font-weight: bold;
+        flex-shrink: 0;
+      }
+
+      &-body {
+        font-size: 1rem;
+        white-space: pre-line;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+
+  .place-department {
+    &-text {
+      font-size: 1rem;
+      white-space: pre-line
     }
   }
 

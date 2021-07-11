@@ -37,7 +37,7 @@ export default new Vuex.Store({
     requestingFloorSet: new Set(),
     centerLocation: {},
     geolocation: {},
-    maxScale: 5,
+    maxScale: 6,
     minScale: 1,
     indoorScale: 3,
     imageUrlListEvent: {

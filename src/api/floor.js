@@ -2,15 +2,15 @@ import api from './api'
 import { appendFile } from 'fs';
 
 const floor = {
-  getFloorInfo(params) {
+  getFloorData(params) {
     return api.get(`/floor/`, params)
   },
 
-  getCampusInfo() {
+  getCampusData() {
     return api.get(`/floor/campus`)
   },
 
-  getFloorInfoPlain(buildingCode, floorIndex) {
+  getFloorDataPlain(buildingCode, floorIndex) {
     return api.get(`/floor/plain/${floorIndex}/${buildingCode}`)
   },
 }

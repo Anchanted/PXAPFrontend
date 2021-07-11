@@ -57,8 +57,8 @@ export default {
           const place = this.placeList[i];
           if (!place.areaCoords) continue
           let color
-          if (place.displayLevel === 2) color = "rgb(0, 255, 0)"
-          else if (place.displayLevel === 3) color = "rgb(0, 0, 255)"
+          if (place.zIndex === 2) color = "rgb(0, 255, 0)"
+          else if (place.zIndex === 3) color = "rgb(0, 0, 255)"
           else color = "rgb(255, 0, 0)"
           ctx.fillStyle = color
           ctx.strokeStyle = color
@@ -219,7 +219,7 @@ export default {
       this.$refs.map.style.width = this.mapWidth + 'px'
       this.$refs.map.style.height = this.mapHeight + 'px'
 
-      const data = await this.$api.floor.getFloorInfoPlain(this.buildingCode, this.floorIndex)
+      const data = await this.$api.floor.getFloorDataPlain(this.buildingCode, this.floorIndex)
       console.log(data)
       const placeList = data.placeList || []
       // this.placeList = placeList.map(place => {
