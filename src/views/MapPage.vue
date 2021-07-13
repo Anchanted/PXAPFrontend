@@ -155,7 +155,7 @@ export default {
       locationActivated: state => state.button.locationActivated
     }),
     buttonList() {
-      const buttonList = this.mapType === "floor" ? ["home", "compass"] : ["location"]
+      const buttonList = this.mapType === "floor" ? ["home"] : ["occupation", "location"]
       if (this.mapType === "floor") {
         if (this.currentFloor.hasGate) buttonList.push("gate")
         if (this.currentFloor.hasOccupation) buttonList.push("occupation")
@@ -484,63 +484,63 @@ export default {
 
     async datetimeInput(dateStr) {
       // console.log('datetime', dateStr)
-      if (dateStr && dateStr != '') {
-        const date = DateTime.fromISO(dateStr)
-        const startDate = DateTime.fromISO(weekInfo["start"])
-        const interval = Interval.fromDateTimes(startDate, date)
-        const days = Math.floor(interval.length('day') || -1)
-        if (days >= 0) {
-          const weekIndex = Math.floor(days / 7)
-          if (weekIndex < weekInfo["weeks"].length) {
-            this.occupationTime = date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
-            // console.log(date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY), DateTime.local().locale)
-            const weekObj = weekInfo["weeks"][weekIndex]
-            let noEmptyRoom = !!weekObj["number"]
-            if (noEmptyRoom) {
-              try {
-                this.$alert({
-                  message: 'Requesting...',
-                  time: 10000,
-                  type: "primary"
-                })
-                this.occupationRequesting = true
-                const data = await this.$api.place.getOccupiedRoom(this.currentFloor.id, {
-                  week: weekObj["number"],
-                  day: date.weekday,
-                  hour: date.minute >= 30 ? date.hour + 0.5 : date.hour
-                })
-                if (!this.occupationRequesting) return
-                this.occupationRequesting = false
-                this.$alert({
-                  message: `Successfully get occupied rooms at ${this.occupationTime}`,
-                  time: 3000,
-                  type: "success"
-                })
-                if (!data.occupiedRoomList || data.occupiedRoomList.length === 0) {
-                  noEmptyRoom = false
-                } else {
-                  this.occupiedRoomList = data.occupiedRoomList
-                }
-              } catch (error) {
-                console.log(error)
-                this.occupationRequesting = false
-                this.$alert({
-                  message: 'Failed to get occupied rooms.\nPlease try again.',
-                  time: 3000
-                })
-                this.occupiedRoomList = []
-                this.$store.commit("button/setOccupationActivated", false)
-              }
-            }
-
-            if (!noEmptyRoom) {
+      if (!dateStr) return
+      const date = DateTime.fromISO(dateStr)
+      const startDate = DateTime.fromISO(weekInfo["start"])
+      const interval = Interval.fromDateTimes(startDate, date)
+      const days = Math.floor(interval.length('day') || -1)
+      if (days >= 0) {
+        const weekIndex = Math.floor(days / 7)
+        if (weekIndex < weekInfo["weeks"].length) {
+          this.occupationTime = date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
+          // console.log(date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY), DateTime.local().locale)
+          const weekObj = weekInfo["weeks"][weekIndex]
+          let noEmptyRoom = !!weekObj["number"]
+          if (noEmptyRoom) {
+            try {
               this.$alert({
-                message: `No room occupied at ${this.occupationTime}`,
-                time: 3000,
+                message: 'Requesting...',
+                time: 10000,
                 type: "primary"
               })
+              this.occupationRequesting = true
+              const data = await this.$api.place.getOccupiedRoom(this.currentFloor.id, {
+                week: weekObj["number"],
+                day: date.weekday,
+                hour: date.minute >= 30 ? date.hour + 0.5 : date.hour
+              })
+              console.log(data)
+              if (!this.occupationRequesting) return
+              this.occupationRequesting = false
+              this.$alert({
+                message: `Successfully get occupied rooms at ${this.occupationTime}`,
+                time: 3000,
+                type: "success"
+              })
+              if (!data.placeList?.length) {
+                noEmptyRoom = false
+              } else {
+                this.occupiedRoomList = data.placeList
+              }
+            } catch (error) {
+              console.log(error)
+              this.occupationRequesting = false
+              this.$alert({
+                message: 'Failed to get occupied rooms.\nPlease try again.',
+                time: 3000
+              })
               this.occupiedRoomList = []
+              this.$store.commit("button/setOccupationActivated", false)
             }
+          }
+
+          if (!noEmptyRoom) {
+            this.$alert({
+              message: `No room occupied at ${this.occupationTime}`,
+              time: 3000,
+              type: "primary"
+            })
+            this.occupiedRoomList = []
           }
         }
       }

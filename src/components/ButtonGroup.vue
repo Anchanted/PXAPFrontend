@@ -62,14 +62,14 @@
 
     <div v-show="!loading" class="bottom-button-group">
       <!-- Compass -->
-      <div v-if="buttonList.includes('compass')" class="compass button-container">
+      <div class="compass button-container">
         <img class="compass-img" :src="require('assets/images/icon/compass.svg')" alt="compass"
-          :style="{ transform: `rotate(${(currentFloor.direction || 0) + (rotate ? 90 : 0)}deg)` }">
+          :style="{ transform: `rotate(${compassDirection}deg)` }">
       </div>
 
       <!-- Gate Button -->
       <div v-if="buttonList.includes('gate')" class="gate button-container" :style="{ 'z-index': gateRequesting ? 1 : null }">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center gate-button button iconfont icon-entrance" :class="{ 'button-checked' : gateActivated }"
+        <button class="btn btn-light gate-button button iconfont icon-entrance" :class="{ 'button-checked' : gateActivated }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.gate.${gateActivated ? 'hide' : 'show'}`)"
           @click="onclickbuttongate"></button>
       </div>
@@ -78,7 +78,7 @@
       <div v-if="buttonList.includes('occupation')" class="occupation" :style="{ 'z-index': occupationRequesting ? 1 : null }">
         <div v-if="occupationActivated && occupationTime" class="occupation-time">{{occupationTime}}</div>
         <div class="button-container">
-          <button class="btn btn-light d-flex flex-column justify-content-around align-items-center occupation-button button iconfont icon-group" :class="{ 'button-checked' : occupationActivated }"
+          <button class="btn btn-light occupation-button button iconfont icon-group" :class="{ 'button-checked' : occupationActivated }"
             data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.occupation.${occupationActivated ? 'hide' : 'show'}`)"
             @click="onclickbuttonoccupation"></button>
         </div>
@@ -86,13 +86,13 @@
 
       <!-- Location Button -->
       <div v-if="buttonList.includes('location')" class="location button-container">
-        <button class="btn btn-light d-flex flex-column justify-content-around align-items-center location-button button iconfont icon-location" :class="{ 'button-checked' : locationActivated }"
+        <button class="btn btn-light location-button button iconfont icon-location" :class="{ 'button-checked' : locationActivated }"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.location.${locationActivated ? 'hide' : 'show'}`)"
           @click="onclickbuttonlocation"></button>
       </div>
 
       <!-- Zoom Button -->
-      <div class="d-flex flex-column justify-content-around align-items-center zoom button-container">
+      <div class="zoom button-container">
         <button ref="zinbtn" class="btn btn-light zoomin-button button iconfont icon-plus"
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.zoomIn')"
           @click="zoomIn"></button>
@@ -101,9 +101,9 @@
           data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.zoomOut')"
           @click="zoomOut"></button>
       </div>
-
-      <div v-if="occupationRequesting || gateRequesting" class="occupation-requesting-shade"></div>
     </div>
+
+    <div v-if="occupationRequesting || gateRequesting" class="occupation-requesting-shade"></div>
   </div>
 </template>
 
@@ -171,6 +171,9 @@ export default {
         return abbr
       }
       return 'en'
+    },
+    compassDirection() {
+      return this.rotate ? 90 : 0
     }
   },
   methods: {
@@ -461,7 +464,7 @@ img {
   justify-content: flex-start;
   align-items: flex-end;
 
-  >div {
+  .button-container {
     margin-top: 10px;
   }
 
@@ -498,6 +501,10 @@ img {
   border-radius: 3px;
   height: auto;
   width: auto;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
 
   .button {
     font-size: 20px !important;

@@ -323,9 +323,9 @@ export default {
       if (this.occupationActivated) {
         if (this.occupiedRoomList?.length) {
           const size = this.iconSize
-          this.occupiedRoomList.forEach(room => {
-            const centroid = room.location
-            this.drawImage(this.imageMap.get('group'), centroid.x, centroid.y, size, size, size/2, size/2, true)
+          this.occupiedRoomList.forEach(place => {
+            this.drawArea(place.areaCoords)
+            this.drawImage(this.imageMap.get('group'), place.location.x, place.location.y, size, size, size/2, size/2, true)
           })
         }
       } else {
@@ -394,6 +394,7 @@ export default {
         if (this.placeList.length) {
           for (let i = this.placeList.length - 1; i >= 0; i--) {
             let place = this.placeList[i]
+            if (place.zIndex === 0) continue
             // selected place
             if (!this.$isEmptyObject(this.selectedPlace) && this.selectedPlace.id === place.id && this.selectedPlace.placeType == place.placeType) continue
             // direction marker
@@ -724,12 +725,12 @@ export default {
       ({ x: px, y: py } = this.getMousePoint({ x: pointX, y: pointY }));
       const place = this.placeList
         .find(place => {
-          if (!place.displayLevel) return
+          if (place.zIndex === 0) return
           if (!this.$isEmptyObject(this.selectedPlace) && this.selectedPlace.id === place.id && this.selectedPlace.floorId == place.floorId) return
           if (!this.$isEmptyObject(this.fromDirectionMarker) && this.globalFromObj.id === place.id && this.globalFromObj.floorId == place.floorId) return
           if (!this.$isEmptyObject(this.toDirectionMarker) && this.globalToObj.id === place.id && this.globalToObj.floorId == place.floorId) return
           if (!place.areaCoords) {
-            if (this.scale.x < place.displayLevel || this.scale.y < place.displayLevel) return
+            if (!place.displayLevel || (this.scale.x < place.displayLevel || this.scale.y < place.displayLevel)) return
             const { x, y } = this.getImageToCanvasPoint(place.location?.x, place.location?.y)
             ctx.beginPath()
             ctx.rect(parseInt(x - this.iconSize / 2), parseInt(y - this.iconSize / 2), this.iconSize, this.iconSize)
@@ -887,7 +888,6 @@ export default {
           }
         }
 
-        console.log("single click")
         this.clickTimeoutId = setTimeout(() => this.chooseItem(e), 300)
         this.lastClickTime = currentTime
         this.lastDoubleClick = false

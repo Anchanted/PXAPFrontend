@@ -8,7 +8,7 @@
       <search-keyword :text="text" :input-focused="inputFocused" ref="keywordSearch" @chooseitem="onChooseKeywordItem"></search-keyword>
     </div>
 
-    <div class="bg-white rounded d-flex justify-content-start align-items-center search-bar" :class="{'panel-collapsed': panelCollapsed}">
+    <div class="bg-white rounded search-bar" :class="{'panel-collapsed': panelCollapsed}">
       <div class="modal-collapse-button-container">
         <button
           class="iconfont icon-arrow-down modal-collapse-button"
@@ -189,6 +189,9 @@ export default {
   padding: 8px 0 8px 14px;
 	top: 10px;
 	left: 10px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
   transition: transform ease-in-out 0.5s;
   -webkit-box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
   -moz-box-shadow: 0px 2px 5px 1px rgba(0,0,0,0.15);
