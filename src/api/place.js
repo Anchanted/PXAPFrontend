@@ -5,8 +5,12 @@ const place = {
     return api.get(`/place/`, params)
   },
 
-  getOccupiedRoom(id, params) {
-    return api.get(`/place/occupied/${id}`, params)
+  getOccupiedRoomList(floorId, params) {
+    return api.get(`/place/occupied/${floorId}`, params)
+  },
+
+  getPortalList(floorId) {
+    return api.get(`/place/portal/${floorId}`)
   }
 }
 

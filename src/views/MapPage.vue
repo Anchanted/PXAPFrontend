@@ -7,14 +7,7 @@
       :floor-list="floorList"
       :building-list="buildingList"
       :map-level="mapLevel"
-      :occupied-room-list="occupiedRoomList"
-      :gate-list="gateList"
-      @updateRulerScale="updateRuler"/>
-
-    <div class="scale-ruler-container">
-      <label for="scale-ruler">{{rulerUnit}}</label>
-      <div id="scale-ruler" :style="{ width: `${rulerWidth}px` }"></div>
-    </div>
+      :occupation-date-str="occupationDateStr"/>
 
     <modal ref="modal"/>
     <search-bar ref="searchBar"/>
@@ -26,7 +19,7 @@
       :button-list="buttonList"
       :current-floor="currentFloor"
       :current-building="currentBuilding"
-      :occupation-time="occupationTime"
+      :occupation-date-str="occupationDateStr"
       :occupation-requesting="occupationRequesting"
       :gate-requesting="gateRequesting"
       :loading="showLoading"/>
@@ -34,7 +27,7 @@
     <datetime
       v-if="displayDatetime"
       type="datetime"
-      v-model="occupationTime"
+      v-model="occupationDateStr"
       format="yyyy-MM-dd HH:mm"
       value-zone="Asia/Shanghai"
       zone="Asia/Shanghai"
@@ -56,7 +49,7 @@
     </datetime>
 
     <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="messageModalLabel">Modal title</h5>
@@ -116,22 +109,18 @@ export default {
       mapType: "campus",
       currentBuilding: null,
       currentFloor: null,
-      occupiedRoomList: [],
       campusPlaceList: [],
       placeList: [],
-      gateList: null,
       geolocation: {},
       geoWatchId: null,
-      occupationTime: null,
+      occupationDateStr: null,
       showLoading: true,
       occupationRequesting: false,
       gateRequesting: false,
       floorList: [],
       floorListStr: null,
       indoorMode: false,
-      getFloorDataId: 0,
-      rulerWidth: 0,
-      rulerUnit: ""
+      getFloorDataId: 0
     }
   },
   computed: {
@@ -139,8 +128,6 @@ export default {
       imageMap: state => state.imageMap,
       scale: state => state.scale,
       indoorScale: state => state.indoorScale,
-      rulerRatio: state => state.pixelPerMeter,
-      rulerUnitArray: state => state.rulerUnitArray,
       currentBuildingId: state => state.currentBuildingId,
       cachedBuildingList: state => state.cachedBuildingList,
       cachedFloorList: state => state.cachedFloorList,
@@ -155,7 +142,7 @@ export default {
       locationActivated: state => state.button.locationActivated
     }),
     buttonList() {
-      const buttonList = this.mapType === "floor" ? ["home"] : ["occupation", "location"]
+      const buttonList = this.mapType === "floor" ? ["home"] : ["gate", "occupation", "location"]
       if (this.mapType === "floor") {
         if (this.currentFloor.hasGate) buttonList.push("gate")
         if (this.currentFloor.hasOccupation) buttonList.push("occupation")
@@ -381,6 +368,7 @@ export default {
 
     setCurrentFloor(floor) {
       if (!floor) return
+
       const key = `map${floor.id}`
       if (!this.imageMap.has(key)) {
         this.loadImage(process.env.VUE_APP_BASE_API + floor.imgUrl).then(image => {
@@ -417,6 +405,10 @@ export default {
         })
       }
 
+      this.setOccupiedRoomList(floor)
+
+      this.setPortalList(floor)
+
       this.currentFloor = floor
     },
 
@@ -432,7 +424,7 @@ export default {
     },
 
     arrangePlaces() {
-      console.log("arrangePlaces")
+      // console.log("arrangePlaces")
       let placeList = []
       if (this.indoorMode) {
         this.floorList.forEach(floor => placeList = placeList.concat(floor.placeList ?? []))
@@ -485,83 +477,127 @@ export default {
     async datetimeInput(dateStr) {
       // console.log('datetime', dateStr)
       if (!dateStr) return
-      const date = DateTime.fromISO(dateStr)
-      const startDate = DateTime.fromISO(weekInfo["start"])
-      const interval = Interval.fromDateTimes(startDate, date)
-      const days = Math.floor(interval.length('day') || -1)
-      if (days >= 0) {
-        const weekIndex = Math.floor(days / 7)
-        if (weekIndex < weekInfo["weeks"].length) {
-          this.occupationTime = date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
-          // console.log(date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY), DateTime.local().locale)
-          const weekObj = weekInfo["weeks"][weekIndex]
-          let noEmptyRoom = !!weekObj["number"]
-          if (noEmptyRoom) {
-            try {
-              this.$alert({
-                message: 'Requesting...',
-                time: 10000,
-                type: "primary"
-              })
-              this.occupationRequesting = true
-              const data = await this.$api.place.getOccupiedRoom(this.currentFloor.id, {
-                week: weekObj["number"],
-                day: date.weekday,
-                hour: date.minute >= 30 ? date.hour + 0.5 : date.hour
-              })
-              console.log(data)
-              if (!this.occupationRequesting) return
-              this.occupationRequesting = false
-              this.$alert({
-                message: `Successfully get occupied rooms at ${this.occupationTime}`,
-                time: 3000,
-                type: "success"
-              })
-              if (!data.placeList?.length) {
-                noEmptyRoom = false
-              } else {
-                this.occupiedRoomList = data.placeList
-              }
-            } catch (error) {
-              console.log(error)
-              this.occupationRequesting = false
-              this.$alert({
-                message: 'Failed to get occupied rooms.\nPlease try again.',
-                time: 3000
-              })
-              this.occupiedRoomList = []
-              this.$store.commit("button/setOccupationActivated", false)
-            }
-          }
-
-          if (!noEmptyRoom) {
-            this.$alert({
-              message: `No room occupied at ${this.occupationTime}`,
-              time: 3000,
-              type: "primary"
-            })
-            this.occupiedRoomList = []
-          }
-        }
-      }
-    },
-
-    updateRuler(scale) {
-      const pixels = this.rulerRatio / scale
-      const distance = pixels * 120
-      let unit
-      for (let i = 1; i < this.rulerUnitArray.length; i++) {
-				if (this.rulerUnitArray[i - 1] <= distance && distance < this.rulerUnitArray[i]) {
-					unit = this.rulerUnitArray[i - 1];
-					break;
-				}
-			}
-      this.rulerWidth = Math.floor(unit / pixels)
-      this.rulerUnit = `${unit / (unit >= 1000 ? 1000 : 1)} ${this.$t("unit." + (unit >= 1000 ? "km" : "m"))}`
+      this.occupationDateStr = dateStr
+      this.setOccupiedRoomList(this.currentFloor)
     },
 
     datetimeClose() {
       if (!this.$refs.dt?.datetime) this.$store.commit("button/setOccupationActivated", false)
+    },
+
+    setOccupiedRoomList(floor) {
+      if (!floor) return
+      if (!this.occupationDateStr || floor.occupation?.time === this.occupationDateStr) return
+      if (!floor.hasOccupation || !this.occupationActivated) return
+
+      const dateStr = this.occupationDateStr
+      const date = DateTime.fromISO(dateStr)
+      // console.log(date.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY), DateTime.local().locale)
+      const startDate = DateTime.fromISO(weekInfo["start"])
+      const interval = Interval.fromDateTimes(startDate, date)
+      const days = Math.floor(interval.length('day') || -1)
+
+      if (days >= 0) {
+        const weekIndex = Math.floor(days / 7)
+        if (weekIndex < weekInfo["weeks"].length) {
+          const weekObj = weekInfo["weeks"][weekIndex]
+          if (weekObj["number"]) {
+            const key = `${floor.id},${dateStr}`
+            if (!this.requestingFloorSet.has(key)) {
+              this.requestingFloorSet.add(key)
+              this.$api.place.getOccupiedRoomList(floor.id, {
+                week: weekObj["number"],
+                day: date.weekday,
+                hour: date.minute >= 30 ? date.hour + 0.5 : date.hour
+              }).then(data => {
+                console.log(data)
+                floor["occupation"] = {
+                  time: dateStr,
+                  data: data.placeList ?? []
+                }
+              }).catch(error => {
+                console.log(error)
+              }).finally(() => {
+                this.requestingFloorSet.delete(key)
+              })
+              return
+            }
+          }
+        }
+      }
+
+      floor["occupation"] = {
+        time: dateStr,
+        data: []
+      }
+    },
+
+    setPortalList(floor) {
+      if (!floor) return
+      // if (!floor.hasGate || !this.gateActivated) return
+      if (!this.gateActivated) return
+
+      if (!floor.portal) {
+        const key = `${floor.id},portal`
+        if (this.requestingFloorSet.has(key)) return
+
+        this.requestingFloorSet.add(key)
+        this.$api.place.getPortalList(floor.id)
+          .then(data => {
+            console.log(data)
+            const portalList = data.placeList ?? []
+            portalList.forEach(place => {
+              try {
+                let color = 0
+                place["time"] = place.extraInfo.time.filter(arr => arr instanceof Array && arr.length >= 2 && arr.every(e => typeof e === "number"))
+                place["direction"] = place.extraInfo.direction ?? 0
+                place.time.forEach(arr => {
+                  switch (arr[1] - arr[0]) {
+                    case 24:
+                      color = 24
+                      break;
+                    case 16:
+                      color = 11
+                      break;
+                    case 10.5:
+                      color = 5
+                      break;
+                    default:
+                      color = 0
+                      break;
+                  }
+                })
+                place["arrow"] = color
+              } catch (error) {
+                console.log(error)
+                place["time"] = place.extraInfo.time ?? []
+                place["direction"] = place.extraInfo.direction ?? 0
+                place["arrow"] = color
+              }
+            })
+            floor["portal"] = portalList
+
+            const targetTimezone = -8
+            let currentDate = new Date()
+            const east8time = currentDate.getTime() + currentDate.getTimezoneOffset() * 60 * 1000 - (targetTimezone * 60 * 60 * 1000)
+            currentDate = new Date(east8time)
+            // console.log(currentDate)
+            const currentTime = currentDate.getHours() + currentDate.getMinutes() / 60
+            floor.portal.forEach(place => place["open"] = place.time.some(arr => currentTime >= arr[0] && currentTime < arr[1]))
+          }).catch(error => {
+            console.log(error)
+          }).finally(() => {
+            this.requestingFloorSet.delete(key)
+          })
+      } else {
+        const targetTimezone = -8
+        let currentDate = new Date()
+        const east8time = currentDate.getTime() + currentDate.getTimezoneOffset() * 60 * 1000 - (targetTimezone * 60 * 60 * 1000)
+        currentDate = new Date(east8time)
+        // console.log(currentDate)
+        const currentTime = currentDate.getHours() + currentDate.getMinutes() / 60
+        floor.portal.forEach(place => place["open"] = place.time.some(arr => currentTime >= arr[0] && currentTime < arr[1]))
+      }
     },
 
     geolocationInfo(position) {
@@ -808,63 +844,18 @@ export default {
     occupationActivated(val) {
       if (val) {
         this.$refs.dt.datetime = null
-        const input = document.querySelector('#datetime')
-        input.click()
+        document.querySelector('#datetime').click()
       } else {
-        this.occupiedRoomList = []
-        if (this.occupationRequesting) this.occupationRequesting = false
-        this.$alert.close()
-        this.occupationTime = null
+        if (this.occupationRequesting) {
+          this.$alert.close()
+          this.occupationRequesting = false
+        }
+        this.occupationDateStr = null
       }
     },
     async gateActivated(val) {
       if (val) {
-        if (!this.gateList) {
-          try {
-            this.$alert({
-              message: 'Requesting...',
-              time: 10000,
-              type: "primary"
-            })
-            this.gateRequesting = true
-            const data = await this.$api.portal.getGateList(this.currentBuilding.id, this.currentFloor.id)
-            if (!this.gateRequesting) return
-            this.gateRequesting = false
-            this.$alert.close()
-            const gateList = data.gateList ?? []
-            this.gateList = gateList.map(e => {
-              let color
-              switch (e.endTime - e.startTime) {
-                case 24:
-                  color = 24
-                  break;
-                case 16:
-                  color = 11
-                  break;
-                case 10.5:
-                  color = 5
-                  break;
-                default:
-                  color = 0
-                  break;
-              }
-              return {
-                ...e,
-                arrow: color
-              }
-            })
-            console.log(this.gateList)
-          } catch (error) {
-            console.log(error)
-            this.gateRequesting = false
-            this.$alert({
-              message: 'Failed to get gates.\nPlease try again.',
-              time: 3000
-            })
-            this.gateList = null
-            this.$store.commit("button/setGateActivated", false)
-          }
-        }
+        this.setPortalList(this.currentFloor)
       } else {
         if (this.gateRequesting) {
           this.$alert.close()
@@ -924,34 +915,18 @@ export default {
 </script>
 
 <style lang="scss">
-.scale-ruler-container {
-  position: fixed;
-  bottom: 4px;
-  left: 10px;
-  padding: 0 3px;
-  line-height: 1.2;
-  background-color: rgba(255,255,255,0.8);
-
-  label {
-    font-size: 10px;
-    margin: 0;
-    margin-right: 4px;
-  }
-
-  #scale-ruler {
-    display: inline-block;
-    height: 4px;
-    border: 2px solid gray;
-    border-top: none;
-  }
-}
-
 .canvas-map-loading-panel {
   position: fixed;
   top: 0;
   left: 0;
   background-color: #ffffff;
   z-index: 0;
+}
+
+.vdatetime-input {
+  // position: absolute;
+  // bottom: 100px;
+  display: none;
 }
 </style>
 

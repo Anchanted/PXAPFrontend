@@ -60,11 +60,26 @@
       </div>
     </div>
 
-    <div v-show="!loading" class="bottom-button-group">
+    <div v-show="!loading" class="bottom-left-button-group">
+      <span class="iconfont icon-logo logo"></span>
+      <div class="scale-ruler-container">
+        <span>{{rulerUnit}}</span>
+        <div class="scale-ruler" :style="{ width: `${rulerWidth}px` }"></div>
+      </div>
+    </div>
+
+    <div v-show="!loading" class="bottom-right-button-group">
       <!-- Compass -->
       <div class="compass button-container">
         <img class="compass-img" :src="require('assets/images/icon/compass.svg')" alt="compass"
           :style="{ transform: `rotate(${compassDirection}deg)` }">
+      </div>
+
+      <!-- Location Button -->
+      <div v-if="buttonList.includes('location')" class="location button-container">
+        <button class="btn btn-light location-button button iconfont icon-location" :class="{ 'button-checked' : locationActivated }"
+          data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.location.${locationActivated ? 'hide' : 'show'}`)"
+          @click="onclickbuttonlocation"></button>
       </div>
 
       <!-- Gate Button -->
@@ -76,19 +91,12 @@
 
       <!-- Occupation Button -->
       <div v-if="buttonList.includes('occupation')" class="occupation" :style="{ 'z-index': occupationRequesting ? 1 : null }">
-        <div v-if="occupationActivated && occupationTime" class="occupation-time">{{occupationTime}}</div>
+        <div v-if="occupationActivated && occupationDateStr" class="occupation-time" @click="onclickoccupationtime">{{occupationDateLocaleStr}}</div>
         <div class="button-container">
           <button class="btn btn-light occupation-button button iconfont icon-group" :class="{ 'button-checked' : occupationActivated }"
             data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.occupation.${occupationActivated ? 'hide' : 'show'}`)"
             @click="onclickbuttonoccupation"></button>
         </div>
-      </div>
-
-      <!-- Location Button -->
-      <div v-if="buttonList.includes('location')" class="location button-container">
-        <button class="btn btn-light location-button button iconfont icon-location" :class="{ 'button-checked' : locationActivated }"
-          data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t(`tooltip.location.${locationActivated ? 'hide' : 'show'}`)"
-          @click="onclickbuttonlocation"></button>
       </div>
 
       <!-- Zoom Button -->
@@ -108,7 +116,7 @@
 </template>
 
 <script>
-import { Settings } from 'luxon'
+import { DateTime, Settings } from 'luxon'
 
 import { mapState } from 'vuex'
 
@@ -127,22 +135,26 @@ export default {
       type: Object,
       default: () => ({})
     },
-    occupationTime: String,
+    occupationDateStr: String,
     loading: Boolean,
     occupationRequesting: Boolean,
     gateRequesting: Boolean
   },
   data() {
     return {
-
+      rulerWidth: 0,
+      rulerUnit: "",
     }
   },
   computed: {
     ...mapState({
+      rotate: state => state.imageRotation,
       scale: state => state.scale,
       maxScale: state => state.maxScale,
       minScale: state => state.minScale,
-      rotate: state => state.imageRotation,
+      zoom: state => state.zoom,
+      rulerRatio: state => state.pixelPerMeter,
+      rulerUnitArray: state => state.rulerUnitArray,
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
       locationActivated: state => state.button.locationActivated
@@ -174,9 +186,23 @@ export default {
     },
     compassDirection() {
       return this.rotate ? 90 : 0
+    },
+    occupationDateLocaleStr() {
+      if (this.occupationDateStr) {
+        try {
+          return DateTime.fromISO(this.occupationDateStr).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
+        } catch (error) {
+          console.log(error)
+          console.log(this.occupationDateStr)
+        }
+      }
+      return ""
     }
   },
   methods: {
+    chooseOtherFloor(e, floor) {
+      this.$store.commit("setFloorDataEvent", [this.currentBuilding?.id, floor.id])
+    },
     onclickbuttonhelp() {
       window.open("/static/html/guide.html", '_blank')
     },
@@ -226,8 +252,8 @@ export default {
     onclickbuttonoccupation() {
       this.$store.commit("button/reverseOccupationActivated")
     },
-    chooseOtherFloor(e, floor) {
-      this.$store.commit("setFloorDataEvent", [this.currentBuilding?.id, floor.id])
+    onclickoccupationtime() {
+      document.querySelector('#datetime').click()
     },
     changeLanguage() {
       const langArr = ['EN', 'ZH', 'ES']
@@ -257,6 +283,19 @@ export default {
   watch: {
     scale(val) {
       this.refreshZoomBtn(val)
+    },
+    zoom(val) {
+      const pixels = this.rulerRatio / val
+      const distance = pixels * 120
+      let unit
+      for (let i = 1; i < this.rulerUnitArray.length; i++) {
+				if (this.rulerUnitArray[i - 1] <= distance && distance < this.rulerUnitArray[i]) {
+					unit = this.rulerUnitArray[i - 1];
+					break;
+				}
+			}
+      this.rulerWidth = Math.floor(unit / pixels)
+      this.rulerUnit = `${unit / (unit >= 1000 ? 1000 : 1)} ${this.$t("unit." + (unit >= 1000 ? "km" : "m"))}`
     },
     loading(val) {
       if (val === false) {
@@ -453,7 +492,47 @@ img {
   }
 }
 
-.bottom-button-group {
+.bottom-left-button-group {
+  position: fixed;
+  height: auto;
+  width: auto;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  align-items: flex-end;
+
+  .logo {
+    font-size: 30px;
+    line-height: 1;
+    color: #743481;
+  }
+
+  .scale-ruler-container {
+    margin-left: 6px;
+    padding: 2px 5px;
+    background-color: rgba(255,255,255,0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+
+    span {
+      font-size: 12px;
+      line-height: 1.2;
+      margin: 0;
+      margin-bottom: -4px;
+    }
+
+    .scale-ruler {
+      display: inline-block;
+      height: 8px;
+      border: 2px solid gray;
+      border-top: none;
+    }
+  }
+}
+
+.bottom-right-button-group {
   position: fixed;
   height: auto;
   width: auto;
@@ -464,7 +543,7 @@ img {
   justify-content: flex-start;
   align-items: flex-end;
 
-  .button-container {
+  >div {
     margin-top: 10px;
   }
 
@@ -492,6 +571,7 @@ img {
       padding: 0 10px;
       font-size: 1rem;
       background: #fff;
+      cursor: pointer;
     }
   }
 }
@@ -510,9 +590,9 @@ img {
     font-size: 20px !important;
   }
 
-  .zoomin-button {
-    margin-bottom: 10px !important;
-  }
+  // .zoomin-button {
+  //   margin-bottom: 10px !important;
+  // }
 }
 
 .button-container {
@@ -542,7 +622,7 @@ img {
   }
 
   .button-checked {
-    color: #007bff;
+    color: #007bff !important;
   }
 }
 
