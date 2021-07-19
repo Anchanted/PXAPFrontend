@@ -1,5 +1,4 @@
 <template>
-  <!-- <div style="display: inline-block; font-size: 0;" id="app"> -->
   <div id="app">
     <!-- <keep-alive :exclude="['Modal', 'ButtonGroup']"> -->
     <!-- <keep-alive> -->
@@ -52,6 +51,13 @@ export default {
         }
       })
     }
+  },
+  beforeCreate() {
+    const link = document.createElement("link")
+    link.type = "text/css"
+    link.rel = "stylesheet"
+    link.href = process.env.VUE_APP_ICONFONT_URL
+    document.head.appendChild(link)
   },
   created() {
     let lang = localStorage.getItem('language')
