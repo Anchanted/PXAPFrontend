@@ -258,9 +258,14 @@ export default {
         this.floorList.forEach(floor => {
           if (this.imageMap.has(`map${floor.id}`)) {
             if (floor.envelope) {
-              const { x: minX, y: minY } = this.getImageToCanvasPoint(floor.envelope[0].x, floor.envelope[0].y)
-              const { x: maxX, y: maxY } = this.getImageToCanvasPoint(floor.envelope[1].x, floor.envelope[1].y)
-              if (!(minX <= this.canvasWidth && minY <= this.canvasHeight && maxX >= 0 && maxY >= 0)) return
+              let { x: minX, y: minY } = this.getImageToCanvasPoint(floor.envelope[0].x, floor.envelope[0].y)
+              let { x: maxX, y: maxY } = this.getImageToCanvasPoint(floor.envelope[1].x, floor.envelope[1].y)
+              if (this.rotate) {
+                minX = minX + maxX;
+                maxX = minX - maxX;
+                minX = minX - maxX;
+              }
+              if (minX > this.canvasWidth || minY > this.canvasHeight || maxX < 0 || maxY < 0) return
             }
             ctx.save()
             if (floor.buildingList?.length) {
@@ -314,7 +319,7 @@ export default {
             floor.portal.forEach(place => {
               this.drawImage(this.imageMap.get("arrow"), place.location.x, place.location.y, size, size, size/2, 0, true, 
                 (arrowSpriteInfo[place.arrow]["column"] - 1) * arrowSpriteInfo[place.arrow]["width"], (arrowSpriteInfo[place.arrow]["row"] - 1) * arrowSpriteInfo[place.arrow]["height"], arrowSpriteInfo[place.arrow]["width"], arrowSpriteInfo[place.arrow]["height"],
-                place.direction * Math.PI / 180 + floor.degree, 0, (place.open ? augY : 0) + 30)
+                place.direction * Math.PI / 180 + floor.degree, 0, (place.open ? augY : -20) + 30)
             })
             this.arrowAnimation.timer = (this.arrowAnimation.timer + 0.016 > this.arrowAnimation.duration) ? 0 : this.arrowAnimation.timer + 0.016
           }
@@ -1247,6 +1252,8 @@ export default {
         this.canvas.height = clientHeight
       }
 
+      if (!this.imageMap.has("map")) return
+
       const imageWidth = parseInt(this.imageMap.get("map").width)
       const imageHeight = parseInt(this.imageMap.get("map").height)
       console.log(imageWidth, imageHeight)
@@ -1436,7 +1443,7 @@ export default {
 
   watch: {
     "buttonZoom.flag"() {
-      this.focusedPoint = this.getMousePoint({ x: (this.rotate ? this.canvasHeight : this.canvasWidth) / 2, y: (this.rotate ? this.canvasWidth : this.canvasHeight) / 2 })
+      this.focusedPoint = this.getMousePoint({ x: this.canvasWidth / 2, y: this.canvasHeight / 2 })
       this.mapAnimation = {
         deltaX: 0,
         deltaY: 0,

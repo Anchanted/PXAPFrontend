@@ -27,14 +27,16 @@
               @click="onclickbuttonmessage"></button>
             <!-- Help Button -->
             <div class="dropdown-divider" style="margin: 0"></div>
-            <button class="dropdown-item iconfont icon-help-outline" type="button"
-              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"
-              @click="onclickbuttonhelp"></button>
-            <!-- Help Button -->
+            <a class="dropdown-item iconfont icon-help-outline" href="/static/html/guide.html" target="_blank"
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.help')"></a>
+            <!-- VPN Button -->
             <div class="dropdown-divider" style="margin: 0"></div>
-            <button class="dropdown-item iconfont icon-vpn" type="button"
-              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.vpn')"
-              @click="onclickbuttonvpn"></button>
+            <a class="dropdown-item iconfont icon-vpn" type="button" href="https://box.xjtlu.edu.cn/lib/40d017f7-ccba-4d31-90bd-345322465e94/file/Guide/XJTLU%20VPN%20(for%20Off%20Campus)%20User%20Guide.pdf" target="_blank"
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.vpn')"></a>
+            <!-- Feedback Button -->
+            <div class="dropdown-divider" style="margin: 0"></div>
+            <a class="dropdown-item iconfont icon-feedback" type="button" href="mailto:emap.xjtlu@xjtlu.edu.cn"
+              data-toggle="tooltip" data-placement="left" data-trigger="hover" :data-original-title="$t('tooltip.feedback')"></a>
             <!-- Hide Button -->
             <template v-if="!loading">
               <div class="dropdown-divider" style="margin: 0"></div>
@@ -62,6 +64,7 @@
 
     <div v-show="!loading" class="bottom-left-button-group">
       <span class="iconfont icon-logo logo"></span>
+      <span style="line-height: 1; font-size: 12px; color: #743481;">beta</span>
       <div class="scale-ruler-container">
         <span>{{rulerUnit}}</span>
         <div class="scale-ruler" :style="{ width: `${rulerWidth}px` }"></div>
@@ -153,7 +156,7 @@ export default {
       maxScale: state => state.maxScale,
       minScale: state => state.minScale,
       zoom: state => state.zoom,
-      rulerRatio: state => state.pixelPerMeter,
+      pixelPerMeter: state => state.pixelPerMeter,
       rulerUnitArray: state => state.rulerUnitArray,
       gateActivated: state => state.button.gateActivated,
       occupationActivated: state => state.button.occupationActivated,
@@ -203,15 +206,8 @@ export default {
     chooseOtherFloor(e, floor) {
       this.$store.commit("setFloorDataEvent", [this.currentBuilding?.id, floor.id])
     },
-    onclickbuttonhelp() {
-      window.open("/static/html/guide.html", '_blank')
-    },
     onclickbuttonmessage() {
-      console.log("here")
       $('#messageModal').modal('show')
-    },
-    onclickbuttonvpn() {
-
     },
     onclickbuttonhide() {
       this.$store.commit("button/setDisplayVirtualButton", true)
@@ -284,9 +280,9 @@ export default {
     scale(val) {
       this.refreshZoomBtn(val)
     },
-    zoom(val) {
-      const pixels = this.rulerRatio / val
-      const distance = pixels * 120
+    zoom(zoom) {
+      const maxPixelWidth = 120
+      const distance = maxPixelWidth / this.pixelPerMeter / zoom
       let unit
       for (let i = 1; i < this.rulerUnitArray.length; i++) {
 				if (this.rulerUnitArray[i - 1] <= distance && distance < this.rulerUnitArray[i]) {
@@ -294,7 +290,7 @@ export default {
 					break;
 				}
 			}
-      this.rulerWidth = Math.floor(unit / pixels)
+      this.rulerWidth = Math.floor(unit / distance * maxPixelWidth)
       this.rulerUnit = `${unit / (unit >= 1000 ? 1000 : 1)} ${this.$t("unit." + (unit >= 1000 ? "km" : "m"))}`
     },
     loading(val) {
@@ -521,6 +517,7 @@ img {
       line-height: 1.2;
       margin: 0;
       margin-bottom: -4px;
+      user-select: none;
     }
 
     .scale-ruler {
@@ -554,22 +551,27 @@ img {
       width: 40px;
       height: 40px;
       opacity: 0.9;
+      user-select: none;
     }
   }
 
   .occupation {
-    font-size: 0;
-
-    >div {
-      display: inline-block;
-      vertical-align: middle;
-    }
+    position: relative;
+    // font-size: 0;
 
     .occupation-time {
+      position: absolute;
+      height: 26px;
+      top: 0;
+      bottom: 0;
+      margin: auto 0;
+      right: 40px;
+      white-space: nowrap;
       border: 1px black solid;
       border-right: none;
       padding: 0 10px;
       font-size: 1rem;
+      line-height: 26px;
       background: #fff;
       cursor: pointer;
     }
@@ -610,6 +612,7 @@ img {
   .button {
     // box-shadow: 0px 0px 2px 1px rgba(142,142,142,.4);
     // -webkit-box-shadow: 0px 0px 2px 1px rgba(142,142,142,.4);
+    box-sizing: content-box;
     background-color: #f8f9fa;
     color: #555555;
     border-radius: 3px;

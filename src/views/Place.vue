@@ -214,6 +214,8 @@ export default {
       if (!this.timeArr.length) return ""
       if (this.timeArr.some(arr => arr[1] - arr[0] === 24)) {
         return this.$t("place.openHour.24")
+      } else if (this.timeArr.some(arr => arr[1] - arr[0] === 0)) {
+        return ""
       } else {
         const padding = (number) => ('0' + number).slice(-2)
         return this.timeArr.map(arr => {

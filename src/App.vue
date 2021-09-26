@@ -1,9 +1,6 @@
 <template>
   <div id="app">
-    <!-- <keep-alive :exclude="['Modal', 'ButtonGroup']"> -->
-    <!-- <keep-alive> -->
-      <router-view></router-view>
-    <!-- </keep-alive> -->
+    <router-view></router-view>
   </div>
 </template>
 
@@ -53,11 +50,7 @@ export default {
     }
   },
   beforeCreate() {
-    const link = document.createElement("link")
-    link.type = "text/css"
-    link.rel = "stylesheet"
-    link.href = process.env.VUE_APP_ICONFONT_URL
-    document.head.appendChild(link)
+    document.getElementById("iconfontcss").href = process.env.VUE_APP_ICONFONT_URL
   },
   created() {
     let lang = localStorage.getItem('language')

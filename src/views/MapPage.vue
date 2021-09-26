@@ -52,19 +52,28 @@
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="messageModalLabel">Modal title</h5>
+            <h5 class="modal-title" id="messageModalLabel">Message</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <ul class="list-group">
-              <li class="list-group-item">Cras justo odio</li>
-              <li class="list-group-item">Dapibus ac facilisis in</li>
-              <li class="list-group-item">Morbi leo risus</li>
-              <li class="list-group-item">Porta ac consectetur ac</li>
-              <li class="list-group-item">Vestibulum at eros</li>
-            </ul>
+            <div class="accordion" id="message-accordion">
+              <div class="card">
+                <div class="card-header" id="headingTwo">
+                  <h2 class="mb-0">
+                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      Acknowledgement
+                    </button>
+                  </h2>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#message-accordion">
+                  <div class="card-body">
+                    <iframe title="Inline Frame" src="/static/html/acknowledgement.html" frameborder="0"></iframe>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -374,8 +383,15 @@ export default {
         this.loadImage(process.env.VUE_APP_BASE_API + floor.imgUrl).then(image => {
           this.imageMap.set(key, image)
 
-          if (floor.refCoords) {
-            const bounds = [
+          let bounds = []
+          if (floor.buildingList?.length) {
+            floor.buildingList.forEach(pf => {
+              if (!pf.areaCoords) return
+              bounds = bounds.concat(pf.areaCoords.flat(2).map(point => [point.x, point.y]))
+            })
+          }
+          if (!bounds.length && floor.refCoords) {
+            bounds = [
               [0, 0],
               [image.width, 0],
               [image.width, image.height],
@@ -390,7 +406,8 @@ export default {
               point[0] = p.x
               point[1] = p.y
             })
-
+          }
+          if (bounds.length) {
             floor["envelope"] = [
               {
                 x: Math.min.apply(null, bounds.map(e => e[0])),
@@ -780,19 +797,15 @@ export default {
       // }
 
       this.campusPlaceList = data.placeList ?? []
+      this.getFloorData()
 
       dataList.splice(0, 1)
-      let flag = false
       dataList.forEach(result => {
         if (result.status !== "fulfilled") return
         console.log(result.value)
-        flag = true
         this.$store.commit("setCurrentBuildingId", result.value?.building?.id)
         this.getFloorData(result.value?.building?.id, result.value?.floor?.id, result.value)
       })
-      if (!flag) {
-        this.floorListStr = ""
-      }
 
       this.showLoading = false
     } catch (error) {
@@ -927,6 +940,17 @@ export default {
   // position: absolute;
   // bottom: 100px;
   display: none;
+}
+
+#messageModal {
+  .modal-dialog {
+    max-width: 800px;
+
+    iframe {
+      width: 100%;
+      height: 400px;
+    }
+  }
 }
 </style>
 
